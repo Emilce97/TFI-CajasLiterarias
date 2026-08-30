@@ -53,13 +53,13 @@ Planteamiento formal: las administradoras de este emprendimiento, que gestionan 
 
 Incluido:
 
-Catálogo de cajas con sus cuatro líneas temáticas.
-Ciclo de suscripciones con fecha de corte automática (día 21).
-Gestión de altas, bajas, pausas y cambios de temática.
-Gestión de cupos y stock por edición mensual.
-Validación manual/semiautomática de pagos (panel de conciliación).
-Panel de despacho con trazabilidad de estado del pedido.
-Historial de libros recibidos por suscriptor (evita repeticiones).
+- Catálogo de cajas con sus cuatro líneas temáticas.
+- Ciclo de suscripciones con fecha de corte automática (día 21).
+- Gestión de altas, bajas, pausas y cambios de temática.
+- Gestión de cupos y stock por edición mensual.
+- Validación manual/semiautomática de pagos (panel de conciliación).
+- Panel de despacho con trazabilidad de estado del pedido.
+- Historial de libros recibidos por suscriptor (evita repeticiones).
 
 ### Plan de trabajo
 
@@ -97,5 +97,5 @@ El plan se organiza en torno a las tres instancias de entrega definidas por la c
 | 7 (09/11–14/11) | Informe final, video explicativo y revisión general. |
 
 Integrantes
-Natalia Córdoba — colaboradora
-Emilce Spital — colaboradora
+- Natalia Córdoba — colaboradora
+- Emilce Spital — colaboradora
