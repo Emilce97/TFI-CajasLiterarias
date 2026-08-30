@@ -8,13 +8,13 @@
 ---
 
 ## Índice
-1. [Propuesta del proyecto](#-propuesta-del-proyecto)  
-2. [Actores Involucrados](#-actores-involucrados)  
-3. [Problema central](#-problema-central)  
-4. [Stack tecnológico](#-stack-tecnológico)  
-5. [Alcance del MVP](#-alcance-del-mvp)  
-6. [Plan de trabajo](#-plan-de-trabajo-y-cronograma)  
-7. [Integrantes](#-integrantes)  
+1. Propuesta del proyecto  
+2. Actores Involucrados  
+3. Problema central  
+4. Stack tecnológico   
+5. Alcance del MVP  
+6. Plan de trabajo   
+7. Integrantes  
 
 ---
 
