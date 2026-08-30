@@ -7,12 +7,12 @@ Docente/Tutor: Oscar Londero
 Integrantes: Natalia Córdoba, Emilce Spital
 
 ### Índice
-Propuesta del proyecto
-Problema central
-Stack tecnológico
-Alcance del MVP
-Plan de trabajo
-Integrantes
+- Propuesta del proyecto
+- Problema central
+- Stack tecnológico
+- Alcance del MVP
+- Plan de trabajo
+- Integrantes
 
 ### Propuesta del proyecto
 
