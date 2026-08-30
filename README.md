@@ -20,9 +20,9 @@ Se propone el desarrollo de una plataforma de gestión para un microemprendimien
 
 El emprendimiento cuenta actualmente con 100 suscriptores activos y funciona bajo un ciclo mensual cerrado:
 
-Día 1 al 20: ventana para altas, bajas, pausas y cambios de temática.
-Día 21 (fecha de corte): se congela el padrón de suscriptores y se reserva el stock con los proveedores.
-Día 1 al 5 del mes siguiente: despacho masivo de los pedidos.
+- Día 1 al 20: ventana para altas, bajas, pausas y cambios de temática.
+- Día 21 (fecha de corte): se congela el padrón de suscriptores y se reserva el stock con los proveedores.
+- Día 1 al 5 del mes siguiente: despacho masivo de los pedidos.
 
 A futuro, las administradoras planean incorporar una modalidad premium con un Club de Lectura Virtual (videollamadas y votación de próximas lecturas), funcionalidad que hoy no pueden sostener con las herramientas manuales que usan.
 
@@ -60,12 +60,6 @@ Gestión de cupos y stock por edición mensual.
 Validación manual/semiautomática de pagos (panel de conciliación).
 Panel de despacho con trazabilidad de estado del pedido.
 Historial de libros recibidos por suscriptor (evita repeticiones).
-
-## Fuera de alcance (versión futura):
-
-Integración con pasarela de pago real (Mercado Pago, Stripe, etc.).
-Club de Lectura Virtual (nivel premium de suscripción, con videollamada y votación de lecturas).
-Integración por API con el correo para tracking automático.
 
 ### Plan de trabajo
 
