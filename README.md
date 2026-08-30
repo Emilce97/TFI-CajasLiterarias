@@ -34,6 +34,7 @@ A futuro, las administradoras planean incorporar una modalidad premium con un Cl
 | Proveedores de libros/insumos | Abastecen el stock según la demanda cerrada el día 21. Sin acceso al sistema. |
 | Correo (envíos) | Actor externo tercerizado. El sistema llega hasta la generación del remito. |
 
+## Problema central
 Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp y planillas de Excel, sin ningún sistema que centralice o valide la información entre etapas (altas, bajas, pagos, despacho). Esto genera problemas concretos y recurrentes: confusión en despachos, altas/bajas no sincronizadas, cambios de temática no reflejados a tiempo, riesgo de reenviar títulos ya entregados, y desajustes entre pagos validados y stock físico disponible.
 
 Planteamiento formal: las administradoras de este emprendimiento, que gestionan todo el proceso manualmente, enfrentan el problema de que, a medida que crece la cantidad de suscriptores (actualmente 100 activos), la falta de sincronización entre etapas genera errores recurrentes, representando una pérdida estimada de entre $64.000 y $96.000 mensuales y entre 15 y 20 horas de trabajo dedicadas a validar información dispersa. Una solución de software podría centralizar el estado real de cada suscriptor y automatizar las reglas del ciclo mensual, eliminando la necesidad de validar manualmente cada etapa.
