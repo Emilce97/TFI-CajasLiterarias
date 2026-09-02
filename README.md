@@ -76,10 +76,10 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 ### Incluido en el MVP
 
 * **Catálogo de cajas:** Configuración de las cuatro líneas temáticas (Misterio/Terror, Romance, Narrativa/Drama y Caja Sorpresa como temática de título curado único por mes).  
-* **Ciclo de suscripciones y snapshot de padrón:** Desacoplamiento entre la entidad continua `Suscripcion` y la entidad inmutable `PedidoEdicion` generada al momento del corte.  
+* **Ciclo de suscripciones y vigencia temporal:** Modelado de reglas de negocio en datos (mediante marcas temporales y estados de vigencia vinculados a la edición de destino), asegurando el desacoplamiento entre la entidad mutable Suscripcion y el snapshot inmutable PedidoEdicion. Modificaciones posteriores a la fecha de corte quedan registradas a nivel entidad con impacto programado para la edición siguiente.   
 * **Gestión de ciclo mensual:** Altas, bajas, pausas y cambios de temática en ventana habilitada (día 1 al 20).  
 * **Corte estricto e idempotente (día 21):** Operación de congelamiento del padrón que incluye únicamente suscripciones con pago validado por la administradora. Suscripciones sin pago confirmado quedan excluidas de la edición y no reservan stock.  
-* **Gestión de cupos y cálculo de stock:** Cálculo automático de la demanda de libros e insumos a solicitar a proveedores a partir del padrón cerrado de la edición.  
+* **Gestión de stock e inventario mensual:** Cálculo automático de la demanda de libros e insumos por edición cerrada, registro de cantidades recibidas de proveedores y detección/alerta de faltantes previo a la etapa de empaquetado.  
 * **Validación manual de pagos:** Panel de conciliación para que las administradoras verifiquen transferencias y habiliten los pedidos antes del día 21.  
 * **Panel de despacho:** Armado de pedidos, generación de remito interno, carga manual de código de seguimiento y actualización de estados del envío (Pendiente de empaque → Empaquetado → Despachado → Entregado).  
 * **Historial de suscriptor:** Registro relacional de pedidos previos para prevenir repetición involuntaria de títulos.
