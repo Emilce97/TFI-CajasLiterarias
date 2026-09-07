@@ -70,6 +70,7 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 
 ---
 
+<a id="stack-tecnologico"></a>
 ## Stack tecnológico
 | Capa | Tecnología | Motivo principal |
 | :--- | :--- | :--- |
