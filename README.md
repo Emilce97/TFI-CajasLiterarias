@@ -7,15 +7,15 @@
 
 ---
 
-## Índice
-1. Propuesta del proyecto  
-2. Actores Involucrados
-- [Estructura del repositorio](#estructura-del-repositorio)
-4. Problema central  
-5. Stack tecnológico   
-6. Alcance del MVP  
-7. Plan de trabajo   
-8. Integrantes  
+## Índice  
+- [Propuesta del proyecto](#propuesta-del-proyecto)  
+- [Actores Involucrados](#actores-involucrados)  
+- [Estructura del repositorio](#estructura-del-repositorio)  
+- [Problema central](#problema-central)  
+- [Stack tecnológico](#stack-tecnologico)  
+- [Alcance del MVP](#alcance-del-mvp)  
+- [Plan de trabajo](#plan-de-trabajo)  
+- [Integrantes](#integrantes)  
 
 ---
 
