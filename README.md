@@ -9,12 +9,13 @@
 
 ## Índice
 1. Propuesta del proyecto  
-2. Actores Involucrados  
-3. Problema central  
-4. Stack tecnológico   
-5. Alcance del MVP  
-6. Plan de trabajo   
-7. Integrantes  
+2. Actores Involucrados
+- [Estructura del repositorio](#estructura-del-repositorio)
+4. Problema central  
+5. Stack tecnológico   
+6. Alcance del MVP  
+7. Plan de trabajo   
+8. Integrantes  
 
 ---
 
@@ -47,6 +48,17 @@ A futuro, las administradoras planean incorporar una modalidad premium con un Cl
 | **Suscriptores (clientes)** | Eligen temática, gestionan su envío y realizan el pago. |
 | **Proveedores de libros/insumos** | Abastecen el stock según la demanda cerrada el día 21. Sin acceso al sistema. |
 | **Correo (envíos)** | Actor externo tercerizado. El sistema llega hasta la generación del remito. |
+
+---
+
+## Estructura del repositorio
+
+| Carpeta | Contenido |
+| :--- | :--- |
+| `Primer_Entrega_Cajas_Literarias/` | Documentación de la Etapa 1 (propuesta inicial). |
+| `Segunda_Entrega_Cajas_Literarias/` | Documentación de la Etapa 2 - Semana 1 (modelo de datos / DER, definición de módulos). |
+| `backend/` | API en Spring Boot (Java) + Spring Data JPA. |
+| `frontend/` | Cliente en HTML, CSS y TypeScript con Vite. |
 
 ---
 
@@ -108,18 +120,20 @@ El plan se organiza en torno a las tres instancias de entrega definidas por la c
 * Centralizar el historial de cada suscriptor evitando repetición de títulos.
 * Dar trazabilidad de estado a cada pedido desde el pago hasta la entrega.
 
-### Etapa 1 — Propuesta y repositorio (10/08 al 30/08)
+### Etapa 1 — Propuesta y repositorio (10/08 al 30/08) ✅
 
-**Entrega actual:** identificación del problema, definición del stack tecnológico, refinamiento de la propuesta asistido por IA, y creación de este repositorio.
+Identificación del problema, definición del stack tecnológico, refinamiento de la propuesta asistido por IA, y creación de este repositorio.
 
 ### Etapa 2 — Arquitectura y módulos (31/08 al 27/09)
 
 | Semana | Tarea |
 | :---: | :--- |
-| **1 (31/08–06/09)** | Diseño del modelo de datos (esquema ER con entidades desacopladas `Suscripcion` y `PedidoEdicion`), definición de módulos y setup inicial (Spring Boot + Vite/TS + MySQL). |
+| **1 (31/08–06/09) ✅** | Diseño del modelo de datos (esquema ER con entidades desacopladas `Suscripcion` y `PedidoEdicion`), definición de módulos y setup inicial (Spring Boot + Vite/TS + MySQL). |
 | **2 (07/09–13/09)** | Implementación backend del recorrido vertical: alta de suscripción, configuración de edición y operación manual idempotente de cierre/snapshot. |
 | **3 (14/09–20/09)** | Conexión con frontend simple: visualización de ediciones, suscripción básica y prueba de inmutabilidad del padrón cerrado ante cambios posteriores. |
 | **4 (21/09–27/09)** | Ajustes según feedback del tutor, buffer para pruebas funcionales del recorrido y entrega formal (**condición de Regular**). |
+
+> 📄 El esquema ER (DER) y la definición de módulos correspondientes a la Semana 1 se encuentran disponibles en [`Segunda_Entrega_Cajas_Literarias/Etapa 2 - sem 1- DER.pdf`](./Segunda_Entrega_Cajas_Literarias/Etapa%202%20-%20sem%201-%20DER.pdf).
 
 ### Etapa 3 — Informe final, video y despliegue (28/09 al 14/11)
 
