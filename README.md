@@ -7,14 +7,15 @@
 
 ---
 
-## Índice
-1. Propuesta del proyecto  
-2. Actores Involucrados  
-3. Problema central  
-4. Stack tecnológico   
-5. Alcance del MVP  
-6. Plan de trabajo   
-7. Integrantes  
+## Índice  
+- [Propuesta del proyecto](#propuesta-del-proyecto)  
+- [Actores Involucrados](#actores-involucrados)  
+- [Estructura del repositorio](#estructura-del-repositorio)  
+- [Problema central](#problema-central)  
+- [Stack tecnológico](#stack-tecnologico)  
+- [Alcance del MVP](#alcance-del-mvp)  
+- [Plan de trabajo](#plan-de-trabajo)  
+- [Integrantes](#integrantes)  
 
 ---
 
@@ -50,6 +51,17 @@ A futuro, las administradoras planean incorporar una modalidad premium con un Cl
 
 ---
 
+## Estructura del repositorio
+
+| Carpeta | Contenido |
+| :--- | :--- |
+| `Primer_Entrega_Cajas_Literarias/` | Documentación de la Etapa 1 (propuesta inicial). |
+| `Segunda_Entrega_Cajas_Literarias/` | Documentación de la Etapa 2 - Semana 1 (modelo de datos / DER, definición de módulos). |
+| `backend/` | API en Spring Boot (Java) + Spring Data JPA. |
+| `frontend/` | Cliente en HTML, CSS y TypeScript con Vite. |
+
+---
+
 ## Problema central  
 
 Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp y planillas de Excel, sin ningún sistema que centralice o valide la información entre etapas (altas, bajas, pagos, despacho). Esto genera problemas concretos y recurrentes: confusión en despachos, altas/bajas no sincronizadas, cambios de temática no reflejados a tiempo, riesgo de reenviar títulos ya entregados, y desajustes entre pagos validados y stock físico disponible.
@@ -58,6 +70,7 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 
 ---
 
+<a id="stack-tecnologico"></a>
 ## Stack tecnológico
 | Capa | Tecnología | Motivo principal |
 | :--- | :--- | :--- |
@@ -108,18 +121,20 @@ El plan se organiza en torno a las tres instancias de entrega definidas por la c
 * Centralizar el historial de cada suscriptor evitando repetición de títulos.
 * Dar trazabilidad de estado a cada pedido desde el pago hasta la entrega.
 
-### Etapa 1 — Propuesta y repositorio (10/08 al 30/08)
+### Etapa 1 — Propuesta y repositorio (10/08 al 30/08) ✅
 
-**Entrega actual:** identificación del problema, definición del stack tecnológico, refinamiento de la propuesta asistido por IA, y creación de este repositorio.
+Identificación del problema, definición del stack tecnológico, refinamiento de la propuesta asistido por IA, y creación de este repositorio.
 
 ### Etapa 2 — Arquitectura y módulos (31/08 al 27/09)
 
 | Semana | Tarea |
 | :---: | :--- |
-| **1 (31/08–06/09)** | Diseño del modelo de datos (esquema ER con entidades desacopladas `Suscripcion` y `PedidoEdicion`), definición de módulos y setup inicial (Spring Boot + Vite/TS + MySQL). |
+| **1 (31/08–06/09) ✅** | Diseño del modelo de datos (esquema ER con entidades desacopladas `Suscripcion` y `PedidoEdicion`), definición de módulos y setup inicial (Spring Boot + Vite/TS + MySQL). |
 | **2 (07/09–13/09)** | Implementación backend del recorrido vertical: alta de suscripción, configuración de edición y operación manual idempotente de cierre/snapshot. |
 | **3 (14/09–20/09)** | Conexión con frontend simple: visualización de ediciones, suscripción básica y prueba de inmutabilidad del padrón cerrado ante cambios posteriores. |
 | **4 (21/09–27/09)** | Ajustes según feedback del tutor, buffer para pruebas funcionales del recorrido y entrega formal (**condición de Regular**). |
+
+> 📄 El esquema ER (DER) y la definición de módulos correspondientes a la Semana 1 se encuentran disponibles en [`Segunda_Entrega_Cajas_Literarias/Etapa 2 - sem 1- DER.pdf`](./Segunda_Entrega_Cajas_Literarias/Etapa%202%20-%20sem%201-%20DER.pdf).
 
 ### Etapa 3 — Informe final, video y despliegue (28/09 al 14/11)
 
