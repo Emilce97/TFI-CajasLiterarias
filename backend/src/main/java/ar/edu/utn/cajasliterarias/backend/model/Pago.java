@@ -1,5 +1,6 @@
 package ar.edu.utn.cajasliterarias.backend.model;
 
+import ar.edu.utn.cajasliterarias.backend.enums.EstadoPago;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -25,8 +26,8 @@ public class Pago {
     private BigDecimal monto;
     private LocalDate fechaPago;
 
-    // pendiente / validado
-    private String estado;
+    @Enumerated(EnumType.STRING)
+    private EstadoPago estado;
 
     @ManyToOne
     @JoinColumn(name = "validado_por_admin_id")

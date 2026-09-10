@@ -1,5 +1,6 @@
 package ar.edu.utn.cajasliterarias.backend.model;
 
+import ar.edu.utn.cajasliterarias.backend.enums.EstadoSuscripcion;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
@@ -21,8 +22,8 @@ public class Suscripcion {
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
 
-    // activa / pausada / baja
-    private String estado;
+    @Enumerated(EnumType.STRING)
+    private EstadoSuscripcion estado;
 
     // Cambio de tematica solicitado despues del corte: no pisa "categoria"
     // hasta que se ejecute el proximo cierre (ver Notas de Diseno del DER).
