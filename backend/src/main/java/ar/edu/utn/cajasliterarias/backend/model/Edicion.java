@@ -1,5 +1,6 @@
 package ar.edu.utn.cajasliterarias.backend.model;
 
+import ar.edu.utn.cajasliterarias.backend.enums.EstadoEdicion;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
@@ -18,6 +19,6 @@ public class Edicion {
     private LocalDate fechaDespachoDesde;
     private LocalDate fechaDespachoHasta;
 
-    // abierta / cerrada
-    private String estado;
+    @Enumerated(EnumType.STRING)
+    private EstadoEdicion estado;
 }
