@@ -8,4 +8,7 @@ public interface EdicionRepository extends JpaRepository<Edicion, Long> {
 
     // Para encontrar la edicion actualmente abierta al momento del corte
     Edicion findByEstado(EstadoEdicion estado);
+
+    // Para evitar crear dos ediciones con el mismo nombre/mes por error
+    boolean existsByNombre(String nombre);
 }
