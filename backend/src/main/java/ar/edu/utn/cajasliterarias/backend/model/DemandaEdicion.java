@@ -1,5 +1,6 @@
 package ar.edu.utn.cajasliterarias.backend.model;
 
+import ar.edu.utn.cajasliterarias.backend.enums.EstadoFaltante;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -22,5 +23,7 @@ public class DemandaEdicion {
 
     private Integer cantidadRequerida;
     private Integer cantidadRecibida;
-    private String estadoFaltante;
+
+    @Enumerated(EnumType.STRING)
+    private EstadoFaltante estadoFaltante;
 }

@@ -1,5 +1,6 @@
 package ar.edu.utn.cajasliterarias.backend.model;
 
+import ar.edu.utn.cajasliterarias.backend.enums.EstadoPedido;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -43,8 +44,9 @@ public class PedidoEdicion {
     private BigDecimal precioAplicado;
     private String direccionEntrega;
 
-    // Pendiente de empaque / Empaquetado / Despachado / Entregado
-    private String estadoPedido;
+    @Enumerated(EnumType.STRING)
+    private EstadoPedido estadoPedido;
+
     private String tracking;
     private String observaciones;
 
