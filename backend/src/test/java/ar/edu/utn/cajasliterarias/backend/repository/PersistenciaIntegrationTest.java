@@ -1,8 +1,7 @@
-package ar.edu.utn.cajasliterarias.backend;
+package ar.edu.utn.cajasliterarias.backend.repository;
 
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoSuscripcion;
 import ar.edu.utn.cajasliterarias.backend.model.*;
-import ar.edu.utn.cajasliterarias.backend.repository.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
