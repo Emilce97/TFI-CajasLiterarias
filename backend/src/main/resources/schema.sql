@@ -135,6 +135,23 @@ CREATE TABLE pedido_edicion (
         UNIQUE (suscripcion_id, edicion_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Tabla hermana de pedido_edicion: registra las suscripciones activas que
+-- NO ingresaron a la edicion en el corte (por falta de pago validado).
+-- Una suscripcion entra como mucho una vez por edicion, igual que pedido_edicion.
+CREATE TABLE exclusion_edicion (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    suscripcion_id BIGINT NOT NULL,
+    edicion_id BIGINT NOT NULL,
+    motivo VARCHAR(30) NOT NULL, -- SIN_PAGO / PAGO_PENDIENTE
+    fecha_registro DATE NOT NULL,
+    CONSTRAINT fk_exclusion_suscripcion
+        FOREIGN KEY (suscripcion_id) REFERENCES suscripcion(id),
+    CONSTRAINT fk_exclusion_edicion
+        FOREIGN KEY (edicion_id) REFERENCES edicion(id),
+    CONSTRAINT uq_exclusion_suscripcion_edicion
+        UNIQUE (suscripcion_id, edicion_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Agregado de pedido_edicion por libro/edicion. Se calcula, no se carga a mano.
 CREATE TABLE demanda_edicion (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
