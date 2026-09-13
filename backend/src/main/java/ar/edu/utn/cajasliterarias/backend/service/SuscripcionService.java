@@ -1,5 +1,6 @@
 package ar.edu.utn.cajasliterarias.backend.service;
 
+import ar.edu.utn.cajasliterarias.backend.dto.CambiarCategoriaRequest;
 import ar.edu.utn.cajasliterarias.backend.dto.CrearSuscripcionRequest;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoEdicion;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoSuscripcion;
@@ -163,5 +164,65 @@ public class SuscripcionService {
 
         suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
         suscripcionRepository.save(suscripcion);
+    }
+
+    /**
+     * Solicita un cambio de categoria para una suscripción activa. No pisa la categoría actual:
+     * queda registrada en proximaCategoria/fechaSolicitudCambio y se aplica cuando se ejecute el próximo corte.
+     */
+    @Transactional
+    public Suscripcion cambiarCategoria(Long suscripcionId, CambiarCategoriaRequest request) {
+
+        Suscripcion suscripcion = suscripcionRepository.findById(suscripcionId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe la suscripción con id " + suscripcionId
+                ));
+
+        if (suscripcion.getEstado() != EstadoSuscripcion.ACTIVA) {
+            throw new IllegalStateException(
+                    "Solo se puede cambiar la categoría de una suscripción ACTIVA (estado actual: "
+                            + suscripcion.getEstado() + ")."
+            );
+        }
+
+        Categoria categoriaNueva = categoriaRepository.findById(request.getCategoriaId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe la categoría con id " + request.getCategoriaId()
+                ));
+
+        if (categoriaNueva.getId().equals(suscripcion.getCategoria().getId())) {
+            throw new IllegalArgumentException(
+                    "La suscripción ya pertenece a la categoria '" + categoriaNueva.getNombre() + "'."
+            );
+        }
+
+        Edicion edicionAbierta = edicionRepository.findByEstado(EstadoEdicion.ABIERTA);
+        if (edicionAbierta == null) {
+            throw new IllegalStateException(
+                    "No hay ninguna edición abierta actualmente para solicitar un cambio de categoría."
+            );
+        }
+
+        CuraduriaEdicion curaduria = curaduriaEdicionRepository
+                .findByEdicionIdAndCategoriaId(edicionAbierta.getId(), categoriaNueva.getId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "La categoría '" + categoriaNueva.getNombre()
+                                + "' no tiene curaduría cargada en la edición abierta."
+                ));
+
+        long activasEnCategoria = suscripcionRepository
+                .countByCategoriaIdAndEstado(categoriaNueva.getId(), EstadoSuscripcion.ACTIVA);
+
+        if (curaduria.getCupoMaximo() != null && activasEnCategoria >= curaduria.getCupoMaximo()) {
+            throw new IllegalStateException(
+                    "Se alcanzó el cupo máximo (" + curaduria.getCupoMaximo()
+                            + ") de la categoría '" + categoriaNueva.getNombre() + "' para esta edición."
+            );
+        }
+
+        suscripcion.setProximaCategoria(categoriaNueva);
+        suscripcion.setFechaSolicitudCambio(LocalDate.now());
+
+        return suscripcionRepository.save(suscripcion);
     }
 }
