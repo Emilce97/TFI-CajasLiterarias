@@ -1,5 +1,6 @@
 package ar.edu.utn.cajasliterarias.backend.service;
 
+import ar.edu.utn.cajasliterarias.backend.dto.CambiarCategoriaRequest;
 import ar.edu.utn.cajasliterarias.backend.dto.CrearSuscripcionRequest;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoEdicion;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoSuscripcion;
@@ -44,8 +45,7 @@ public class SuscripcionService {
     /**
      * Da de alta una suscripcion de un suscriptor ya registrado a una categoria.
      * Valida que la categoria tenga curaduria en la edicion actualmente abierta
-     * y que no haya superado el cupoMaximo definido para esa categoria/edicion
-     * (cupo validado aca, no en el corte, segun lo acordado con el tutor).
+     * y que no haya superado el cupoMaximo definido para esa categoria/edicion.
      */
     @Transactional
     public Suscripcion crearSuscripcion(CrearSuscripcionRequest request) {
@@ -63,22 +63,22 @@ public class SuscripcionService {
         if (suscripcionRepository.existsBySuscriptorIdAndCategoriaIdAndEstado(
                 suscriptor.getId(), categoria.getId(), EstadoSuscripcion.ACTIVA)) {
             throw new IllegalArgumentException(
-                    "El suscriptor ya tiene una suscripcion activa en esta categoria."
+                    "El suscriptor ya tiene una suscripción activa en esta categoría."
             );
         }
 
         Edicion edicionAbierta = edicionRepository.findByEstado(EstadoEdicion.ABIERTA);
         if (edicionAbierta == null) {
             throw new IllegalStateException(
-                    "No hay ninguna edicion abierta actualmente para dar de alta suscripciones."
+                    "No hay ninguna edición abierta actualmente para dar de alta suscripciones."
             );
         }
 
         CuraduriaEdicion curaduria = curaduriaEdicionRepository
                 .findByEdicionIdAndCategoriaId(edicionAbierta.getId(), categoria.getId())
                 .orElseThrow(() -> new IllegalStateException(
-                        "La categoria '" + categoria.getNombre()
-                                + "' no tiene curaduria cargada en la edicion abierta."
+                        "La categoría '" + categoria.getNombre()
+                                + "' no tiene curaduria cargada en la edición abierta."
                 ));
 
         long activasEnCategoria = suscripcionRepository
@@ -86,8 +86,8 @@ public class SuscripcionService {
 
         if (curaduria.getCupoMaximo() != null && activasEnCategoria >= curaduria.getCupoMaximo()) {
             throw new IllegalStateException(
-                    "Se alcanzo el cupo maximo (" + curaduria.getCupoMaximo()
-                            + ") de la categoria '" + categoria.getNombre() + "' para esta edicion."
+                    "Se alcanzó el cupo máximo (" + curaduria.getCupoMaximo()
+                            + ") de la categoría '" + categoria.getNombre() + "' para esta edición."
             );
         }
 
@@ -96,6 +96,132 @@ public class SuscripcionService {
         suscripcion.setCategoria(categoria);
         suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
         suscripcion.setFechaAlta(LocalDate.now());
+
+        return suscripcionRepository.save(suscripcion);
+    }
+
+    /**
+     * Da de baja definitivamente una suscripción. Cancela cualquier
+     * cambio de categoria que hubiera quedado pendiente para el próximo corte.
+     */
+    @Transactional
+    public void darDeBaja(Long suscripcionId) {
+        Suscripcion suscripcion = suscripcionRepository.findById(suscripcionId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe la suscripcion con id " + suscripcionId
+                ));
+
+        if (suscripcion.getEstado() == EstadoSuscripcion.BAJA) {
+            throw new IllegalStateException("La suscripción ya esta dada de baja.");
+        }
+
+        suscripcion.setEstado(EstadoSuscripcion.BAJA);
+        suscripcion.setFechaBaja(LocalDate.now());
+        suscripcion.setProximaCategoria(null);
+        suscripcion.setFechaSolicitudCambio(null);
+
+        suscripcionRepository.save(suscripcion);
+    }
+
+    /**
+     * Pausa una suscripción actualmente activa. Una suscripción pausada
+     * no ingresa al padrón del próximo corte hasta que se reanude.
+     */
+    @Transactional
+    public void pausar(Long suscripcionId) {
+        Suscripcion suscripcion = suscripcionRepository.findById(suscripcionId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe la suscripcion con id " + suscripcionId
+                ));
+
+        if (suscripcion.getEstado() != EstadoSuscripcion.ACTIVA) {
+            throw new IllegalStateException(
+                    "Solo se puede pausar una suscripción que este ACTIVA (estado actual: "
+                            + suscripcion.getEstado() + ")."
+            );
+        }
+
+        suscripcion.setEstado(EstadoSuscripcion.PAUSADA);
+        suscripcionRepository.save(suscripcion);
+    }
+
+    /**
+     * Reanuda una suscripción pausada, volviendo a dejarla ACTIVA.
+     */
+    @Transactional
+    public void reanudar(Long suscripcionId) {
+        Suscripcion suscripcion = suscripcionRepository.findById(suscripcionId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe la suscripción con id " + suscripcionId
+                ));
+
+        if (suscripcion.getEstado() != EstadoSuscripcion.PAUSADA) {
+            throw new IllegalStateException(
+                    "Solo se puede reanudar una suscripción que esta PAUSADA (estado actual: "
+                            + suscripcion.getEstado() + ")."
+            );
+        }
+
+        suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
+        suscripcionRepository.save(suscripcion);
+    }
+
+    /**
+     * Solicita un cambio de categoria para una suscripción activa. No pisa la categoría actual:
+     * queda registrada en proximaCategoria/fechaSolicitudCambio y se aplica cuando se ejecute el próximo corte.
+     */
+    @Transactional
+    public Suscripcion cambiarCategoria(Long suscripcionId, CambiarCategoriaRequest request) {
+
+        Suscripcion suscripcion = suscripcionRepository.findById(suscripcionId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe la suscripción con id " + suscripcionId
+                ));
+
+        if (suscripcion.getEstado() != EstadoSuscripcion.ACTIVA) {
+            throw new IllegalStateException(
+                    "Solo se puede cambiar la categoría de una suscripción ACTIVA (estado actual: "
+                            + suscripcion.getEstado() + ")."
+            );
+        }
+
+        Categoria categoriaNueva = categoriaRepository.findById(request.getCategoriaId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe la categoría con id " + request.getCategoriaId()
+                ));
+
+        if (categoriaNueva.getId().equals(suscripcion.getCategoria().getId())) {
+            throw new IllegalArgumentException(
+                    "La suscripción ya pertenece a la categoria '" + categoriaNueva.getNombre() + "'."
+            );
+        }
+
+        Edicion edicionAbierta = edicionRepository.findByEstado(EstadoEdicion.ABIERTA);
+        if (edicionAbierta == null) {
+            throw new IllegalStateException(
+                    "No hay ninguna edición abierta actualmente para solicitar un cambio de categoría."
+            );
+        }
+
+        CuraduriaEdicion curaduria = curaduriaEdicionRepository
+                .findByEdicionIdAndCategoriaId(edicionAbierta.getId(), categoriaNueva.getId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "La categoría '" + categoriaNueva.getNombre()
+                                + "' no tiene curaduría cargada en la edición abierta."
+                ));
+
+        long activasEnCategoria = suscripcionRepository
+                .countByCategoriaIdAndEstado(categoriaNueva.getId(), EstadoSuscripcion.ACTIVA);
+
+        if (curaduria.getCupoMaximo() != null && activasEnCategoria >= curaduria.getCupoMaximo()) {
+            throw new IllegalStateException(
+                    "Se alcanzó el cupo máximo (" + curaduria.getCupoMaximo()
+                            + ") de la categoría '" + categoriaNueva.getNombre() + "' para esta edición."
+            );
+        }
+
+        suscripcion.setProximaCategoria(categoriaNueva);
+        suscripcion.setFechaSolicitudCambio(LocalDate.now());
 
         return suscripcionRepository.save(suscripcion);
     }
