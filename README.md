@@ -130,7 +130,7 @@ Identificación del problema, definición del stack tecnológico, refinamiento d
 | Semana | Tarea |
 | :---: | :--- |
 | **1 (31/08–06/09) ✅** | Diseño del modelo de datos (esquema ER con entidades desacopladas `Suscripcion` y `PedidoEdicion`), definición de módulos y setup inicial (Spring Boot + Vite/TS + MySQL). |
-| **2 (07/09–13/09)** | Implementación backend del recorrido vertical: alta de suscripción, configuración de edición y operación manual idempotente de cierre/snapshot. |
+| **2 (07/09–13/09) ✅** | Implementación backend del recorrido vertical: alta de suscripción, configuración de edición y operación manual idempotente de cierre/snapshot. |
 | **3 (14/09–20/09)** | Conexión con frontend simple: visualización de ediciones, suscripción básica y prueba de inmutabilidad del padrón cerrado ante cambios posteriores. |
 | **4 (21/09–27/09)** | Ajustes según feedback del tutor, buffer para pruebas funcionales del recorrido y entrega formal (**condición de Regular**). |
 
