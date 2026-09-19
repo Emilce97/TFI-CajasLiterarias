@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/ediciones")
 public class EdicionController {
@@ -25,5 +27,14 @@ public class EdicionController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    /**
+     * Lista todas las ediciones existentes.
+     * GET /api/ediciones
+     */
+    @GetMapping
+    public List<Edicion> listarEdiciones() {
+        return edicionService.listarEdiciones();
     }
 }

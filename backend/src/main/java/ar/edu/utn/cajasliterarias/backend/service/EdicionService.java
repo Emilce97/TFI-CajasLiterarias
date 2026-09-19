@@ -66,6 +66,12 @@ public class EdicionService {
 
         return edicion;
     }
+    /**
+     * Lista todas las ediciones existentes.
+     */
+    public List<Edicion> listarEdiciones() {
+        return edicionRepository.findAll();
+    }
 
     private void crearCuraduria(Edicion edicion, CuraduriaItemDTO item) {
         Categoria categoria = categoriaRepository.findById(item.getCategoriaId())

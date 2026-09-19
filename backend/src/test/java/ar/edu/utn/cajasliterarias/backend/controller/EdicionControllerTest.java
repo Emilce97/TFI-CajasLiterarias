@@ -12,7 +12,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -79,5 +79,24 @@ class EdicionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestValido())))
                 .andExpect(status().isBadRequest());
+    }
+    @Test
+    void listarEdiciones_devuelveLaListaDeEdiciones() throws Exception {
+        Edicion edicion1 = new Edicion();
+        edicion1.setId(1L);
+        edicion1.setNombre("Septiembre 2026");
+        edicion1.setEstado(EstadoEdicion.CERRADA);
+
+        Edicion edicion2 = new Edicion();
+        edicion2.setId(2L);
+        edicion2.setNombre("Octubre 2026");
+        edicion2.setEstado(EstadoEdicion.ABIERTA);
+
+        when(edicionService.listarEdiciones()).thenReturn(List.of(edicion1, edicion2));
+
+        mockMvc.perform(get("/api/ediciones"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].nombre").value("Septiembre 2026"))
+                .andExpect(jsonPath("$[1].nombre").value("Octubre 2026"));
     }
 }
