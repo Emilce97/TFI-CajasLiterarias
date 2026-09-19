@@ -93,4 +93,13 @@ public class EdicionService {
 
         curaduriaEdicionRepository.save(curaduria);
     }
+    /**
+     * Lista las curadurias (categoria, libro, precio, cupo) de una edicion puntual.
+     */
+    public List<CuraduriaEdicion> listarCuraduriasDeEdicion(Long edicionId) {
+        if (!edicionRepository.existsById(edicionId)) {
+            throw new IllegalArgumentException("No existe la edicion con id " + edicionId);
+        }
+        return curaduriaEdicionRepository.findByEdicionId(edicionId);
+    }
 }

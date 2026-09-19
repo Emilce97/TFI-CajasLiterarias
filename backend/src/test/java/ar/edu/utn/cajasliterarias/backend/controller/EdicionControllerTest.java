@@ -16,6 +16,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import ar.edu.utn.cajasliterarias.backend.model.Categoria;
+import ar.edu.utn.cajasliterarias.backend.model.CuraduriaEdicion;
+import ar.edu.utn.cajasliterarias.backend.model.Libro;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -98,5 +101,39 @@ class EdicionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].nombre").value("Septiembre 2026"))
                 .andExpect(jsonPath("$[1].nombre").value("Octubre 2026"));
+    }
+    @Test
+    void listarCuradurias_conEdicionExistente_devuelveLista() throws Exception {
+        Categoria categoria = new Categoria();
+        categoria.setId(1L);
+        categoria.setNombre("Romance");
+
+        Libro libro = new Libro();
+        libro.setId(1L);
+        libro.setTitulo("El Aleph");
+
+        CuraduriaEdicion curaduria = new CuraduriaEdicion();
+        curaduria.setId(1L);
+        curaduria.setCategoria(categoria);
+        curaduria.setLibro(libro);
+        curaduria.setPrecioVigente(new BigDecimal("5000"));
+        curaduria.setCupoMaximo(30);
+
+        when(edicionService.listarCuraduriasDeEdicion(1L)).thenReturn(List.of(curaduria));
+
+        mockMvc.perform(get("/api/ediciones/1/curadurias"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].categoria.nombre").value("Romance"))
+                .andExpect(jsonPath("$[0].libro.titulo").value("El Aleph"))
+                .andExpect(jsonPath("$[0].cupoMaximo").value(30));
+    }
+
+    @Test
+    void listarCuradurias_conEdicionInexistente_devuelve404() throws Exception {
+        when(edicionService.listarCuraduriasDeEdicion(99L))
+                .thenThrow(new IllegalArgumentException("No existe la edicion con id 99"));
+
+        mockMvc.perform(get("/api/ediciones/99/curadurias"))
+                .andExpect(status().isNotFound());
     }
 }

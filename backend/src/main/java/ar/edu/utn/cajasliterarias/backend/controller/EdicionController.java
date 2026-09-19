@@ -6,7 +6,7 @@ import ar.edu.utn.cajasliterarias.backend.service.EdicionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import ar.edu.utn.cajasliterarias.backend.model.CuraduriaEdicion;
 import java.util.List;
 
 @RestController
@@ -36,5 +36,18 @@ public class EdicionController {
     @GetMapping
     public List<Edicion> listarEdiciones() {
         return edicionService.listarEdiciones();
+    }
+    /**
+     * Lista las curadurias (categoria, libro, precio, cupo) de una edicion puntual.
+     * GET /api/ediciones/{id}/curadurias
+     */
+    @GetMapping("/{id}/curadurias")
+    public ResponseEntity<?> listarCuradurias(@PathVariable Long id) {
+        try {
+            List<CuraduriaEdicion> curadurias = edicionService.listarCuraduriasDeEdicion(id);
+            return ResponseEntity.ok(curadurias);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 }
