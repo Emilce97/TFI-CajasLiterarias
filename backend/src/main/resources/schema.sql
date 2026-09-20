@@ -35,7 +35,8 @@ CREATE TABLE suscriptor (
     nombre VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL,
     direccion VARCHAR(255),
-    fecha_registro DATE
+    fecha_registro DATE,
+    CONSTRAINT uq_suscriptor_email UNIQUE (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE edicion (

@@ -9,7 +9,9 @@ import lombok.Data;
 @Data
 public class CrearSuscripcionRequest {
 
-    private Long suscriptorId;
+    private String nombre;
+    private String email;
+    private String direccion;
     private Long categoriaId;
 
 }

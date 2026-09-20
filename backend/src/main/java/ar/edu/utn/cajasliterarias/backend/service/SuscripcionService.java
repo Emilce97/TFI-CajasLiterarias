@@ -43,17 +43,34 @@ public class SuscripcionService {
     }
 
     /**
-     * Da de alta una suscripcion de un suscriptor ya registrado a una categoria.
-     * Valida que la categoria tenga curaduria en la edicion actualmente abierta
-     * y que no haya superado el cupoMaximo definido para esa categoria/edicion.
+     * Da de alta una suscripcion a una categoria. No asume un Suscriptor ya registrado: busca por email
+     * y, si no existe, lo crea con los datos del request (find-or-create). Si el email ya existe,
+     * reutiliza ese Suscriptor tal cual esta en la base.
+     * Valida que la categoria tenga curaduria en la edicion actualmente abierta y que no haya superado el cupoMaximo
+     * definido para esa categoria/edicion.
      */
     @Transactional
     public Suscripcion crearSuscripcion(CrearSuscripcionRequest request) {
 
-        Suscriptor suscriptor = suscriptorRepository.findById(request.getSuscriptorId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No existe el suscriptor con id " + request.getSuscriptorId()
-                ));
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            throw new IllegalArgumentException("El email del suscriptor es obligatorio.");
+        }
+        if (request.getNombre() == null || request.getNombre().isBlank()) {
+            throw new IllegalArgumentException("El nombre del suscriptor es obligatorio.");
+        }
+        if (request.getCategoriaId() == null) {
+            throw new IllegalArgumentException("La categoría es obligatoria.");
+        }
+
+        Suscriptor suscriptor = suscriptorRepository.findByEmail(request.getEmail())
+                .orElseGet(() -> {
+                    Suscriptor nuevo = new Suscriptor();
+                    nuevo.setNombre(request.getNombre());
+                    nuevo.setEmail(request.getEmail());
+                    nuevo.setDireccion(request.getDireccion());
+                    nuevo.setFechaRegistro(LocalDate.now());
+                    return suscriptorRepository.save(nuevo);
+                });
 
         Categoria categoria = categoriaRepository.findById(request.getCategoriaId())
                 .orElseThrow(() -> new IllegalArgumentException(
