@@ -207,4 +207,59 @@ class CierreEdicionServiceTest {
         assertNull(suscripcion.getProximaCategoria());
         verify(suscripcionRepository).save(suscripcion);
     }
+    @Test
+    void pedidoEdicionYaGenerado_noCambiaAunqueLaSuscripcionCambieDespues() {
+        Edicion edicion = new Edicion();
+        edicion.setId(1L);
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+
+        Suscriptor suscriptor = new Suscriptor();
+        suscriptor.setDireccion("Calle Falsa 123");
+
+        Categoria romance = new Categoria();
+        romance.setId(10L);
+        romance.setNombre("Romance");
+
+        Categoria misterio = new Categoria();
+        misterio.setId(20L);
+        misterio.setNombre("Misterio/Terror");
+
+        Suscripcion suscripcion = new Suscripcion();
+        suscripcion.setId(100L);
+        suscripcion.setSuscriptor(suscriptor);
+        suscripcion.setCategoria(romance); // vigente al momento del corte
+        suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
+
+        when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA))
+                .thenReturn(List.of(suscripcion));
+
+        Pago pagoValidado = new Pago();
+        pagoValidado.setId(1L);
+        pagoValidado.setSuscripcion(suscripcion);
+        pagoValidado.setEstado(EstadoPago.VALIDADO);
+        when(pagoRepository.findByEdicionId(1L)).thenReturn(List.of(pagoValidado));
+
+        Libro libro = new Libro();
+        libro.setTitulo("El Aleph");
+
+        CuraduriaEdicion curaduria = new CuraduriaEdicion();
+        curaduria.setCategoria(romance);
+        curaduria.setLibro(libro);
+        curaduria.setPrecioVigente(java.math.BigDecimal.valueOf(5000));
+        when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(List.of(curaduria));
+
+        // Ejecutamos el corte: en este momento la suscripcion todavia esta en Romance
+        service.ejecutarCorte();
+
+        // "Atrapamos" el PedidoEdicion que se guardo, para inspeccionarlo despues
+        ArgumentCaptor<PedidoEdicion> captor = ArgumentCaptor.forClass(PedidoEdicion.class);
+        verify(pedidoEdicionRepository).save(captor.capture());
+        PedidoEdicion pedidoGenerado = captor.getValue();
+
+        // Ahora, DESPUES del corte, alguien cambia la categoria de la suscripcion
+        suscripcion.setCategoria(misterio);
+
+        // El pedido que ya se genero no debe verse afectado por este cambio posterior
+        assertEquals("Romance", pedidoGenerado.getCategoriaCongelada());
+    }
 }
