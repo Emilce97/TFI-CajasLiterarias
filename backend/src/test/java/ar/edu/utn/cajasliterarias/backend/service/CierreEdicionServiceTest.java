@@ -15,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
@@ -212,6 +213,7 @@ class CierreEdicionServiceTest {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
         when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Suscriptor suscriptor = new Suscriptor();
         suscriptor.setDireccion("Calle Falsa 123");
@@ -240,12 +242,13 @@ class CierreEdicionServiceTest {
         when(pagoRepository.findByEdicionId(1L)).thenReturn(List.of(pagoValidado));
 
         Libro libro = new Libro();
+        libro.setId(1L);
         libro.setTitulo("El Aleph");
 
         CuraduriaEdicion curaduria = new CuraduriaEdicion();
         curaduria.setCategoria(romance);
         curaduria.setLibro(libro);
-        curaduria.setPrecioVigente(java.math.BigDecimal.valueOf(5000));
+        curaduria.setPrecioVigente(BigDecimal.valueOf(5000));
         when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(List.of(curaduria));
 
         // Ejecutamos el corte: en este momento la suscripcion todavia esta en Romance
@@ -256,10 +259,15 @@ class CierreEdicionServiceTest {
         verify(pedidoEdicionRepository).save(captor.capture());
         PedidoEdicion pedidoGenerado = captor.getValue();
 
+        // El pedido debe quedar congelado en Romance ya en el momento del corte
+        assertEquals("Romance", pedidoGenerado.getCategoriaCongelada());
+
         // Ahora, DESPUES del corte, alguien cambia la categoria de la suscripcion
         suscripcion.setCategoria(misterio);
 
-        // El pedido que ya se genero no debe verse afectado por este cambio posterior
+        // La suscripcion (entidad continua) sí refleja el cambio
+        assertEquals(misterio, suscripcion.getCategoria());
+        // pero el pedido que ya se genero (snapshot inmutable) no se ve afectado
         assertEquals("Romance", pedidoGenerado.getCategoriaCongelada());
     }
 }
