@@ -1,8 +1,10 @@
 package ar.edu.utn.cajasliterarias.backend.exception;
 
 /**
- * Se lanza cuando se intenta cerrar (cortar) una edicion que ya tiene PedidoEdicion generados.
- * Es la guarda de idempotencia del corte: evita que un reintento del proceso duplique pedidos.
+ * Guarda defensiva: salta si una edicion todavia ABIERTA ya tiene PedidoEdicion generados, un estado inconsistente
+ * (el proceso de corte se interrumpio despues de generar los pedidos pero antes de marcar CERRADA).
+ * El reintento normal de un corte ya finalizado no llega aca: corta antes con IllegalStateException,
+ * al no encontrar edicion ABIERTA.
  */
 public class EdicionYaCerradaException extends RuntimeException {
 
