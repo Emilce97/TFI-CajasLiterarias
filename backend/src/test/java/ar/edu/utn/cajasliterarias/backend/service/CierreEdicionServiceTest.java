@@ -15,6 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
@@ -206,5 +207,67 @@ class CierreEdicionServiceTest {
         assertEquals(categoriaProxima, suscripcion.getCategoria());
         assertNull(suscripcion.getProximaCategoria());
         verify(suscripcionRepository).save(suscripcion);
+    }
+    @Test
+    void pedidoEdicionYaGenerado_noCambiaAunqueLaSuscripcionCambieDespues() {
+        Edicion edicion = new Edicion();
+        edicion.setId(1L);
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
+
+        Suscriptor suscriptor = new Suscriptor();
+        suscriptor.setDireccion("Calle Falsa 123");
+
+        Categoria romance = new Categoria();
+        romance.setId(10L);
+        romance.setNombre("Romance");
+
+        Categoria misterio = new Categoria();
+        misterio.setId(20L);
+        misterio.setNombre("Misterio/Terror");
+
+        Suscripcion suscripcion = new Suscripcion();
+        suscripcion.setId(100L);
+        suscripcion.setSuscriptor(suscriptor);
+        suscripcion.setCategoria(romance); // vigente al momento del corte
+        suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
+
+        when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA))
+                .thenReturn(List.of(suscripcion));
+
+        Pago pagoValidado = new Pago();
+        pagoValidado.setId(1L);
+        pagoValidado.setSuscripcion(suscripcion);
+        pagoValidado.setEstado(EstadoPago.VALIDADO);
+        when(pagoRepository.findByEdicionId(1L)).thenReturn(List.of(pagoValidado));
+
+        Libro libro = new Libro();
+        libro.setId(1L);
+        libro.setTitulo("El Aleph");
+
+        CuraduriaEdicion curaduria = new CuraduriaEdicion();
+        curaduria.setCategoria(romance);
+        curaduria.setLibro(libro);
+        curaduria.setPrecioVigente(BigDecimal.valueOf(5000));
+        when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(List.of(curaduria));
+
+        // Ejecutamos el corte: en este momento la suscripcion todavia esta en Romance
+        service.ejecutarCorte();
+
+        // "Atrapamos" el PedidoEdicion que se guardo, para inspeccionarlo despues
+        ArgumentCaptor<PedidoEdicion> captor = ArgumentCaptor.forClass(PedidoEdicion.class);
+        verify(pedidoEdicionRepository).save(captor.capture());
+        PedidoEdicion pedidoGenerado = captor.getValue();
+
+        // El pedido debe quedar congelado en Romance ya en el momento del corte
+        assertEquals("Romance", pedidoGenerado.getCategoriaCongelada());
+
+        // Ahora, DESPUES del corte, alguien cambia la categoria de la suscripcion
+        suscripcion.setCategoria(misterio);
+
+        // La suscripcion (entidad continua) sí refleja el cambio
+        assertEquals(misterio, suscripcion.getCategoria());
+        // pero el pedido que ya se genero (snapshot inmutable) no se ve afectado
+        assertEquals("Romance", pedidoGenerado.getCategoriaCongelada());
     }
 }
