@@ -76,6 +76,13 @@ class SuscripcionServiceTest {
     }
 
     @Test
+    void crear_conEmailFormatoInvalido_lanzaExcepcion() {
+        CrearSuscripcionRequest request = requestAlta("Juana Diaz", "juana-arroba-mail", "Calle Falsa 123", 10L);
+
+        assertThrows(IllegalArgumentException.class, () -> service.crearSuscripcion(request));
+    }
+
+    @Test
     void crear_sinNombre_lanzaExcepcion() {
         CrearSuscripcionRequest request = requestAlta(null, "juana@mail.com", "Calle Falsa 123", 10L);
 
