@@ -18,10 +18,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.regex.Pattern;
 
 @Service
 public class SuscripcionService {
 
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile("^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$");
     private final SuscripcionRepository suscripcionRepository;
     private final SuscriptorRepository suscriptorRepository;
     private final CategoriaRepository categoriaRepository;
@@ -54,6 +57,9 @@ public class SuscripcionService {
 
         if (request.getEmail() == null || request.getEmail().isBlank()) {
             throw new IllegalArgumentException("El email del suscriptor es obligatorio.");
+        }
+        if (!EMAIL_PATTERN.matcher(request.getEmail()).matches()) {
+            throw new IllegalArgumentException("El email tiene un formato inválido.");
         }
         if (request.getNombre() == null || request.getNombre().isBlank()) {
             throw new IllegalArgumentException("El nombre del suscriptor es obligatorio.");
