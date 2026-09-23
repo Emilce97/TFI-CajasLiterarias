@@ -143,7 +143,7 @@ CREATE TABLE exclusion_edicion (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     suscripcion_id BIGINT NOT NULL,
     edicion_id BIGINT NOT NULL,
-    motivo VARCHAR(30) NOT NULL, -- SIN_PAGO / PAGO_PENDIENTE
+    motivo VARCHAR(30) NOT NULL, -- SIN_PAGO / PAGO_PENDIENTE / SIN_CURADURIA
     fecha_registro DATE NOT NULL,
     CONSTRAINT fk_exclusion_suscripcion
         FOREIGN KEY (suscripcion_id) REFERENCES suscripcion(id),
@@ -160,7 +160,7 @@ CREATE TABLE demanda_edicion (
     libro_id BIGINT NOT NULL,
     cantidad_requerida INT NOT NULL,
     cantidad_recibida INT DEFAULT 0,
-    estado_faltante BOOLEAN DEFAULT FALSE,
+    estado_faltante VARCHAR(20) DEFAULT 'SIN_FALTANTE',
     CONSTRAINT fk_demanda_edicion
         FOREIGN KEY (edicion_id) REFERENCES edicion(id),
     CONSTRAINT fk_demanda_libro
