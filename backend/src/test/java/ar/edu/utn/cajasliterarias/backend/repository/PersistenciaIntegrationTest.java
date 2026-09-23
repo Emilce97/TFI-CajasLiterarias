@@ -24,6 +24,8 @@ class PersistenciaIntegrationTest {
 
     @Test
     void suscripcionPruebaGuardarRecuperar() {
+        long cantidadPrevia = suscripcionRepository.count();
+
         Suscriptor suscriptor = new Suscriptor();
         suscriptor.setNombre("Aldana");
         suscriptor.setEmail("aldana@test.com");
@@ -37,8 +39,9 @@ class PersistenciaIntegrationTest {
         suscripcion.setSuscriptor(suscriptor);
         suscripcion.setCategoria(categoria);
         suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
-        suscripcionRepository.save(suscripcion);
+        Suscripcion guardada = suscripcionRepository.save(suscripcion);
 
-        assertThat(suscripcionRepository.findAll()).hasSize(1);
+        assertThat(suscripcionRepository.count()).isEqualTo(cantidadPrevia + 1);
+        assertThat(suscripcionRepository.findById(guardada.getId())).isPresent();
     }
 }
