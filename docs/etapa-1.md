@@ -103,11 +103,16 @@ Al simular escenarios competitivos (por ejemplo, la aparición de un competidor 
 - Historial de libros recibidos por suscriptor, para evitar repetición de títulos.
 
 **Nice to have (si sobra tiempo):**
-- **Recordatorios y avisos automáticos por correo:** Alertas preventivas programadas. Por ejemplo, recordatorio el día 17 sobre el vencimiento del plazo de pago el día 20 y aviso automático el día 21 informando si la suscripción ingresó a la edición o quedó pospuesta para el mes entrante por falta de pago. *(Nota: En el MVP, esta información se consulta de forma pasiva directamente en el panel web del suscriptor).*  
+- **Recordatorios y avisos automáticos por correo:** Alertas preventivas programadas. Por ejemplo, recordatorio el día 17 sobre el vencimiento del plazo de pago el día 20 y aviso automático el día 21 informando si la suscripción ingresó a la edición o quedó pospuesta para el mes entrante por falta de pago. *Nota: En el MVP, esta información se consulta de forma pasiva directamente en el panel web del suscriptor.*  
 - Notificaciones automáticas por correo ante cambios de estado del pedido.
 - Panel simple de reportes para las administradoras.
 
-**No incluido (mejoras futuras):** integración con pasarela de pago real (Mercado Pago); Club de Lectura Virtual (nivel premium con videollamada y votación); integración por API con el correo para tracking automático — las tres se dejan fuera por la complejidad que agregarían frente a los plazos del TFI.
+**No incluido (mejoras futuras):**  
+- Integración con pasarela de pago real (Mercado Pago).  
+- Club de Lectura Virtual (nivel premium con videollamada y votación).
+- Integración por API con el correo para tracking automático.
+  
+*Nota: Las tres mejoras futuras de **No incluido** se dejan fuera por la complejidad que agregarían frente a los plazos del TFI.*
 
 ### 3.4. Plan de trabajo
 
@@ -146,9 +151,15 @@ Identificación del problema, stack tecnológico y refinamiento asistido por IA 
 
 **Riesgos principales y mitigación:** el riesgo más relevante es que la aprobación del tutor sobre el esquema de datos y módulos (fin de Etapa 2) pida cambios importantes — se mitiga presentando avances parciales antes de la fecha límite y dejando la semana 4 como buffer real. Con 10-15 hs/semana entre dos personas, también existe riesgo de atraso por imprevistos o módulos más complejos de lo previsto — se prioriza siempre el MVP sobre lo "nice to have", replanteando el cronograma apenas se detecta el desvío. Al no usar una herramienta de tracking externa, se usa el historial de commits como registro de avance semanal (con Trello como opción de respaldo si hiciera falta).
 
-**Criterios de éxito:** ciclo mensual completo funcionando de punta a punta sin corrección manual de datos; historial por suscriptor evitando correctamente el reenvío de títulos; MVP completo desplegado en PaaS antes del 14/11; repositorio con README completo y documentación al día.
+**Criterios de éxito:**  
+- Ciclo mensual completo funcionando de punta a punta sin corrección manual de datos.
+- Historial por suscriptor evitando correctamente el reenvío de títulos.
+- MVP completo desplegado en PaaS antes del 14/11.
+- Repositorio con README completo y documentación al día.
 
-**Criterios de fracaso:** no lograr el ciclo completo funcionando para la entrega final, o MVP incompleto/sin desplegar en la nube. 
+**Criterios de fracaso:**  
+- No lograr el ciclo completo funcionando para la entrega final.
+- MVP incompleto/sin desplegar en la nube. 
 
 ### 3.5. Análisis de viabilidad
 
