@@ -25,6 +25,8 @@ La decisión principal que organiza esta etapa de modelado es la separación ent
 | ExclusionEdicion | Tabla hermana de `PedidoEdicion`: registra, de forma trazable, las suscripciones activas que NO ingresaron a una edición en el corte, ya sea por no contar con pago validado o por no tener curaduría cargada para su categoría en esa edición. | id, suscripcion_id, edicion_id, motivo (sin_pago/pago_pendiente/sin_curaduria), fecha_registro |
 | DemandaEdicion | Cálculo agregado de demanda por libro/insumo para una edición, usado para detectar faltantes. | id, edicion_id, libro_id, cantidad_requerida, cantidad_recibida, estado_faltante (sin_faltante/faltante) |
 
+---
+
 ## Relaciones y Cardinalidad
 
 | Relación | Cardinalidad | Regla de negocio |
