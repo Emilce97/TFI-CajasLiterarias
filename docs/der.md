@@ -6,11 +6,13 @@ Este documento contiene el Diagrama de Entidad-Relación (DER) realizado para mo
 
 La decisión principal que organiza esta etapa de modelado es la separación entre las entidades `Suscripcion` y `PedidoEdicion`, ya que la primera es una entidad mutable que representa la relación vigente entre un suscriptor y una temática, mientras que la segunda es un snapshot inmutable generado únicamente para las suscripciones que, al momento del corte mensual (día 21), cuenten con pago validado. Realizar esta separación permite que la suscripción pueda ser modificada entre cada una de las ediciones (altas, bajas, pausas, cambios de temática) sin que el historial ya congelado se vea afectado. Además, esto logra evitar que un pedido que no fue incluido en una edición sea arrastrado de forma automática a la edición siguiente.
 
+---
+
 ## Entidades y Atributos
 
 | Entidad | Descripción | Atributos |
 |---|---|---|
-| Suscriptor | Persona que se suscribe a una o más cajas temáticas. | id, nombre, email, direccion, fecha_registro |
+| Suscriptor | Persona que se suscribe a una o más cajas temáticas. | id, nombre, email (único), direccion, fecha_registro |
 | Administradora | Rol interno de la emprendedora; valida pagos y gestiona stock/despacho. | id, nombre, email |
 | Categoria | Línea temática fija de las cajas (una de las 4 disponibles). | id, nombre (Misterio/Terror, Romance, Narrativa/Drama, Sorpresa) |
 | Libro | Título curado que puede integrar una caja en alguna edición. | id, titulo, autor, proveedor_id |
@@ -54,13 +56,18 @@ La decisión principal que organiza esta etapa de modelado es la separación ent
 - **Garantía de curaduría por restricción:** `CuraduriaEdicion` va a llevar una restricción única compuesta (`edicion_id`, `categoria_id`) con `libro_id` NOT NULL. De esta manera se logra asegurar, a nivel de base de datos, que una edición no pueda duplicar temáticas y que, antes del cierre, existan las cuatro opciones cargadas con su libro correspondiente para evitar pedidos incompletos.
 - **Vigencia temporal y transición en datos:** la entidad `Suscripcion` va a incluir `proxima_categoria_id` y `fecha_solicitud_cambio` para poder capturar, a nivel de datos, cualquier cambio solicitado después de la fecha de corte (día 21) sin pisar la temática actual. Cuando se ejecute el corte del ciclo siguiente, el sistema va a promover `proxima_categoria_id` como la nueva `categoria_id` activa y restablecer ambos campos a null, dejando entonces la suscripción limpia para futuros cambios.
 - **Idempotencia y no arrastre:** el corte que se realiza el día 21 es una operación idempotente, ya que solo va a tomar `Suscripcion` con estado = activa y con `Pago` estado = validado. Aquellas suscripciones que no cumplen ambas condiciones —ya sea por no tener pago validado, o por estar pausadas o dadas de baja aunque cuenten con un pago cargado— simplemente no generan `PedidoEdicion` en la edición de ese mes y tampoco se arrastran a la edición siguiente de forma automática.
-- **Trazabilidad de exclusiones:** además de `PedidoEdicion`, el corte también registra en `ExclusionEdicion` cada suscripción activa que no ingresó a la edición, indicando el motivo (`sin_pago`, `pago_pendiente` o `sin_curaduria`). Esto permite auditar por qué una suscripción quedó afuera sin tener que reconstruirlo cruzando manualmente `Pago` y `CuraduriaEdicion`, y sigue el mismo criterio de no arrastre que `PedidoEdicion`.
+- **Trazabilidad de exclusiones:** además de `PedidoEdicion`, el corte también registra en `ExclusionEdicion` cada suscripción activa que no ingresó a la edición, indicando el motivo (`sin_pago`, `pago_pendiente` o `sin_curaduria`). Esto permite auditar por qué una suscripción quedó afuera sin tener que reconstruirlo cruzando manualmente `Pago` y `CuraduriaEdicion`, y sigue el mismo criterio de no arrastre que `PedidoEdicion`.   
 - **Cálculo de stock:** `DemandaEdicion` no es una entidad que se carga a mano, sino que se va a calcular agregando los `PedidoEdicion` de esa edición por libro/insumo.
-- **Cupos por temática:** el cupo ocupado de una categoría no se almacena como columna independiente, sino que se calcula dinámicamente contando las `Suscripcion` activas asociadas a esa `categoria_id` mientras la edición correspondiente está abierta (antes del corte). Esta decisión evita inconsistencias entre un contador guardado y el estado real de las suscripciones. La validación del cupo ocurre en el momento del alta o del cambio de temática (no en el corte), rechazando la acción si `cupos_ocupados >= cupo_maximo`. Esto es intencional: se prioriza que el suscriptor conozca la disponibilidad al momento de elegir, en lugar de descubrir recién en el corte que quedó fuera de la edición.
+- **Cupos por temática:** el cupo ocupado de una categoría no se almacena como columna independiente, sino que se calcula dinámicamente contando las `Suscripcion` activas asociadas a esa `categoria_id` mientras la edición correspondiente está abierta (antes del corte). Esta decisión evita inconsistencias entre un contador guardado y el estado real de las suscripciones. La validación del cupo ocurre en el momento del alta o del cambio de temática (no en el corte), rechazando la acción si `cupos_ocupados >= cupo_maximo`. Esto es intencional: se prioriza que el suscriptor conozca la disponibilidad al momento de elegir, en lugar de descubrir recién en el corte que quedó fuera de la edición.  
+- **Unicidad de suscriptor por email:** `Suscriptor.email` va a tener una restricción `UNIQUE` a nivel de base de datos. Esto permite que el alta de una suscripción identifique al suscriptor por email de forma automática (find-or-create): si el email ya existe se reutiliza el `Suscriptor` existente, y si no existe se crea uno nuevo, evitando registros duplicados de la misma persona. 
+
+---
 
 ## Diagrama UML
 
 ![Diagrama DER](img/der-diagrama.png)
+
+---
 
 ## Definición de Módulos
 
@@ -82,4 +89,8 @@ A partir del modelo de datos definido, se establecen los siguientes módulos fun
 
 **Nota:** si bien los módulos 1 a 9 son todos P0, no son independientes entre sí. El recorrido vertical acordado exige que Ediciones, Suscripciones y Pagos estén funcionando antes de poder implementar y probar Cierre/Padrón, ya que esta operación depende de datos generados por los tres módulos anteriores.
 
-- Repositorio: https://github.com/Emilce97/TFI-CajasLiterarias.git
+---
+
+## Repositorio GitHub
+
+- https://github.com/Emilce97/TFI-CajasLiterarias.git
