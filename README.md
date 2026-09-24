@@ -55,8 +55,7 @@ A futuro, las administradoras planean incorporar una modalidad premium con un Cl
 
 | Carpeta | Contenido |
 | :--- | :--- |
-| `Primer_Entrega_Cajas_Literarias/` | Documentación de la Etapa 1 (propuesta inicial). |
-| `Segunda_Entrega_Cajas_Literarias/` | Documentación de la Etapa 2 - Semana 1 (modelo de datos / DER, definición de módulos). |
+| `docs/` | Documentación del TFI en Markdown: propuesta y plan de trabajo (Etapa 1), modelo de datos / DER (Etapa 2 semana 1) y futuras entregas. |
 | `backend/` | API en Spring Boot (Java) + Spring Data JPA. |
 | `frontend/` | Cliente en HTML, CSS y TypeScript con Vite. |
 
@@ -80,7 +79,7 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 | **Base de datos** | *MySQL* (relacional) | El dominio tiene relaciones fuertes entre entidades que se benefician de claves foráneas e integridad transaccional (ACID). Es el motor que el equipo ya utilizó en cuatrimestres anteriores. |
 | **Despliegue** | *PaaS (Plataforma como Servicio)* | Reduce la complejidad operativa de gestionar un servidor propio, adecuado para los plazos de un trabajo académico. |  
 
-*La justificación detallada de cada decisión se encuentra en el documento completo de esta entrega.*
+*La justificación detallada de cada decisión se encuentra en [`docs/etapa-1.md`](./docs/etapa-1.md#2-definición-del-stack-tecnológico).*
 
 ---
 
@@ -98,7 +97,7 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 * **Historial de suscriptor:** Registro relacional de pedidos previos para prevenir repetición involuntaria de títulos.
 
 ### Nice to have (si sobra tiempo dentro del cronograma)  
-* **Recordatorios y avisos automáticos por correo:** Alertas preventivas programadas (por ejemplo, recordatorio el día 17 sobre el vencimiento del plazo de pago el día 20 y aviso automático el día 21 informando si la suscripción ingresó a la edición o quedó pospuesta para el mes entrante por falta de pago. *(Nota: En el MVP, esta información se consulta de forma pasiva directamente en el panel web del suscriptor).*
+* **Recordatorios y avisos automáticos por correo:** Alertas preventivas programadas. Por ejemplo, recordatorio el día 17 sobre el vencimiento del plazo de pago el día 20 y aviso automático el día 21 informando si la suscripción ingresó a la edición o quedó pospuesta para el mes entrante por falta de pago. *(Nota: En el MVP, esta información se consulta de forma pasiva directamente en el panel web del suscriptor).*
 * **Notificaciones por cambio de estado:** Correos automáticos para avisar al suscriptor sobre cambios de estado en su pedido (*Pago confirmado*, *Despachado con tracking*).
 * **Panel de reportes básicos:** Visualización de métricas simples de despacho por temática y edición para las administradoras.
 
@@ -125,16 +124,18 @@ El plan se organiza en torno a las tres instancias de entrega definidas por la c
 
 Identificación del problema, definición del stack tecnológico, refinamiento de la propuesta asistido por IA, y creación de este repositorio.
 
+> 📄 El detalle completo de esta entrega se encuentra en [`docs/entrega-1.md`](./docs/etapa-1.md).
+
 ### Etapa 2 — Arquitectura y módulos (31/08 al 27/09)
 
 | Semana | Tarea |
 | :---: | :--- |
 | **1 (31/08–06/09) ✅** | Diseño del modelo de datos (esquema ER con entidades desacopladas `Suscripcion` y `PedidoEdicion`), definición de módulos y setup inicial (Spring Boot + Vite/TS + MySQL). |
 | **2 (07/09–13/09) ✅** | Implementación backend del recorrido vertical: alta de suscripción, configuración de edición y operación manual idempotente de cierre/snapshot. |
-| **3 (14/09–20/09)** | Conexión con frontend simple: visualización de ediciones, suscripción básica y prueba de inmutabilidad del padrón cerrado ante cambios posteriores. |
+| **3 (14/09–20/09) ✅** | Conexión con frontend simple: visualización de ediciones, suscripción básica y prueba de inmutabilidad del padrón cerrado ante cambios posteriores. |
 | **4 (21/09–27/09)** | Ajustes según feedback del tutor, buffer para pruebas funcionales del recorrido y entrega formal (**condición de Regular**). |
 
-> 📄 El esquema ER (DER) y la definición de módulos correspondientes a la Semana 1 se encuentran disponibles en [`Segunda_Entrega_Cajas_Literarias/Etapa 2 - sem 1- DER.pdf`](./Segunda_Entrega_Cajas_Literarias/Etapa%202%20-%20sem%201-%20DER.pdf).
+> 📄 El esquema ER (DER) y la definición de módulos correspondientes a la Semana 1 se encuentran disponibles en [`docs/der.md`](./docs/der.md).
 
 ### Etapa 3 — Informe final, video y despliegue (28/09 al 14/11)
 
