@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
@@ -170,6 +171,124 @@ class CierreEdicionServiceTest {
         ArgumentCaptor<ExclusionEdicion> captor = ArgumentCaptor.forClass(ExclusionEdicion.class);
         verify(exclusionEdicionRepository).save(captor.capture());
         assertEquals(MotivoExclusion.SIN_CURADURIA, captor.getValue().getMotivo());
+    }
+
+    @Test
+    void suscripcionQueSuperaElCupoDeLaCategoria_quedaExcluidaConMotivoCupoCompleto() {
+        Edicion edicion = new Edicion();
+        edicion.setId(1L);
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
+
+        Categoria romance = new Categoria();
+        romance.setId(10L);
+        romance.setNombre("Romance");
+
+        Suscripcion primera = new Suscripcion();
+        primera.setId(100L);
+        primera.setCategoria(romance);
+        primera.setEstado(EstadoSuscripcion.ACTIVA);
+        primera.setSuscriptor(new Suscriptor());
+
+        Suscripcion segunda = new Suscripcion();
+        segunda.setId(200L);
+        segunda.setCategoria(romance);
+        segunda.setEstado(EstadoSuscripcion.ACTIVA);
+        segunda.setSuscriptor(new Suscriptor());
+
+        when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA))
+                .thenReturn(List.of(primera, segunda));
+
+        Pago pago1 = new Pago();
+        pago1.setSuscripcion(primera);
+        pago1.setEstado(EstadoPago.VALIDADO);
+        pago1.setFechaValidacion(LocalDate.of(2026, 9, 10));
+
+        Pago pago2 = new Pago();
+        pago2.setSuscripcion(segunda);
+        pago2.setEstado(EstadoPago.VALIDADO);
+        pago2.setFechaValidacion(LocalDate.of(2026, 9, 12));
+
+        when(pagoRepository.findByEdicionId(1L)).thenReturn(List.of(pago1, pago2));
+
+        Libro libro = new Libro();
+        libro.setId(1L);
+        libro.setTitulo("El Aleph");
+
+        CuraduriaEdicion curaduria = new CuraduriaEdicion();
+        curaduria.setCategoria(romance);
+        curaduria.setLibro(libro);
+        curaduria.setCupoMaximo(1);
+        curaduria.setPrecioVigente(BigDecimal.valueOf(5000));
+        when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(List.of(curaduria));
+
+        ResumenCierreDTO resumen = service.ejecutarCorte();
+
+        assertEquals(1, resumen.getTotalPedidosGenerados());
+        assertEquals(1, resumen.getTotalExcluidos());
+
+        ArgumentCaptor<ExclusionEdicion> captor = ArgumentCaptor.forClass(ExclusionEdicion.class);
+        verify(exclusionEdicionRepository).save(captor.capture());
+        assertEquals(MotivoExclusion.CUPO_COMPLETO, captor.getValue().getMotivo());
+        assertEquals(200L, captor.getValue().getSuscripcion().getId());
+    }
+
+    @Test
+    void dosSuscripcionesCompitiendoPorElUltimoCupo_priorizaAQuienValidoElPagoAntes() {
+        Edicion edicion = new Edicion();
+        edicion.setId(1L);
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
+
+        Categoria romance = new Categoria();
+        romance.setId(10L);
+        romance.setNombre("Romance");
+
+        Suscripcion tardia = new Suscripcion();   // valida el pago DESPUES
+        tardia.setId(100L);
+        tardia.setCategoria(romance);
+        tardia.setEstado(EstadoSuscripcion.ACTIVA);
+        tardia.setSuscriptor(new Suscriptor());
+
+        Suscripcion temprana = new Suscripcion(); // valida el pago ANTES
+        temprana.setId(200L);
+        temprana.setCategoria(romance);
+        temprana.setEstado(EstadoSuscripcion.ACTIVA);
+        temprana.setSuscriptor(new Suscriptor());
+
+        // OJO: la devolvemos con la "tardia" primero en la lista,
+        // para probar que el orden lo pone el sort y no el mock.
+        when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA))
+                .thenReturn(List.of(tardia, temprana));
+
+        Pago pagoTardio = new Pago();
+        pagoTardio.setSuscripcion(tardia);
+        pagoTardio.setEstado(EstadoPago.VALIDADO);
+        pagoTardio.setFechaValidacion(LocalDate.of(2026, 9, 20));
+
+        Pago pagoTemprano = new Pago();
+        pagoTemprano.setSuscripcion(temprana);
+        pagoTemprano.setEstado(EstadoPago.VALIDADO);
+        pagoTemprano.setFechaValidacion(LocalDate.of(2026, 9, 10));
+
+        when(pagoRepository.findByEdicionId(1L)).thenReturn(List.of(pagoTardio, pagoTemprano));
+
+        Libro libro = new Libro();
+        libro.setId(1L);
+        libro.setTitulo("El Aleph");
+
+        CuraduriaEdicion curaduria = new CuraduriaEdicion();
+        curaduria.setCategoria(romance);
+        curaduria.setLibro(libro);
+        curaduria.setCupoMaximo(1);
+        curaduria.setPrecioVigente(BigDecimal.valueOf(5000));
+        when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(List.of(curaduria));
+
+        service.ejecutarCorte();
+
+        ArgumentCaptor<PedidoEdicion> captor = ArgumentCaptor.forClass(PedidoEdicion.class);
+        verify(pedidoEdicionRepository).save(captor.capture());
+        assertEquals(temprana, captor.getValue().getSuscripcion());
     }
 
     @Test

@@ -53,17 +53,30 @@ public class CierreEdicionService {
             throw new EdicionYaCerradaException(edicion.getId());
         }
 
-        List<Suscripcion> candidatas = suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA);
+        List<Suscripcion> candidatas = new ArrayList<>(
+                suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA)
+        );
 
         Map<Long, Pago> pagosPorSuscripcion = new HashMap<>();
         for (Pago pago : pagoRepository.findByEdicionId(edicion.getId())) {
                 pagosPorSuscripcion.put(pago.getSuscripcion().getId(), pago);
         }
 
+        // Ordena por fecha de validación de pago, para que el cupo se reparta a quien pagó (y fue validado) primero.
+        candidatas.sort(Comparator.comparing(
+                s -> {
+                    Pago p = pagosPorSuscripcion.get(s.getId());
+                    return p != null ? p.getFechaValidacion() : null;
+                },
+                Comparator.nullsLast(Comparator.naturalOrder())
+        ));
+
         Map<Long, CuraduriaEdicion> curaduriaPorCategoria = new HashMap<>();
         for (CuraduriaEdicion c : curaduriaEdicionRepository.findByEdicionId(edicion.getId())) {
             curaduriaPorCategoria.put(c.getCategoria().getId(), c);
         }
+
+        Map<Long, Integer> cupoUsadoPorCategoria = new HashMap<>();
 
         List<PedidoEdicion> pedidosGenerados = new ArrayList<>();
         List<Long> suscripcionesExcluidas = new ArrayList<>();
@@ -89,6 +102,15 @@ public class CierreEdicionService {
                 suscripcionesExcluidas.add(suscripcion.getId());
                 continue;
             }
+
+            Long categoriaId = curaduria.getCategoria().getId();
+            int usados = cupoUsadoPorCategoria.getOrDefault(categoriaId, 0);
+            if (curaduria.getCupoMaximo() != null && usados >= curaduria.getCupoMaximo()) {
+                registrarExclusion(suscripcion, edicion, MotivoExclusion.CUPO_COMPLETO);
+                suscripcionesExcluidas.add(suscripcion.getId());
+                continue;
+            }
+            cupoUsadoPorCategoria.merge(categoriaId, 1, Integer::sum);
 
             PedidoEdicion pedido = new PedidoEdicion();
             pedido.setSuscripcion(suscripcion);

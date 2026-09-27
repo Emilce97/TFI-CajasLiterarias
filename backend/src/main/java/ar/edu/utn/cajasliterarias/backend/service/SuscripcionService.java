@@ -219,30 +219,8 @@ public class SuscripcionService {
             );
         }
 
-        Edicion edicionAbierta = edicionRepository.findByEstado(EstadoEdicion.ABIERTA);
-        if (edicionAbierta == null) {
-            throw new IllegalStateException(
-                    "No hay ninguna edición abierta actualmente para solicitar un cambio de categoría."
-            );
-        }
-
-        CuraduriaEdicion curaduria = curaduriaEdicionRepository
-                .findByEdicionIdAndCategoriaId(edicionAbierta.getId(), categoriaNueva.getId())
-                .orElseThrow(() -> new IllegalStateException(
-                        "La categoría '" + categoriaNueva.getNombre()
-                                + "' no tiene curaduría cargada en la edición abierta."
-                ));
-
-        long activasEnCategoria = suscripcionRepository
-                .countByCategoriaIdAndEstado(categoriaNueva.getId(), EstadoSuscripcion.ACTIVA);
-
-        if (curaduria.getCupoMaximo() != null && activasEnCategoria >= curaduria.getCupoMaximo()) {
-            throw new IllegalStateException(
-                    "Se alcanzó el cupo máximo (" + curaduria.getCupoMaximo()
-                            + ") de la categoría '" + categoriaNueva.getNombre() + "' para esta edición."
-            );
-        }
-
+        // El cambio siempre queda registrado como pendiente para el próximo corte. No depende de que exista una edición abierta:
+        // el cupo de la categoría destino se controla en CierreEdicionService, al momento en que ese cambio efectivamente se aplica.
         suscripcion.setProximaCategoria(categoriaNueva);
         suscripcion.setFechaSolicitudCambio(LocalDate.now());
 
