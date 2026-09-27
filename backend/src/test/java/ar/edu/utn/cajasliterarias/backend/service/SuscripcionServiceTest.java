@@ -16,8 +16,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SuscripcionServiceTest {
@@ -292,7 +291,7 @@ class SuscripcionServiceTest {
     }
 
     @Test
-    void cambiarCategoria_siSeAlcanzoElCupoDeLaCategoriaDestino_lanzaExcepcion() {
+    void cambiarCategoria_conDatosValidos_quedaComoProximaCategoriaSinPisarLaActual() {
         Categoria categoriaActual = categoria(10L, "Romance");
         Categoria categoriaDestino = categoria(20L, "Misterio/Terror");
         Suscripcion suscripcion = new Suscripcion();
@@ -301,33 +300,6 @@ class SuscripcionServiceTest {
 
         when(suscripcionRepository.findById(100L)).thenReturn(Optional.of(suscripcion));
         when(categoriaRepository.findById(20L)).thenReturn(Optional.of(categoriaDestino));
-        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicionAbierta());
-        when(curaduriaEdicionRepository.findByEdicionIdAndCategoriaId(1L, 20L))
-                .thenReturn(Optional.of(curaduria(3)));
-        when(suscripcionRepository.countByCategoriaIdAndEstado(20L, EstadoSuscripcion.ACTIVA))
-                .thenReturn(3L);
-
-        CambiarCategoriaRequest request = new CambiarCategoriaRequest();
-        request.setCategoriaId(20L);
-
-        assertThrows(IllegalStateException.class, () -> service.cambiarCategoria(100L, request));
-    }
-
-    @Test
-    void cambiarCategoria_conCupoDisponible_quedaComoProximaCategoriaSinPisarLaActual() {
-        Categoria categoriaActual = categoria(10L, "Romance");
-        Categoria categoriaDestino = categoria(20L, "Misterio/Terror");
-        Suscripcion suscripcion = new Suscripcion();
-        suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
-        suscripcion.setCategoria(categoriaActual);
-
-        when(suscripcionRepository.findById(100L)).thenReturn(Optional.of(suscripcion));
-        when(categoriaRepository.findById(20L)).thenReturn(Optional.of(categoriaDestino));
-        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicionAbierta());
-        when(curaduriaEdicionRepository.findByEdicionIdAndCategoriaId(1L, 20L))
-                .thenReturn(Optional.of(curaduria(3)));
-        when(suscripcionRepository.countByCategoriaIdAndEstado(20L, EstadoSuscripcion.ACTIVA))
-                .thenReturn(1L);
         when(suscripcionRepository.save(any(Suscripcion.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -336,6 +308,25 @@ class SuscripcionServiceTest {
         assertEquals(categoriaActual, resultado.getCategoria());
         assertEquals(categoriaDestino, resultado.getProximaCategoria());
         assertNotNull(resultado.getFechaSolicitudCambio());
+    }
+
+    @Test
+    void cambiarCategoria_sinEdicionAbierta_igualQuedaComoProximaCategoria() {
+        Categoria categoriaActual = categoria(10L, "Romance");
+        Categoria categoriaDestino = categoria(20L, "Misterio/Terror");
+        Suscripcion suscripcion = new Suscripcion();
+        suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
+        suscripcion.setCategoria(categoriaActual);
+
+        when(suscripcionRepository.findById(100L)).thenReturn(Optional.of(suscripcion));
+        when(categoriaRepository.findById(20L)).thenReturn(Optional.of(categoriaDestino));
+        when(suscripcionRepository.save(any(Suscripcion.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Suscripcion resultado = service.cambiarCategoria(100L, request());
+
+        assertEquals(categoriaDestino, resultado.getProximaCategoria());
+        verifyNoInteractions(edicionRepository, curaduriaEdicionRepository);
     }
 
     private CambiarCategoriaRequest request() {

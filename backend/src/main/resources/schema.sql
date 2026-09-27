@@ -143,7 +143,7 @@ CREATE TABLE exclusion_edicion (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     suscripcion_id BIGINT NOT NULL,
     edicion_id BIGINT NOT NULL,
-    motivo VARCHAR(30) NOT NULL, -- SIN_PAGO / PAGO_PENDIENTE / SIN_CURADURIA
+    motivo VARCHAR(30) NOT NULL, -- SIN_PAGO / PAGO_PENDIENTE / SIN_CURADURIA / CUPO_COMPLETO
     fecha_registro DATE NOT NULL,
     CONSTRAINT fk_exclusion_suscripcion
         FOREIGN KEY (suscripcion_id) REFERENCES suscripcion(id),

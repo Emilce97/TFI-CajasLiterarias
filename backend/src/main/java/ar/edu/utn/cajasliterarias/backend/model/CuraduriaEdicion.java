@@ -31,7 +31,9 @@ public class CuraduriaEdicion {
     private BigDecimal precioVigente;
 
     // Cantidad maxima de suscriptores para esta categoria en esta edicion.
-    // Validado en el alta/cambio de suscripcion, no en el corte
-    // (ver Notas de Diseno del DER: cupos por tematica).
+    // Alta de suscripcion (SuscripcionService): se valida en el momento.
+    // Cambio de categoria: no se valida al pedirlo, se controla recien en
+    // el corte (ver CierreEdicionService.ejecutarCorte y Notas de Diseno
+    // del DER: cupos por tematica).
     private Integer cupoMaximo;
 }
