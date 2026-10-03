@@ -52,6 +52,23 @@ public class EdicionService {
             );
         }
 
+// NUEVO: las 4 curadurias deben ser de categorias distintas
+        long categoriasDistintas = request.getCuradurias().stream()
+                .map(CuraduriaItemDTO::getCategoriaId)
+                .distinct()
+                .count();
+        if (categoriasDistintas != 4) {
+            throw new IllegalArgumentException(
+                    "Las 4 curadurias deben corresponder a categorias distintas."
+            );
+        }
+
+// NUEVO: no puede haber dos ediciones ABIERTA al mismo tiempo
+        if (edicionRepository.findByEstado(EstadoEdicion.ABIERTA) != null) {
+            throw new IllegalArgumentException(
+                    "Ya existe una edicion ABIERTA. Debe cerrarse antes de crear una nueva."
+            );
+        }
         Edicion edicion = new Edicion();
         edicion.setNombre(request.getNombre());
         edicion.setFechaCorte(request.getFechaCorte());
