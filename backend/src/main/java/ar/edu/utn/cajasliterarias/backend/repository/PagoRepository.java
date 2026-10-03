@@ -16,4 +16,11 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
     // Una suscripción sin pago cargado para esta edición simplemente no aparece en el resultado.
     List<Pago> findByEdicionId(Long edicionId);
 
+    // Para listar los pagos pendientes de validar (panel de conciliacion)
+    List<Pago> findByEstado(EstadoPago estado);
+
+    // Chequeo defensivo: evitar registrar dos pagos para la misma suscripcion+edicion.
+// Nota: esto es solo un chequeo a nivel aplicacion. Falta agregar la restriccion
+// UNIQUE real en la base de datos (pendiente, tarea de Nati segun devolucion de Oscar).
+    boolean existsBySuscripcionIdAndEdicionId(Long suscripcionId, Long edicionId);
 }
