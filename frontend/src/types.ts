@@ -26,3 +26,26 @@ export interface CuraduriaEdicion {
     precioVigente: number;
     cupoMaximo: number;
 }
+export interface Suscriptor {
+    id: number;
+    nombre: string;
+    email: string;
+    direccion: string;
+}
+
+export interface Suscripcion {
+    id: number;
+    estado: string;
+    categoria: Categoria;
+    suscriptor: Suscriptor;
+}
+
+export interface Pago {
+    id: number;
+    monto: number;
+    fechaPago: string;
+    fechaValidacion: string | null;
+    estado: "PENDIENTE" | "VALIDADO";
+    suscripcion: Suscripcion;
+    edicion: Edicion;
+}

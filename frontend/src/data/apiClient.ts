@@ -10,3 +10,13 @@ export async function apiGet<T>(path: string): Promise<T> {
     }
     return response.json();
 }
+
+export async function apiPatch<T>(path: string): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+        method: "PATCH",
+    });
+    if (!response.ok) {
+        throw new Error(`Error al llamar a ${path}: ${response.status}`);
+    }
+    return response.json();
+}
