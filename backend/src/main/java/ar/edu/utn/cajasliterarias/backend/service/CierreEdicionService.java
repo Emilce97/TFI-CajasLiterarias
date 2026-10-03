@@ -8,6 +8,7 @@ import ar.edu.utn.cajasliterarias.backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -21,6 +22,7 @@ public class CierreEdicionService {
     private final PedidoEdicionRepository pedidoEdicionRepository;
     private final DemandaEdicionRepository demandaEdicionRepository;
     private final ExclusionEdicionRepository exclusionEdicionRepository;
+    private final Clock clock;
 
     public CierreEdicionService(
             EdicionRepository edicionRepository,
@@ -29,7 +31,8 @@ public class CierreEdicionService {
             CuraduriaEdicionRepository curaduriaEdicionRepository,
             PedidoEdicionRepository pedidoEdicionRepository,
             DemandaEdicionRepository demandaEdicionRepository,
-            ExclusionEdicionRepository exclusionEdicionRepository
+            ExclusionEdicionRepository exclusionEdicionRepository,
+            Clock clock
     ) {
         this.edicionRepository = edicionRepository;
         this.suscripcionRepository = suscripcionRepository;
@@ -38,6 +41,7 @@ public class CierreEdicionService {
         this.pedidoEdicionRepository = pedidoEdicionRepository;
         this.demandaEdicionRepository = demandaEdicionRepository;
         this.exclusionEdicionRepository = exclusionEdicionRepository;
+        this.clock = clock;
     }
 
     @Transactional
@@ -122,19 +126,17 @@ public class CierreEdicionService {
             pedido.setPrecioAplicado(curaduria.getPrecioVigente());
             pedido.setDireccionEntrega(suscripcion.getSuscriptor().getDireccion());
             pedido.setEstadoPedido(EstadoPedido.PENDIENTE_DE_EMPAQUE);
-            pedido.setFechaCreacion(LocalDate.now());
+            pedido.setFechaCreacion(LocalDate.now(clock));
 
             pedidoEdicionRepository.save(pedido);
             pedidosGenerados.add(pedido);
         }
 
-        for (Suscripcion suscripcion : candidatas) {
-            if (suscripcion.getProximaCategoria() != null) {
-                suscripcion.setCategoria(suscripcion.getProximaCategoria());
-                suscripcion.setProximaCategoria(null);
-                suscripcion.setFechaSolicitudCambio(null);
-                suscripcionRepository.save(suscripcion);
-            }
+        for (Suscripcion suscripcion : suscripcionRepository.findByProximaCategoriaIsNotNull()) {
+            suscripcion.setCategoria(suscripcion.getProximaCategoria());
+            suscripcion.setProximaCategoria(null);
+            suscripcion.setFechaSolicitudCambio(null);
+            suscripcionRepository.save(suscripcion);
         }
 
         actualizarDemanda(edicion, pedidosGenerados);
@@ -156,7 +158,7 @@ public class CierreEdicionService {
         exclusion.setSuscripcion(suscripcion);
         exclusion.setEdicion(edicion);
         exclusion.setMotivo(motivo);
-        exclusion.setFechaRegistro(LocalDate.now());
+        exclusion.setFechaRegistro(LocalDate.now(clock));
         exclusionEdicionRepository.save(exclusion);
     }
 

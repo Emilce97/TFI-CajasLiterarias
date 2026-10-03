@@ -19,4 +19,7 @@ public interface SuscripcionRepository extends JpaRepository<Suscripcion, Long> 
     // (el filtro por pago validado se hace dentro del loop del CierreEdicionService, no acá).
     List<Suscripcion> findByEstado(EstadoSuscripcion estado);
 
+    // Suscripciones con cambio de categoría pendiente.
+    // Incluye pausadas: el cambio se promueve al ejecutar el corte.
+    List<Suscripcion> findByProximaCategoriaIsNotNull();
 }

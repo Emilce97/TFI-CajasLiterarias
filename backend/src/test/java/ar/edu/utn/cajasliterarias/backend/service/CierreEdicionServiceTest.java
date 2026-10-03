@@ -16,7 +16,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,13 +39,15 @@ class CierreEdicionServiceTest {
     @Mock private ExclusionEdicionRepository exclusionEdicionRepository;
 
     private CierreEdicionService service;
+    private final Clock clock = Clock.fixed(
+            Instant.parse("2026-10-10T15:00:00Z"), ZoneId.of("America/Argentina/Buenos_Aires"));
 
     @BeforeEach
     void setUp() {
         service = new CierreEdicionService(
                 edicionRepository, suscripcionRepository, pagoRepository,
                 curaduriaEdicionRepository, pedidoEdicionRepository,
-                demandaEdicionRepository, exclusionEdicionRepository
+                demandaEdicionRepository, exclusionEdicionRepository, clock
         );
     }
 
@@ -256,7 +261,7 @@ class CierreEdicionServiceTest {
         temprana.setEstado(EstadoSuscripcion.ACTIVA);
         temprana.setSuscriptor(new Suscriptor());
 
-        // OJO: la devolvemos con la "tardia" primero en la lista,
+        // La devolvemos con la "tardia" primero en la lista,
         // para probar que el orden lo pone el sort y no el mock.
         when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA))
                 .thenReturn(List.of(tardia, temprana));
@@ -318,6 +323,8 @@ class CierreEdicionServiceTest {
 
         when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA))
                 .thenReturn(List.of(suscripcion));
+        when(suscripcionRepository.findByProximaCategoriaIsNotNull())
+                .thenReturn(List.of(suscripcion));
         when(pagoRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
         when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
 
@@ -327,6 +334,42 @@ class CierreEdicionServiceTest {
         assertNull(suscripcion.getProximaCategoria());
         verify(suscripcionRepository).save(suscripcion);
     }
+
+    @Test
+    void suscripcionPausadaConCambioPendiente_tambienSePromueveEnElCorte() {
+        Edicion edicion = new Edicion();
+        edicion.setId(1L);
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
+
+        Categoria categoriaVigente = new Categoria();
+        categoriaVigente.setId(10L);
+        categoriaVigente.setNombre("Romance");
+
+        Categoria categoriaProxima = new Categoria();
+        categoriaProxima.setId(20L);
+        categoriaProxima.setNombre("Misterio/Terror");
+
+        Suscripcion pausada = new Suscripcion();
+        pausada.setId(101L);
+        pausada.setCategoria(categoriaVigente);
+        pausada.setProximaCategoria(categoriaProxima);
+        pausada.setEstado(EstadoSuscripcion.PAUSADA);
+
+        // Pausada: no es candidata del corte, pero sí tiene un cambio pendiente.
+        when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA)).thenReturn(Collections.emptyList());
+        when(suscripcionRepository.findByProximaCategoriaIsNotNull()).thenReturn(List.of(pausada));
+        when(pagoRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
+        when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
+
+        service.ejecutarCorte();
+
+        assertEquals(categoriaProxima, pausada.getCategoria());
+        assertNull(pausada.getProximaCategoria());
+        assertNull(pausada.getFechaSolicitudCambio());
+        verify(suscripcionRepository).save(pausada);
+    }
+
     @Test
     void pedidoEdicionYaGenerado_noCambiaAunqueLaSuscripcionCambieDespues() {
         Edicion edicion = new Edicion();
