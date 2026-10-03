@@ -124,7 +124,7 @@ El plan se organiza en torno a las tres instancias de entrega definidas por la c
 
 Identificación del problema, definición del stack tecnológico, refinamiento de la propuesta asistido por IA, y creación de este repositorio.
 
-> 📄 El detalle completo de esta entrega se encuentra en [`docs/entrega-1.md`](./docs/etapa-1.md).
+> > 📄 El detalle completo de esta entrega se encuentra en [`docs/etapa-1.md`](./docs/etapa-1.md).
 
 ### Etapa 2 — Arquitectura y módulos (31/08 al 27/09)
 
