@@ -16,10 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.Collections;
 import java.util.List;
 
@@ -207,12 +204,12 @@ class CierreEdicionServiceTest {
         Pago pago1 = new Pago();
         pago1.setSuscripcion(primera);
         pago1.setEstado(EstadoPago.VALIDADO);
-        pago1.setFechaValidacion(LocalDate.of(2026, 9, 10));
+        pago1.setFechaValidacion(LocalDateTime.of(2026, 9, 10, 12, 0));
 
         Pago pago2 = new Pago();
         pago2.setSuscripcion(segunda);
         pago2.setEstado(EstadoPago.VALIDADO);
-        pago2.setFechaValidacion(LocalDate.of(2026, 9, 12));
+        pago2.setFechaValidacion(LocalDateTime.of(2026, 9, 12, 12, 0));
 
         when(pagoRepository.findByEdicionId(1L)).thenReturn(List.of(pago1, pago2));
 
@@ -269,12 +266,12 @@ class CierreEdicionServiceTest {
         Pago pagoTardio = new Pago();
         pagoTardio.setSuscripcion(tardia);
         pagoTardio.setEstado(EstadoPago.VALIDADO);
-        pagoTardio.setFechaValidacion(LocalDate.of(2026, 9, 20));
+        pagoTardio.setFechaValidacion(LocalDateTime.of(2026, 9, 20, 12, 0));
 
         Pago pagoTemprano = new Pago();
         pagoTemprano.setSuscripcion(temprana);
         pagoTemprano.setEstado(EstadoPago.VALIDADO);
-        pagoTemprano.setFechaValidacion(LocalDate.of(2026, 9, 10));
+        pagoTemprano.setFechaValidacion(LocalDateTime.of(2026, 9, 10, 12, 0));
 
         when(pagoRepository.findByEdicionId(1L)).thenReturn(List.of(pagoTardio, pagoTemprano));
 
@@ -294,6 +291,87 @@ class CierreEdicionServiceTest {
         ArgumentCaptor<PedidoEdicion> captor = ArgumentCaptor.forClass(PedidoEdicion.class);
         verify(pedidoEdicionRepository).save(captor.capture());
         assertEquals(temprana, captor.getValue().getSuscripcion());
+    }
+
+    @Test
+    void mismoDiaDistintaHora_priorizaAlQueValidoPrimero() {
+        Pago pagoTarde = pagoValidado(100L, 1L, LocalDateTime.of(2026, 9, 10, 18, 30));
+        Pago pagoTemprano = pagoValidado(200L, 2L, LocalDateTime.of(2026, 9, 10, 9, 15));
+
+        PedidoEdicion elegido = cerrarConUnCupoYObtenerElPedido(pagoTarde, pagoTemprano);
+
+        assertEquals(200L, elegido.getSuscripcion().getId());
+    }
+
+    @Test
+    void empateExactoEnFechaYHora_desempataPorIdDePago() {
+        LocalDateTime mismoInstante = LocalDateTime.of(2026, 9, 10, 12, 0);
+        Pago pagoIdAlto = pagoValidado(100L, 7L, mismoInstante);
+        Pago pagoIdBajo = pagoValidado(200L, 3L, mismoInstante);
+
+        // Mismo instante exacto: gana el pago con id menor (el que se registro antes).
+        PedidoEdicion elegido = cerrarConUnCupoYObtenerElPedido(pagoIdAlto, pagoIdBajo);
+
+        assertEquals(200L, elegido.getSuscripcion().getId());
+    }
+
+    @Test
+    void empateExactoEnFechaYHora_conPagosInvertidosEnLaLista_elResultadoEsElMismo() {
+        LocalDateTime mismoInstante = LocalDateTime.of(2026, 9, 10, 12, 0);
+        Pago pagoIdBajo = pagoValidado(200L, 3L, mismoInstante);
+        Pago pagoIdAlto = pagoValidado(100L, 7L, mismoInstante);
+
+        PedidoEdicion elegido = cerrarConUnCupoYObtenerElPedido(pagoIdBajo, pagoIdAlto);
+
+        assertEquals(200L, elegido.getSuscripcion().getId());
+    }
+
+    // Helpers de los tests de prioridad por cupo (1 solo cupo en la categoria).
+
+    private Pago pagoValidado(Long suscripcionId, Long pagoId, LocalDateTime fechaValidacion) {
+        Suscripcion suscripcion = new Suscripcion();
+        suscripcion.setId(suscripcionId);
+        suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
+        suscripcion.setSuscriptor(new Suscriptor());
+        Categoria romance = new Categoria();
+        romance.setId(10L);
+        romance.setNombre("Romance");
+        suscripcion.setCategoria(romance);
+
+        Pago pago = new Pago();
+        pago.setId(pagoId);
+        pago.setSuscripcion(suscripcion);
+        pago.setEstado(EstadoPago.VALIDADO);
+        pago.setFechaValidacion(fechaValidacion);
+        return pago;
+    }
+
+    private PedidoEdicion cerrarConUnCupoYObtenerElPedido(Pago primero, Pago segundo) {
+        Edicion edicion = new Edicion();
+        edicion.setId(1L);
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
+
+        when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA))
+                .thenReturn(List.of(primero.getSuscripcion(), segundo.getSuscripcion()));
+        when(pagoRepository.findByEdicionId(1L)).thenReturn(List.of(primero, segundo));
+
+        Libro libro = new Libro();
+        libro.setId(1L);
+        libro.setTitulo("El Aleph");
+
+        CuraduriaEdicion curaduria = new CuraduriaEdicion();
+        curaduria.setCategoria(primero.getSuscripcion().getCategoria());
+        curaduria.setLibro(libro);
+        curaduria.setCupoMaximo(1);
+        curaduria.setPrecioVigente(BigDecimal.valueOf(5000));
+        when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(List.of(curaduria));
+
+        service.ejecutarCorte();
+
+        ArgumentCaptor<PedidoEdicion> captor = ArgumentCaptor.forClass(PedidoEdicion.class);
+        verify(pedidoEdicionRepository).save(captor.capture());
+        return captor.getValue();
     }
 
     @Test

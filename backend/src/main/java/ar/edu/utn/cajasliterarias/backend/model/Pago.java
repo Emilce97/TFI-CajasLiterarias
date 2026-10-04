@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(
@@ -39,5 +40,6 @@ public class Pago {
     @JoinColumn(name = "validado_por_admin_id")
     private Administradora validadoPor;
 
-    private LocalDate fechaValidacion;
+    // Fecha y hora: define la prioridad por cupo en el corte.
+    private LocalDateTime fechaValidacion;
 }

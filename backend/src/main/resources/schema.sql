@@ -95,7 +95,8 @@ CREATE TABLE pago (
     fecha_pago DATE,
     estado VARCHAR(30) NOT NULL, -- PENDIENTE / VALIDADO
     validado_por_admin_id BIGINT,
-    fecha_validacion DATE,
+    -- Fecha Y HORA: define la prioridad por cupo (quien valido antes). Con DATE dos pagos del mismo dia empatan.
+    fecha_validacion DATETIME(6),
     -- Maximo un pago por suscripcion y edicion (regla de P0).
     CONSTRAINT uk_pago_suscripcion_edicion UNIQUE (suscripcion_id, edicion_id),
     CONSTRAINT fk_pago_suscripcion

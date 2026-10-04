@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -140,7 +141,7 @@ class CambioCategoriaYCorteIntegrationTest {
         pago.setMonto(new BigDecimal("5000.00"));
         pago.setFechaPago(LocalDate.now(clock));
         pago.setEstado(EstadoPago.VALIDADO);
-        pago.setFechaValidacion(LocalDate.now(clock));
+        pago.setFechaValidacion(LocalDateTime.now(clock));
         pagoRepository.save(pago);
 
         return edicion;

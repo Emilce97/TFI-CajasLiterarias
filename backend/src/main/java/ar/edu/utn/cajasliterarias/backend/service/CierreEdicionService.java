@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -66,14 +67,22 @@ public class CierreEdicionService {
                 pagosPorSuscripcion.put(pago.getSuscripcion().getId(), pago);
         }
 
-        // Ordena por fecha de validación de pago, para que el cupo se reparta a quien pagó (y fue validado) primero.
-        candidatas.sort(Comparator.comparing(
-                s -> {
+        // Prioridad por cupo: quien validó el pago primero (fecha Y hora).
+        // Desempate estable y determinista:
+        // 1) fecha/hora de validación,
+        // 2) id del pago (el que se registró antes),
+        // 3) id de la suscripción. Sin pago validado va al final.
+        candidatas.sort(Comparator
+                .comparing((Suscripcion s) -> {
                     Pago p = pagosPorSuscripcion.get(s.getId());
                     return p != null ? p.getFechaValidacion() : null;
-                },
-                Comparator.nullsLast(Comparator.naturalOrder())
-        ));
+                }, Comparator.nullsLast(Comparator.<LocalDateTime>naturalOrder()))
+                .thenComparing(s -> {
+                    Pago p = pagosPorSuscripcion.get(s.getId());
+                    return p != null ? p.getId() : null;
+                }, Comparator.nullsLast(Comparator.<Long>naturalOrder()))
+                .thenComparing(Suscripcion::getId, Comparator.nullsLast(Comparator.<Long>naturalOrder()))
+        );
 
         Map<Long, CuraduriaEdicion> curaduriaPorCategoria = new HashMap<>();
         for (CuraduriaEdicion c : curaduriaEdicionRepository.findByEdicionId(edicion.getId())) {

@@ -11,7 +11,9 @@ import ar.edu.utn.cajasliterarias.backend.repository.SuscripcionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -20,15 +22,18 @@ public class PagoService {
     private final PagoRepository pagoRepository;
     private final SuscripcionRepository suscripcionRepository;
     private final EdicionRepository edicionRepository;
+    private final Clock clock;
 
     public PagoService(
             PagoRepository pagoRepository,
             SuscripcionRepository suscripcionRepository,
-            EdicionRepository edicionRepository
+            EdicionRepository edicionRepository,
+            Clock clock
     ) {
         this.pagoRepository = pagoRepository;
         this.suscripcionRepository = suscripcionRepository;
         this.edicionRepository = edicionRepository;
+        this.clock = clock;
     }
 
     /**
@@ -57,7 +62,7 @@ public class PagoService {
         pago.setSuscripcion(suscripcion);
         pago.setEdicion(edicion);
         pago.setMonto(request.getMonto());
-        pago.setFechaPago(LocalDate.now());
+        pago.setFechaPago(LocalDate.now(clock));
         pago.setEstado(EstadoPago.PENDIENTE);
 
         return pagoRepository.save(pago);
@@ -81,7 +86,7 @@ public class PagoService {
                 ));
 
         pago.setEstado(EstadoPago.VALIDADO);
-        pago.setFechaValidacion(LocalDate.now());
+        pago.setFechaValidacion(LocalDateTime.now(clock));
 
         return pagoRepository.save(pago);
     }
