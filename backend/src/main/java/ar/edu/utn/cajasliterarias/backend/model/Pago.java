@@ -7,7 +7,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "pago")
+@Table(
+        name = "pago",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_pago_suscripcion_edicion",
+                columnNames = {"suscripcion_id", "edicion_id"}
+        )
+)
 @Data
 public class Pago {
 

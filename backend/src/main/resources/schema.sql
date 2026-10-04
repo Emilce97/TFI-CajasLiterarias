@@ -96,6 +96,8 @@ CREATE TABLE pago (
     estado VARCHAR(30) NOT NULL, -- PENDIENTE / VALIDADO
     validado_por_admin_id BIGINT,
     fecha_validacion DATE,
+    -- Maximo un pago por suscripcion y edicion (regla de P0).
+    CONSTRAINT uk_pago_suscripcion_edicion UNIQUE (suscripcion_id, edicion_id),
     CONSTRAINT fk_pago_suscripcion
         FOREIGN KEY (suscripcion_id) REFERENCES suscripcion(id),
     CONSTRAINT fk_pago_edicion
