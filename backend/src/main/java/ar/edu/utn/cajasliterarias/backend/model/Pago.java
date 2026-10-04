@@ -30,6 +30,7 @@ public class Pago {
     @JoinColumn(name = "edicion_id", nullable = false)
     private Edicion edicion;
 
+    @Column(nullable = false)
     private BigDecimal monto;
     private LocalDate fechaPago;
 

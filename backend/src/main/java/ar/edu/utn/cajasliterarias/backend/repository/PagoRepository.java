@@ -2,9 +2,14 @@ package ar.edu.utn.cajasliterarias.backend.repository;
 
 import ar.edu.utn.cajasliterarias.backend.model.Pago;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoPago;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PagoRepository extends JpaRepository<Pago, Long> {
 
@@ -22,4 +27,10 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
     // Chequeo previo para dar un mensaje claro. La garantia real es la restriccion UNIQUE
     // uk_pago_suscripcion_edicion (suscripcion_id, edicion_id) en la base de datos.
     boolean existsBySuscripcionIdAndEdicionId(Long suscripcionId, Long edicionId);
+
+    // Para validar: bloquea la fila (SELECT ... FOR UPDATE) para que dos validaciones simultaneas
+    // del mismo pago se serialicen y la segunda vea el estado ya VALIDADO.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Pago p where p.id = :id")
+    Optional<Pago> findByIdForUpdate(@Param("id") Long id);
 }

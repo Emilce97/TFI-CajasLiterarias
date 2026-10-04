@@ -99,6 +99,7 @@ CREATE TABLE pago (
     fecha_validacion DATETIME(6),
     -- Maximo un pago por suscripcion y edicion (regla de P0).
     CONSTRAINT uk_pago_suscripcion_edicion UNIQUE (suscripcion_id, edicion_id),
+    CONSTRAINT ck_pago_monto_positivo CHECK (monto > 0),
     CONSTRAINT fk_pago_suscripcion
         FOREIGN KEY (suscripcion_id) REFERENCES suscripcion(id),
     CONSTRAINT fk_pago_edicion
