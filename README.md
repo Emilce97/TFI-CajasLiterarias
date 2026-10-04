@@ -33,7 +33,7 @@ Cada una compuesta por el **libro seleccionado del mes**, **dos regalos fijos** 
 
 Para dimensionar el proyecto se estableció una escala de referencia de 100 suscriptores activos (supuesto de simulación para modelar el caso), funcionando bajo un ciclo mensual cerrado:  
 * **Día 1 al 20:** ventana para altas, bajas, pausas y cambios de temática.
-* **Día 21 (fecha de corte):** se congela el padrón en un snapshot inmutable (PedidoEdicion) y se reserva el stock con los proveedores. Los cambios de temática o bajas solicitados con posterioridad a esta fecha impactan recién en la edición del mes siguiente.  
+* **Día 21 (fecha de corte):** se congela el padrón en un snapshot inmutable (PedidoEdicion) y se reserva el stock con los proveedores. Los cambios de temática solicitados desde el día del corte en adelante impactan recién en la edición del mes siguiente.  
 * **Día 1 al 5 del mes siguiente:** despacho masivo de los pedidos.
 
 A futuro, las administradoras planean incorporar una modalidad premium con un Club de Lectura Virtual (videollamadas y votación de próximas lecturas), funcionalidad que hoy no pueden sostener con las herramientas manuales que usan.

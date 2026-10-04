@@ -17,6 +17,7 @@ import ar.edu.utn.cajasliterarias.backend.repository.SuscriptorRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.regex.Pattern;
 
@@ -30,19 +31,22 @@ public class SuscripcionService {
     private final CategoriaRepository categoriaRepository;
     private final EdicionRepository edicionRepository;
     private final CuraduriaEdicionRepository curaduriaEdicionRepository;
+    private final Clock clock;
 
     public SuscripcionService(
             SuscripcionRepository suscripcionRepository,
             SuscriptorRepository suscriptorRepository,
             CategoriaRepository categoriaRepository,
             EdicionRepository edicionRepository,
-            CuraduriaEdicionRepository curaduriaEdicionRepository
+            CuraduriaEdicionRepository curaduriaEdicionRepository,
+            Clock clock
     ) {
         this.suscripcionRepository = suscripcionRepository;
         this.suscriptorRepository = suscriptorRepository;
         this.categoriaRepository = categoriaRepository;
         this.edicionRepository = edicionRepository;
         this.curaduriaEdicionRepository = curaduriaEdicionRepository;
+        this.clock = clock;
     }
 
     /**
@@ -74,7 +78,7 @@ public class SuscripcionService {
                     nuevo.setNombre(request.getNombre());
                     nuevo.setEmail(request.getEmail());
                     nuevo.setDireccion(request.getDireccion());
-                    nuevo.setFechaRegistro(LocalDate.now());
+                    nuevo.setFechaRegistro(LocalDate.now(clock));
                     return suscriptorRepository.save(nuevo);
                 });
 
@@ -118,7 +122,7 @@ public class SuscripcionService {
         suscripcion.setSuscriptor(suscriptor);
         suscripcion.setCategoria(categoria);
         suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
-        suscripcion.setFechaAlta(LocalDate.now());
+        suscripcion.setFechaAlta(LocalDate.now(clock));
 
         return suscripcionRepository.save(suscripcion);
     }
@@ -139,7 +143,7 @@ public class SuscripcionService {
         }
 
         suscripcion.setEstado(EstadoSuscripcion.BAJA);
-        suscripcion.setFechaBaja(LocalDate.now());
+        suscripcion.setFechaBaja(LocalDate.now(clock));
         suscripcion.setProximaCategoria(null);
         suscripcion.setFechaSolicitudCambio(null);
 
@@ -190,8 +194,11 @@ public class SuscripcionService {
     }
 
     /**
-     * Solicita un cambio de categoria para una suscripción activa. No pisa la categoría actual:
-     * queda registrada en proximaCategoria/fechaSolicitudCambio y se aplica cuando se ejecute el próximo corte.
+     * Cambia la categoría de una suscripción activa según la fecha de corte:
+     * antes del corte o sin edición abierta, actualiza {@code categoria} y reemplaza
+     * cambios pendientes; desde el corte, registra {@code proximaCategoria} y
+     * {@code fechaSolicitudCambio} para la siguiente edición. Sin edición abierta,
+     * no afecta la edición anterior ya congelada. El cupo se valida al ejecutar el corte.
      */
     @Transactional
     public Suscripcion cambiarCategoria(Long suscripcionId, CambiarCategoriaRequest request) {
@@ -219,11 +226,24 @@ public class SuscripcionService {
             );
         }
 
-        // El cambio siempre queda registrado como pendiente para el próximo corte. No depende de que exista una edición abierta:
-        // el cupo de la categoría destino se controla en CierreEdicionService, al momento en que ese cambio efectivamente se aplica.
-        suscripcion.setProximaCategoria(categoriaNueva);
-        suscripcion.setFechaSolicitudCambio(LocalDate.now());
+        // El cupo de la categoría destino no se valida acá: se controla en CierreEdicionService, al ejecutar el corte.
+        Edicion edicionAbierta = edicionRepository.findByEstado(EstadoEdicion.ABIERTA);
+        LocalDate hoy = LocalDate.now(clock);
 
+        boolean desdeElCorte = edicionAbierta != null
+                && edicionAbierta.getFechaCorte() != null
+                && !hoy.isBefore(edicionAbierta.getFechaCorte());
+
+        if (desdeElCorte) {
+            // Desde el día del corte y hasta que se ejecute: rige desde la edición siguiente.
+            suscripcion.setProximaCategoria(categoriaNueva);
+            suscripcion.setFechaSolicitudCambio(hoy);
+        } else {
+            // Antes del corte, o sin edición abierta (la anterior ya está congelada): rige para la próxima edición que se cierre.
+            suscripcion.setCategoria(categoriaNueva);
+            suscripcion.setProximaCategoria(null);
+            suscripcion.setFechaSolicitudCambio(null);
+        }
         return suscripcionRepository.save(suscripcion);
     }
 }
