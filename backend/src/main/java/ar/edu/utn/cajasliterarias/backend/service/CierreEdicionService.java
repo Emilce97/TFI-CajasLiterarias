@@ -45,12 +45,21 @@ public class CierreEdicionService {
         this.clock = clock;
     }
 
+    /**
+     * Ejecuta el corte de la edicion indicada por id (no "la que este abierta").
+     * - id inexistente -> IllegalArgumentException (400)
+     * - edicion que ya no esta ABIERTA -> EdicionYaCerradaException (409)
+     */
     @Transactional
-    public ResumenCierreDTO ejecutarCorte() {
+    public ResumenCierreDTO ejecutarCorte(Long edicionId) {
 
-        Edicion edicion = edicionRepository.findByEstado(EstadoEdicion.ABIERTA);
-        if (edicion == null) {
-            throw new IllegalStateException("No hay ninguna edición abierta para cerrar.");
+        Edicion edicion = edicionRepository.findById(edicionId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe la edición con id " + edicionId
+                ));
+
+        if (edicion.getEstado() != EstadoEdicion.ABIERTA) {
+            throw new EdicionYaCerradaException(edicion.getId());
         }
 
         // Guarda de idempotencia: si ya se generaron pedidos para esta edición, el corte ya se ejecutó.

@@ -19,10 +19,10 @@ import java.math.BigDecimal;
 import java.time.*;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CierreEdicionServiceTest {
@@ -49,27 +49,59 @@ class CierreEdicionServiceTest {
     }
 
     @Test
-    void siNoHayEdicionAbierta_lanzaExcepcion() {
-        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(null);
+    void siLaEdicionNoExiste_lanzaIllegalArgument() {
+        when(edicionRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalStateException.class, () -> service.ejecutarCorte());
+        assertThrows(IllegalArgumentException.class, () -> service.ejecutarCorte(99L));
+    }
+
+    @Test
+    void siLaEdicionYaEstaCerrada_lanzaEdicionYaCerradaExceptionYNoGeneraNada() {
+        Edicion cerrada = new Edicion();
+        cerrada.setId(1L);
+        cerrada.setEstado(EstadoEdicion.CERRADA);
+        when(edicionRepository.findById(1L)).thenReturn(Optional.of(cerrada));
+
+        assertThrows(EdicionYaCerradaException.class, () -> service.ejecutarCorte(1L));
+        verify(pedidoEdicionRepository, never()).save(any());
+        verify(exclusionEdicionRepository, never()).save(any());
+    }
+
+    @Test
+    void cierraLaEdicionIndicadaPorId_noOtraQueEsteAbierta() {
+        Edicion edicion = new Edicion();
+        edicion.setId(7L);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findById(7L)).thenReturn(Optional.of(edicion));
+        when(pedidoEdicionRepository.existsByEdicionId(7L)).thenReturn(false);
+        when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA)).thenReturn(Collections.emptyList());
+        when(pagoRepository.findByEdicionId(7L)).thenReturn(Collections.emptyList());
+        when(curaduriaEdicionRepository.findByEdicionId(7L)).thenReturn(Collections.emptyList());
+
+        ResumenCierreDTO resumen = service.ejecutarCorte(7L);
+
+        assertEquals(7L, resumen.getEdicionId());
+        assertEquals(EstadoEdicion.CERRADA, edicion.getEstado());
+        verify(edicionRepository, never()).findByEstado(any());
     }
 
     @Test
     void siLaEdicionYaFueCerrada_lanzaEdicionYaCerradaException() {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
-        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(true);
 
-        assertThrows(EdicionYaCerradaException.class, () -> service.ejecutarCorte());
+        assertThrows(EdicionYaCerradaException.class, () -> service.ejecutarCorte(1L));
     }
 
     @Test
     void suscripcionSinPago_quedaExcluidaConMotivoSinPago() {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
-        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Suscriptor suscriptor = new Suscriptor();
@@ -90,7 +122,7 @@ class CierreEdicionServiceTest {
         when(pagoRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
         when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
 
-        ResumenCierreDTO resumen = service.ejecutarCorte();
+        ResumenCierreDTO resumen = service.ejecutarCorte(1L);
 
         assertEquals(0, resumen.getTotalPedidosGenerados());
         assertEquals(1, resumen.getTotalExcluidos());
@@ -101,7 +133,8 @@ class CierreEdicionServiceTest {
     void suscripcionConPagoNoValidado_quedaExcluidaConMotivoPagoPendiente() {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
-        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Suscriptor suscriptor = new Suscriptor();
@@ -126,7 +159,7 @@ class CierreEdicionServiceTest {
         when(pagoRepository.findByEdicionId(1L)).thenReturn(List.of(pago));
         when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
 
-        ResumenCierreDTO resumen = service.ejecutarCorte();
+        ResumenCierreDTO resumen = service.ejecutarCorte(1L);
 
         assertEquals(0, resumen.getTotalPedidosGenerados());
         assertEquals(1, resumen.getTotalExcluidos());
@@ -140,7 +173,8 @@ class CierreEdicionServiceTest {
     void suscripcionSinCuraduriaParaSuCategoria_quedaExcluidaConMotivoSinCuraduria() {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
-        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Suscriptor suscriptor = new Suscriptor();
@@ -165,7 +199,7 @@ class CierreEdicionServiceTest {
         when(pagoRepository.findByEdicionId(1L)).thenReturn(List.of(pago));
         when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
 
-        ResumenCierreDTO resumen = service.ejecutarCorte();
+        ResumenCierreDTO resumen = service.ejecutarCorte(1L);
 
         assertEquals(0, resumen.getTotalPedidosGenerados());
         assertEquals(1, resumen.getTotalExcluidos());
@@ -179,7 +213,8 @@ class CierreEdicionServiceTest {
     void suscripcionQueSuperaElCupoDeLaCategoria_quedaExcluidaConMotivoCupoCompleto() {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
-        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Categoria romance = new Categoria();
@@ -224,7 +259,7 @@ class CierreEdicionServiceTest {
         curaduria.setPrecioVigente(BigDecimal.valueOf(5000));
         when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(List.of(curaduria));
 
-        ResumenCierreDTO resumen = service.ejecutarCorte();
+        ResumenCierreDTO resumen = service.ejecutarCorte(1L);
 
         assertEquals(1, resumen.getTotalPedidosGenerados());
         assertEquals(1, resumen.getTotalExcluidos());
@@ -239,7 +274,8 @@ class CierreEdicionServiceTest {
     void dosSuscripcionesCompitiendoPorElUltimoCupo_priorizaAQuienValidoElPagoAntes() {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
-        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Categoria romance = new Categoria();
@@ -286,7 +322,7 @@ class CierreEdicionServiceTest {
         curaduria.setPrecioVigente(BigDecimal.valueOf(5000));
         when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(List.of(curaduria));
 
-        service.ejecutarCorte();
+        service.ejecutarCorte(1L);
 
         ArgumentCaptor<PedidoEdicion> captor = ArgumentCaptor.forClass(PedidoEdicion.class);
         verify(pedidoEdicionRepository).save(captor.capture());
@@ -349,7 +385,8 @@ class CierreEdicionServiceTest {
     private PedidoEdicion cerrarConUnCupoYObtenerElPedido(Pago primero, Pago segundo) {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
-        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA))
@@ -367,7 +404,7 @@ class CierreEdicionServiceTest {
         curaduria.setPrecioVigente(BigDecimal.valueOf(5000));
         when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(List.of(curaduria));
 
-        service.ejecutarCorte();
+        service.ejecutarCorte(1L);
 
         ArgumentCaptor<PedidoEdicion> captor = ArgumentCaptor.forClass(PedidoEdicion.class);
         verify(pedidoEdicionRepository).save(captor.capture());
@@ -378,7 +415,8 @@ class CierreEdicionServiceTest {
     void suscripcionConCambioPendiente_promocionaCategoriaDespuesDelCorte() {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
-        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Suscriptor suscriptor = new Suscriptor();
@@ -406,7 +444,7 @@ class CierreEdicionServiceTest {
         when(pagoRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
         when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
 
-        service.ejecutarCorte();
+        service.ejecutarCorte(1L);
 
         assertEquals(categoriaProxima, suscripcion.getCategoria());
         assertNull(suscripcion.getProximaCategoria());
@@ -417,7 +455,8 @@ class CierreEdicionServiceTest {
     void suscripcionPausadaConCambioPendiente_tambienSePromueveEnElCorte() {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
-        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Categoria categoriaVigente = new Categoria();
@@ -440,7 +479,7 @@ class CierreEdicionServiceTest {
         when(pagoRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
         when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
 
-        service.ejecutarCorte();
+        service.ejecutarCorte(1L);
 
         assertEquals(categoriaProxima, pausada.getCategoria());
         assertNull(pausada.getProximaCategoria());
@@ -452,7 +491,8 @@ class CierreEdicionServiceTest {
     void pedidoEdicionYaGenerado_noCambiaAunqueLaSuscripcionCambieDespues() {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
-        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicion);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Suscriptor suscriptor = new Suscriptor();
@@ -492,7 +532,7 @@ class CierreEdicionServiceTest {
         when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(List.of(curaduria));
 
         // Ejecutamos el corte: en este momento la suscripcion todavia esta en Romance
-        service.ejecutarCorte();
+        service.ejecutarCorte(1L);
 
         // "Atrapamos" el PedidoEdicion que se guardo, para inspeccionarlo despues
         ArgumentCaptor<PedidoEdicion> captor = ArgumentCaptor.forClass(PedidoEdicion.class);

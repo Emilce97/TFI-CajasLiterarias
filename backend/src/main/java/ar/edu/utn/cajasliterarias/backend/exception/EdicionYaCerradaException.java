@@ -1,10 +1,10 @@
 package ar.edu.utn.cajasliterarias.backend.exception;
 
 /**
- * Guarda defensiva: salta si una edicion todavia ABIERTA ya tiene PedidoEdicion generados, un estado inconsistente
- * (el proceso de corte se interrumpio despues de generar los pedidos pero antes de marcar CERRADA).
- * El reintento normal de un corte ya finalizado no llega aca: corta antes con IllegalStateException,
- * al no encontrar edicion ABIERTA.
+ * El corte no puede ejecutarse sobre una edicion que ya no esta ABIERTA (ya fue cerrada),
+ * ni sobre una edicion todavia ABIERTA que ya tiene PedidoEdicion generados (estado inconsistente:
+ * el proceso de corte se interrumpio despues de generar los pedidos pero antes de marcar CERRADA).
+ * Se responde 409.
  */
 public class EdicionYaCerradaException extends RuntimeException {
 
