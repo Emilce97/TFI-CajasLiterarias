@@ -5,9 +5,16 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "pago")
+@Table(
+        name = "pago",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_pago_suscripcion_edicion",
+                columnNames = {"suscripcion_id", "edicion_id"}
+        )
+)
 @Data
 public class Pago {
 
@@ -23,6 +30,7 @@ public class Pago {
     @JoinColumn(name = "edicion_id", nullable = false)
     private Edicion edicion;
 
+    @Column(nullable = false)
     private BigDecimal monto;
     private LocalDate fechaPago;
 
@@ -33,5 +41,6 @@ public class Pago {
     @JoinColumn(name = "validado_por_admin_id")
     private Administradora validadoPor;
 
-    private LocalDate fechaValidacion;
+    // Fecha y hora: define la prioridad por cupo en el corte.
+    private LocalDateTime fechaValidacion;
 }

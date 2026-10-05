@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -81,7 +82,7 @@ class CambioCategoriaYCorteIntegrationTest {
         Edicion edicion = abrirEdicionConPagoValidado(LocalDate.now(clock).plusDays(5));
 
         suscripcionService.cambiarCategoria(suscripcion.getId(), cambioA(misterio));
-        cierreEdicionService.ejecutarCorte();
+        cierreEdicionService.ejecutarCorte(edicion.getId());
 
         PedidoEdicion pedido = pedidoDe(suscripcion);
         assertThat(pedido.getEdicion().getId()).isEqualTo(edicion.getId());
@@ -96,10 +97,10 @@ class CambioCategoriaYCorteIntegrationTest {
 
     @Test
     void cambioDespuesDelCorte_elPedidoCerradoNoCambiaYLaNuevaCategoriaAplicaDesdeLaSiguiente() {
-        abrirEdicionConPagoValidado(LocalDate.now(clock).minusDays(1));
+        Edicion edicion = abrirEdicionConPagoValidado(LocalDate.now(clock).minusDays(1));
 
         suscripcionService.cambiarCategoria(suscripcion.getId(), cambioA(misterio));
-        cierreEdicionService.ejecutarCorte();
+        cierreEdicionService.ejecutarCorte(edicion.getId());
 
         PedidoEdicion pedido = pedidoDe(suscripcion);
         assertThat(pedido.getCategoriaCongelada()).isEqualTo(romance.getNombre());
@@ -116,8 +117,8 @@ class CambioCategoriaYCorteIntegrationTest {
         // El setUp deja la base sin edición ABIERTA: es la ventana entre un cierre y la apertura de la siguiente.
         suscripcionService.cambiarCategoria(suscripcion.getId(), cambioA(misterio));
 
-        abrirEdicionConPagoValidado(LocalDate.now(clock).plusDays(5));
-        cierreEdicionService.ejecutarCorte();
+        Edicion edicion = abrirEdicionConPagoValidado(LocalDate.now(clock).plusDays(5));
+        cierreEdicionService.ejecutarCorte(edicion.getId());
 
         assertThat(pedidoDe(suscripcion).getCategoriaCongelada()).isEqualTo(misterio.getNombre());
     }
@@ -140,7 +141,7 @@ class CambioCategoriaYCorteIntegrationTest {
         pago.setMonto(new BigDecimal("5000.00"));
         pago.setFechaPago(LocalDate.now(clock));
         pago.setEstado(EstadoPago.VALIDADO);
-        pago.setFechaValidacion(LocalDate.now(clock));
+        pago.setFechaValidacion(LocalDateTime.now(clock));
         pagoRepository.save(pago);
 
         return edicion;

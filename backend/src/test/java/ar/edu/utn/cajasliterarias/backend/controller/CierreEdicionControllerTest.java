@@ -33,9 +33,9 @@ class CierreEdicionControllerTest {
         resumen.setTotalExcluidos(1);
         resumen.setSuscripcionesExcluidas(List.of(99L));
 
-        when(cierreEdicionService.ejecutarCorte()).thenReturn(resumen);
+        when(cierreEdicionService.ejecutarCorte(1L)).thenReturn(resumen);
 
-        mockMvc.perform(post("/api/ediciones/cierre"))
+        mockMvc.perform(post("/api/ediciones/1/cierre"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.edicionId").value(1))
                 .andExpect(jsonPath("$.totalPedidosGenerados").value(3))
@@ -45,10 +45,10 @@ class CierreEdicionControllerTest {
 
     @Test
     void cerrarEdicion_edicionYaCerrada_devuelve409ConMensaje() throws Exception {
-        when(cierreEdicionService.ejecutarCorte())
+        when(cierreEdicionService.ejecutarCorte(1L))
                 .thenThrow(new EdicionYaCerradaException(1L));
 
-        mockMvc.perform(post("/api/ediciones/cierre"))
+        mockMvc.perform(post("/api/ediciones/1/cierre"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("Edición ya cerrada"))
                 .andExpect(jsonPath("$.message").value(
@@ -56,15 +56,21 @@ class CierreEdicionControllerTest {
     }
 
     @Test
-    void cerrarEdicion_sinEdicionAbierta_devuelve409ConMensaje() throws Exception {
-        String mensaje = "No hay ninguna edición abierta para cerrar.";
+    void cerrarEdicion_edicionInexistente_devuelve400ConMensaje() throws Exception {
+        String mensaje = "No existe la edición con id 99";
 
-        when(cierreEdicionService.ejecutarCorte())
-                .thenThrow(new IllegalStateException(mensaje));
+        when(cierreEdicionService.ejecutarCorte(99L))
+                .thenThrow(new IllegalArgumentException(mensaje));
 
-        mockMvc.perform(post("/api/ediciones/cierre"))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.error").value("Operación inválida"))
+        mockMvc.perform(post("/api/ediciones/99/cierre"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Datos inválidos"))
                 .andExpect(jsonPath("$.message").value(mensaje));
+    }
+
+    @Test
+    void cerrarEdicion_rutaVieja_sinIdYaNoExiste() throws Exception {
+        mockMvc.perform(post("/api/ediciones/cierre"))
+                .andExpect(status().is4xxClientError());
     }
 }

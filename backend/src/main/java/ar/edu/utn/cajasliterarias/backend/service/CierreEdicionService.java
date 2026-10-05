@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -44,12 +45,24 @@ public class CierreEdicionService {
         this.clock = clock;
     }
 
+    /**
+     * Ejecuta el corte de la edicion indicada por id (no "la que este abierta").
+     * - id inexistente -> IllegalArgumentException (400)
+     * - edicion que ya no esta ABIERTA -> EdicionYaCerradaException (409)
+     * Bloquea la edición para evitar cierres simultáneos.
+     * La lectura debe ser la primera operación de la transacción para garantizar
+     * que el bloqueo vea el estado actualizado (REPEATABLE READ).
+     */
     @Transactional
-    public ResumenCierreDTO ejecutarCorte() {
+    public ResumenCierreDTO ejecutarCorte(Long edicionId) {
 
-        Edicion edicion = edicionRepository.findByEstado(EstadoEdicion.ABIERTA);
-        if (edicion == null) {
-            throw new IllegalStateException("No hay ninguna edición abierta para cerrar.");
+        Edicion edicion = edicionRepository.findByIdForUpdate(edicionId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe la edición con id " + edicionId
+                ));
+
+        if (edicion.getEstado() != EstadoEdicion.ABIERTA) {
+            throw new EdicionYaCerradaException(edicion.getId());
         }
 
         // Guarda de idempotencia: si ya se generaron pedidos para esta edición, el corte ya se ejecutó.
@@ -66,14 +79,22 @@ public class CierreEdicionService {
                 pagosPorSuscripcion.put(pago.getSuscripcion().getId(), pago);
         }
 
-        // Ordena por fecha de validación de pago, para que el cupo se reparta a quien pagó (y fue validado) primero.
-        candidatas.sort(Comparator.comparing(
-                s -> {
+        // Prioridad por cupo: quien validó el pago primero (fecha Y hora).
+        // Desempate estable y determinista:
+        // 1) fecha/hora de validación,
+        // 2) id del pago (el que se registró antes),
+        // 3) id de la suscripción. Sin pago validado va al final.
+        candidatas.sort(Comparator
+                .comparing((Suscripcion s) -> {
                     Pago p = pagosPorSuscripcion.get(s.getId());
                     return p != null ? p.getFechaValidacion() : null;
-                },
-                Comparator.nullsLast(Comparator.naturalOrder())
-        ));
+                }, Comparator.nullsLast(Comparator.<LocalDateTime>naturalOrder()))
+                .thenComparing(s -> {
+                    Pago p = pagosPorSuscripcion.get(s.getId());
+                    return p != null ? p.getId() : null;
+                }, Comparator.nullsLast(Comparator.<Long>naturalOrder()))
+                .thenComparing(Suscripcion::getId, Comparator.nullsLast(Comparator.<Long>naturalOrder()))
+        );
 
         Map<Long, CuraduriaEdicion> curaduriaPorCategoria = new HashMap<>();
         for (CuraduriaEdicion c : curaduriaEdicionRepository.findByEdicionId(edicion.getId())) {
