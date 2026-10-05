@@ -49,11 +49,14 @@ public class CierreEdicionService {
      * Ejecuta el corte de la edicion indicada por id (no "la que este abierta").
      * - id inexistente -> IllegalArgumentException (400)
      * - edicion que ya no esta ABIERTA -> EdicionYaCerradaException (409)
+     * Bloquea la edición para evitar cierres simultáneos.
+     * La lectura debe ser la primera operación de la transacción para garantizar
+     * que el bloqueo vea el estado actualizado (REPEATABLE READ).
      */
     @Transactional
     public ResumenCierreDTO ejecutarCorte(Long edicionId) {
 
-        Edicion edicion = edicionRepository.findById(edicionId)
+        Edicion edicion = edicionRepository.findByIdForUpdate(edicionId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "No existe la edición con id " + edicionId
                 ));

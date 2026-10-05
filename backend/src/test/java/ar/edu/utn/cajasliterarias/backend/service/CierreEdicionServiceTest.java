@@ -50,7 +50,7 @@ class CierreEdicionServiceTest {
 
     @Test
     void siLaEdicionNoExiste_lanzaIllegalArgument() {
-        when(edicionRepository.findById(99L)).thenReturn(Optional.empty());
+        when(edicionRepository.findByIdForUpdate(99L)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> service.ejecutarCorte(99L));
     }
@@ -60,7 +60,7 @@ class CierreEdicionServiceTest {
         Edicion cerrada = new Edicion();
         cerrada.setId(1L);
         cerrada.setEstado(EstadoEdicion.CERRADA);
-        when(edicionRepository.findById(1L)).thenReturn(Optional.of(cerrada));
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(cerrada));
 
         assertThrows(EdicionYaCerradaException.class, () -> service.ejecutarCorte(1L));
         verify(pedidoEdicionRepository, never()).save(any());
@@ -72,7 +72,7 @@ class CierreEdicionServiceTest {
         Edicion edicion = new Edicion();
         edicion.setId(7L);
         edicion.setEstado(EstadoEdicion.ABIERTA);
-        when(edicionRepository.findById(7L)).thenReturn(Optional.of(edicion));
+        when(edicionRepository.findByIdForUpdate(7L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(7L)).thenReturn(false);
         when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA)).thenReturn(Collections.emptyList());
         when(pagoRepository.findByEdicionId(7L)).thenReturn(Collections.emptyList());
@@ -83,6 +83,7 @@ class CierreEdicionServiceTest {
         assertEquals(7L, resumen.getEdicionId());
         assertEquals(EstadoEdicion.CERRADA, edicion.getEstado());
         verify(edicionRepository, never()).findByEstado(any());
+        verify(edicionRepository, never()).findById(any());
     }
 
     @Test
@@ -90,7 +91,7 @@ class CierreEdicionServiceTest {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
         edicion.setEstado(EstadoEdicion.ABIERTA);
-        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(true);
 
         assertThrows(EdicionYaCerradaException.class, () -> service.ejecutarCorte(1L));
@@ -101,7 +102,7 @@ class CierreEdicionServiceTest {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
         edicion.setEstado(EstadoEdicion.ABIERTA);
-        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Suscriptor suscriptor = new Suscriptor();
@@ -134,7 +135,7 @@ class CierreEdicionServiceTest {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
         edicion.setEstado(EstadoEdicion.ABIERTA);
-        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Suscriptor suscriptor = new Suscriptor();
@@ -174,7 +175,7 @@ class CierreEdicionServiceTest {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
         edicion.setEstado(EstadoEdicion.ABIERTA);
-        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Suscriptor suscriptor = new Suscriptor();
@@ -214,7 +215,7 @@ class CierreEdicionServiceTest {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
         edicion.setEstado(EstadoEdicion.ABIERTA);
-        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Categoria romance = new Categoria();
@@ -275,7 +276,7 @@ class CierreEdicionServiceTest {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
         edicion.setEstado(EstadoEdicion.ABIERTA);
-        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Categoria romance = new Categoria();
@@ -386,7 +387,7 @@ class CierreEdicionServiceTest {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
         edicion.setEstado(EstadoEdicion.ABIERTA);
-        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA))
@@ -416,7 +417,7 @@ class CierreEdicionServiceTest {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
         edicion.setEstado(EstadoEdicion.ABIERTA);
-        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Suscriptor suscriptor = new Suscriptor();
@@ -456,7 +457,7 @@ class CierreEdicionServiceTest {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
         edicion.setEstado(EstadoEdicion.ABIERTA);
-        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Categoria categoriaVigente = new Categoria();
@@ -492,7 +493,7 @@ class CierreEdicionServiceTest {
         Edicion edicion = new Edicion();
         edicion.setId(1L);
         edicion.setEstado(EstadoEdicion.ABIERTA);
-        when(edicionRepository.findById(1L)).thenReturn(Optional.of(edicion));
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(edicion));
         when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
 
         Suscriptor suscriptor = new Suscriptor();
@@ -549,5 +550,47 @@ class CierreEdicionServiceTest {
         assertEquals(misterio, suscripcion.getCategoria());
         // pero el pedido que ya se genero (snapshot inmutable) no se ve afectado
         assertEquals("Romance", pedidoGenerado.getCategoriaCongelada());
+    }
+
+    // cierres simultaneos
+
+    @Test
+    void elCierreLeeLaEdicionConBloqueo() {
+        Edicion edicion = new Edicion();
+        edicion.setId(1L);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(edicion));
+        when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
+        when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA)).thenReturn(Collections.emptyList());
+        when(pagoRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
+        when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
+
+        service.ejecutarCorte(1L);
+
+        // Nunca por la lectura comun: sin bloqueo, dos cierres podrian empezar a congelar el mismo padron.
+        verify(edicionRepository).findByIdForUpdate(1L);
+        verify(edicionRepository, never()).findById(any());
+    }
+
+    @Test
+    void segundoCierreDeLaMismaEdicion_encuentraLaEdicionCerradaYNoGeneraNadaMas() {
+        // Simula lo que ve la segunda solicitud al obtener el bloqueo: la misma fila, ya CERRADA por la primera.
+        Edicion edicion = new Edicion();
+        edicion.setId(1L);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(edicion));
+        when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
+        when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA)).thenReturn(Collections.emptyList());
+        when(pagoRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
+        when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(Collections.emptyList());
+
+        service.ejecutarCorte(1L);
+        assertEquals(EstadoEdicion.CERRADA, edicion.getEstado());
+
+        assertThrows(EdicionYaCerradaException.class, () -> service.ejecutarCorte(1L));
+
+        // El padron se calculo una sola vez.
+        verify(suscripcionRepository, times(1)).findByEstado(EstadoSuscripcion.ACTIVA);
+        verify(pagoRepository, times(1)).findByEdicionId(1L);
     }
 }
