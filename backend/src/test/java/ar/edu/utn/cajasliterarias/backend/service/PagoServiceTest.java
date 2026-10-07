@@ -160,6 +160,28 @@ class PagoServiceTest {
         assertThrows(IllegalStateException.class,
                 () -> service.registrarPago(request(new BigDecimal("5000"))));
     }
+    @Test
+    void registrarPago_conSuscripcionInexistente_lanzaIllegalArgument() {
+        when(suscripcionRepository.findById(10L)).thenReturn(Optional.empty());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> service.registrarPago(request(new BigDecimal("5000"))));
+
+        assertTrue(ex.getMessage().contains("No existe la suscripcion"));
+        verify(pagoRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void registrarPago_conEdicionInexistente_lanzaIllegalArgument() {
+        when(suscripcionRepository.findById(10L)).thenReturn(Optional.of(suscripcion(EstadoSuscripcion.ACTIVA)));
+        when(edicionRepository.findById(1L)).thenReturn(Optional.empty());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> service.registrarPago(request(new BigDecimal("5000"))));
+
+        assertTrue(ex.getMessage().contains("No existe la edicion"));
+        verify(pagoRepository, never()).saveAndFlush(any());
+    }
 
     // validarPago
     @Test
