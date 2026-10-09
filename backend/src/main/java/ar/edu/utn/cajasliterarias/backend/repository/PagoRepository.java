@@ -2,9 +2,7 @@ package ar.edu.utn.cajasliterarias.backend.repository;
 
 import ar.edu.utn.cajasliterarias.backend.model.Pago;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoPago;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -30,7 +28,6 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
 
     // Para validar: bloquea la fila (SELECT ... FOR UPDATE) para que dos validaciones simultaneas
     // del mismo pago se serialicen y la segunda vea el estado ya VALIDADO.
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select p from Pago p where p.id = :id")
+    @Query(value = "SELECT * FROM pago WHERE id = :id FOR UPDATE", nativeQuery = true)
     Optional<Pago> findByIdForUpdate(@Param("id") Long id);
 }
