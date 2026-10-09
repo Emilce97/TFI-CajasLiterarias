@@ -12,6 +12,8 @@ import ar.edu.utn.cajasliterarias.backend.repository.EdicionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -156,5 +158,67 @@ class DemandaServiceTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> service.listarDemandaDeEdicion(99L));
         assertTrue(ex.getMessage().contains("No existe la edicion"));
+    }
+
+    // registrarRecepcion
+
+    @Test
+    void registrarRecepcion_parcial_quedaFaltante() {
+        DemandaEdicion fila = demanda(5L, "Rayuela", proveedor(1L, "Libreria Sur"), 10, 0);
+        when(demandaEdicionRepository.findById(5L)).thenReturn(Optional.of(fila));
+        when(demandaEdicionRepository.save(any(DemandaEdicion.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        DemandaItemDTO resultado = service.registrarRecepcion(5L, 6);
+
+        assertEquals(6, resultado.getCantidadRecibida());
+        assertEquals(4, resultado.getCantidadFaltante());
+        assertEquals(EstadoFaltante.FALTANTE, resultado.getEstadoFaltante());
+    }
+
+    @Test
+    void registrarRecepcion_completa_quedaSinFaltante() {
+        DemandaEdicion fila = demanda(5L, "Rayuela", proveedor(1L, "Libreria Sur"), 10, 0);
+        when(demandaEdicionRepository.findById(5L)).thenReturn(Optional.of(fila));
+        when(demandaEdicionRepository.save(any(DemandaEdicion.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        DemandaItemDTO resultado = service.registrarRecepcion(5L, 10);
+
+        assertEquals(0, resultado.getCantidadFaltante());
+        assertEquals(EstadoFaltante.SIN_FALTANTE, resultado.getEstadoFaltante());
+    }
+
+    @Test
+    void registrarRecepcion_reemplazaElTotalAnteriorEnVezDeSumar() {
+        // Ya se habian cargado 8; la administradora corrige a 5 (se habia equivocado).
+        DemandaEdicion fila = demanda(5L, "Rayuela", proveedor(1L, "Libreria Sur"), 10, 8);
+        when(demandaEdicionRepository.findById(5L)).thenReturn(Optional.of(fila));
+        when(demandaEdicionRepository.save(any(DemandaEdicion.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        DemandaItemDTO resultado = service.registrarRecepcion(5L, 5);
+
+        assertEquals(5, resultado.getCantidadRecibida());
+        assertEquals(5, resultado.getCantidadFaltante());
+    }
+
+    @Test
+    void registrarRecepcion_conCantidadNull_lanzaIllegalArgumentYNoGuarda() {
+        assertThrows(IllegalArgumentException.class, () -> service.registrarRecepcion(5L, null));
+        verify(demandaEdicionRepository, never()).save(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-1, -10})
+    void registrarRecepcion_conCantidadNegativa_lanzaIllegalArgumentYNoGuarda(int cantidad) {
+        assertThrows(IllegalArgumentException.class, () -> service.registrarRecepcion(5L, cantidad));
+        verify(demandaEdicionRepository, never()).save(any());
+    }
+
+    @Test
+    void registrarRecepcion_demandaInexistente_lanzaIllegalArgument() {
+        when(demandaEdicionRepository.findById(99L)).thenReturn(Optional.empty());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> service.registrarRecepcion(99L, 3));
+        assertTrue(ex.getMessage().contains("No existe la demanda"));
     }
 }

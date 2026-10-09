@@ -2,6 +2,7 @@ package ar.edu.utn.cajasliterarias.backend.service;
 
 import ar.edu.utn.cajasliterarias.backend.dto.DemandaItemDTO;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoEdicion;
+import ar.edu.utn.cajasliterarias.backend.enums.EstadoFaltante;
 import ar.edu.utn.cajasliterarias.backend.model.DemandaEdicion;
 import ar.edu.utn.cajasliterarias.backend.model.Edicion;
 import ar.edu.utn.cajasliterarias.backend.model.Libro;
@@ -16,7 +17,7 @@ import java.util.List;
 
 /**
  * Demanda de libros para proveedores. Las filas las genera el corte
- * (CierreEdicionService); aca solo se consultan y, mas adelante, se registra la recepcion.
+ * (CierreEdicionService); aca se consultan y se registra lo que llega de cada proveedor.
  */
 @Service
 public class DemandaService {
@@ -46,12 +47,35 @@ public class DemandaService {
             throw new IllegalStateException(
                     "La edicion " + edicionId + " sigue abierta: la demanda se calcula al cerrarla.");
         }
-        // Para el panel de demanda: todas las filas (una por libro) de una edicion.
+
         return demandaEdicionRepository.findByEdicionId(edicionId).stream()
                 .map(this::aDTO)
                 .sorted(Comparator.comparing(DemandaItemDTO::getProveedorNombre)
                         .thenComparing(DemandaItemDTO::getTitulo))
                 .toList();
+    }
+
+    /**
+     * Registra cuantos ejemplares de un libro llegaron del proveedor.
+     * La cantidad es el TOTAL recibido (reemplaza al valor anterior) y el estado de faltante
+     * se recalcula: FALTANTE si llego menos de lo requerido, SIN_FALTANTE si se completo.
+     */
+    @Transactional
+    public DemandaItemDTO registrarRecepcion(Long demandaId, Integer cantidadRecibida) {
+        if (cantidadRecibida == null || cantidadRecibida < 0) {
+            throw new IllegalArgumentException("La cantidad recibida es obligatoria y no puede ser negativa.");
+        }
+
+        DemandaEdicion demanda = demandaEdicionRepository.findById(demandaId)
+                .orElseThrow(() -> new IllegalArgumentException("No existe la demanda con id " + demandaId));
+
+        int requerida = valorOCero(demanda.getCantidadRequerida());
+        demanda.setCantidadRecibida(cantidadRecibida);
+        demanda.setEstadoFaltante(cantidadRecibida < requerida
+                ? EstadoFaltante.FALTANTE
+                : EstadoFaltante.SIN_FALTANTE);
+
+        return aDTO(demandaEdicionRepository.save(demanda));
     }
 
     private DemandaItemDTO aDTO(DemandaEdicion demanda) {
