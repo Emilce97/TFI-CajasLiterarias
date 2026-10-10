@@ -145,6 +145,7 @@ public class CierreEdicionService {
             pedido.setCategoriaCongelada(suscripcion.getCategoria().getNombre());
             pedido.setLibroCongelado(curaduria.getLibro().getTitulo());
             pedido.setPrecioAplicado(curaduria.getPrecioVigente());
+            pedido.setNombreDestinatario(suscripcion.getSuscriptor().getNombre());
             pedido.setDireccionEntrega(suscripcion.getSuscriptor().getDireccion());
             pedido.setEstadoPedido(EstadoPedido.PENDIENTE_DE_EMPAQUE);
             pedido.setFechaCreacion(LocalDate.now(clock));
@@ -199,7 +200,8 @@ public class CierreEdicionService {
             demanda.setLibro(librosPorId.get(entry.getKey()));
             demanda.setCantidadRequerida(entry.getValue());
             demanda.setCantidadRecibida(0);
-            demanda.setEstadoFaltante(EstadoFaltante.SIN_FALTANTE);
+            // Recien calculada no llego ningun ejemplar: falta todo hasta que se registre la recepcion.
+            demanda.setEstadoFaltante(EstadoFaltante.FALTANTE);
             demandaEdicionRepository.save(demanda);
         }
     }

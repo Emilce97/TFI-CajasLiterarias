@@ -42,6 +42,9 @@ public class PedidoEdicion {
     private String categoriaCongelada;
     private String libroCongelado;
     private BigDecimal precioAplicado;
+    // A quien va dirigida la caja: si el suscriptor cambia su nombre despues del corte,
+    // el remito de esta edicion sigue saliendo con el nombre que tenia al congelarse.
+    private String nombreDestinatario;
     private String direccionEntrega;
 
     @Enumerated(EnumType.STRING)
