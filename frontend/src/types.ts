@@ -49,3 +49,17 @@ export interface Pago {
     suscripcion: Suscripcion;
     edicion: Edicion;
 }
+
+// Una fila de la demanda de una edicion (GET /api/ediciones/{id}/demanda).
+export interface DemandaItem {
+    id: number;
+    libroId: number;
+    titulo: string;
+    autor: string;
+    proveedorId: number | null;
+    proveedorNombre: string;
+    cantidadRequerida: number;
+    cantidadRecibida: number;
+    cantidadFaltante: number;
+    estadoFaltante: "FALTANTE" | "SIN_FALTANTE";
+}
