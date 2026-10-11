@@ -184,6 +184,8 @@ class SuscripcionServiceTest {
         Suscriptor existente = new Suscriptor();
         existente.setId(7L);
         existente.setEmail("juana@mail.com");
+        existente.setNombre("Juana Diaz");
+        existente.setDireccion("Calle Falsa 123");
 
         when(suscriptorRepository.findByEmail("juana@mail.com")).thenReturn(Optional.of(existente));
         when(categoriaRepository.findById(10L)).thenReturn(Optional.of(categoria(10L, "Romance")));
@@ -201,6 +203,95 @@ class SuscripcionServiceTest {
 
         verify(suscriptorRepository, org.mockito.Mockito.never()).save(any(Suscriptor.class));
         assertEquals(existente, resultado.getSuscriptor());
+    }
+    @Test
+    void crear_conEmailYaRegistradoYDatosNuevos_actualizaNombreYDireccion() {
+        // Juana ya estaba registrada y se mudo: se suscribe a otra categoria con su direccion nueva.
+        CrearSuscripcionRequest request = requestAlta("Juana Diaz de Perez", "juana@mail.com", "Av. Siempreviva 742", 10L);
+
+        Suscriptor existente = new Suscriptor();
+        existente.setId(7L);
+        existente.setEmail("juana@mail.com");
+        existente.setNombre("Juana Diaz");
+        existente.setDireccion("Calle Falsa 123");
+
+        when(suscriptorRepository.findByEmail("juana@mail.com")).thenReturn(Optional.of(existente));
+        when(categoriaRepository.findById(10L)).thenReturn(Optional.of(categoria(10L, "Romance")));
+        when(suscripcionRepository.existsBySuscriptorIdAndCategoriaIdAndEstado(7L, 10L, EstadoSuscripcion.ACTIVA))
+                .thenReturn(false);
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicionAbierta());
+        when(curaduriaEdicionRepository.findByEdicionIdAndCategoriaId(1L, 10L))
+                .thenReturn(Optional.of(curaduria(5)));
+        when(suscripcionRepository.countByCategoriaIdAndEstado(10L, EstadoSuscripcion.ACTIVA))
+                .thenReturn(2L);
+        when(suscripcionRepository.save(any(Suscripcion.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Suscripcion resultado = service.crearSuscripcion(request);
+
+        // Es la misma persona (mismo suscriptor), con los datos actualizados.
+        assertEquals(existente, resultado.getSuscriptor());
+        assertEquals("Juana Diaz de Perez", existente.getNombre());
+        assertEquals("Av. Siempreviva 742", existente.getDireccion());
+        verify(suscriptorRepository).save(existente);
+    }
+
+    @Test
+    void crear_conEmailYaRegistradoYDireccionVacia_conservaLaDireccionAnterior() {
+        CrearSuscripcionRequest request = requestAlta("Juana Diaz", "juana@mail.com", "  ", 10L);
+
+        Suscriptor existente = new Suscriptor();
+        existente.setId(7L);
+        existente.setEmail("juana@mail.com");
+        existente.setNombre("Juana Diaz");
+        existente.setDireccion("Calle Falsa 123");
+
+        when(suscriptorRepository.findByEmail("juana@mail.com")).thenReturn(Optional.of(existente));
+        when(categoriaRepository.findById(10L)).thenReturn(Optional.of(categoria(10L, "Romance")));
+        when(suscripcionRepository.existsBySuscriptorIdAndCategoriaIdAndEstado(7L, 10L, EstadoSuscripcion.ACTIVA))
+                .thenReturn(false);
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicionAbierta());
+        when(curaduriaEdicionRepository.findByEdicionIdAndCategoriaId(1L, 10L))
+                .thenReturn(Optional.of(curaduria(5)));
+        when(suscripcionRepository.countByCategoriaIdAndEstado(10L, EstadoSuscripcion.ACTIVA))
+                .thenReturn(2L);
+        when(suscripcionRepository.save(any(Suscripcion.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.crearSuscripcion(request);
+
+        // Un dato que llega vacio no borra el que ya estaba; y como nada cambio, no se guarda.
+        assertEquals("Calle Falsa 123", existente.getDireccion());
+        verify(suscriptorRepository, never()).save(any(Suscriptor.class));
+    }
+
+    @Test
+    void crear_conEmailYaRegistrado_siElAltaSeRechaza_noModificaLosDatos() {
+        CrearSuscripcionRequest request = requestAlta("Juana Diaz de Perez", "juana@mail.com", "Av. Siempreviva 742", 10L);
+
+        Suscriptor existente = new Suscriptor();
+        existente.setId(7L);
+        existente.setEmail("juana@mail.com");
+        existente.setNombre("Juana Diaz");
+        existente.setDireccion("Calle Falsa 123");
+
+        when(suscriptorRepository.findByEmail("juana@mail.com")).thenReturn(Optional.of(existente));
+        when(categoriaRepository.findById(10L)).thenReturn(Optional.of(categoria(10L, "Romance")));
+        when(suscripcionRepository.existsBySuscriptorIdAndCategoriaIdAndEstado(7L, 10L, EstadoSuscripcion.ACTIVA))
+                .thenReturn(false);
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicionAbierta());
+        when(curaduriaEdicionRepository.findByEdicionIdAndCategoriaId(1L, 10L))
+                .thenReturn(Optional.of(curaduria(5)));
+        // Cupo completo: el alta se rechaza.
+        when(suscripcionRepository.countByCategoriaIdAndEstado(10L, EstadoSuscripcion.ACTIVA))
+                .thenReturn(5L);
+
+        assertThrows(IllegalStateException.class, () -> service.crearSuscripcion(request));
+
+        // Si el alta no se concreta, los datos del suscriptor quedan como estaban.
+        assertEquals("Juana Diaz", existente.getNombre());
+        assertEquals("Calle Falsa 123", existente.getDireccion());
+        verify(suscriptorRepository, never()).save(any(Suscriptor.class));
     }
 
     // Dar de Baja una Suscripción
