@@ -101,6 +101,17 @@ public class SuscripcionService {
             );
         }
 
+        // Desde el día del corte la ventana de altas de esta edición está cerrada: una suscripción nueva
+        // no puede entrar al padrón que se está por congelar, y el cupo de la edición siguiente todavía
+        // no se puede validar porque esa edición no existe.
+        if (esDesdeElCorte(edicionAbierta, LocalDate.now(clock))) {
+            throw new IllegalStateException(
+                    "Las altas de la edición '" + edicionAbierta.getNombre() + "' cerraron el "
+                            + edicionAbierta.getFechaCorte()
+                            + ". Podés suscribirte cuando se abra la próxima edición."
+            );
+        }
+
         CuraduriaEdicion curaduria = curaduriaEdicionRepository
                 .findByEdicionIdAndCategoriaId(edicionAbierta.getId(), categoria.getId())
                 .orElseThrow(() -> new IllegalStateException(
@@ -128,69 +139,57 @@ public class SuscripcionService {
     }
 
     /**
-     * Da de baja definitivamente una suscripción. Cancela cualquier
-     * cambio de categoria que hubiera quedado pendiente para el próximo corte.
+     * Da de baja una suscripción según la fecha de corte: antes del corte (o sin edición abierta) la baja es inmediata
+     * y cancela cualquier cambio de categoria pendiente; desde el día del corte queda pendiente y se aplica
+     * al ejecutar el cierre, así la suscripción sigue contando en la edición que se cierra y la baja rige desde la siguiente.
      */
     @Transactional
     public void darDeBaja(Long suscripcionId) {
-        Suscripcion suscripcion = suscripcionRepository.findById(suscripcionId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No existe la suscripcion con id " + suscripcionId
-                ));
+        Suscripcion suscripcion = buscarSuscripcion(suscripcionId);
 
-        if (suscripcion.getEstado() == EstadoSuscripcion.BAJA) {
-            throw new IllegalStateException("La suscripción ya esta dada de baja.");
+        if (estadoEfectivo(suscripcion) == EstadoSuscripcion.BAJA) {
+            throw new IllegalStateException("La suscripción ya está dada de baja o tiene una baja pendiente.");
         }
 
-        suscripcion.setEstado(EstadoSuscripcion.BAJA);
-        suscripcion.setFechaBaja(LocalDate.now(clock));
-        suscripcion.setProximaCategoria(null);
-        suscripcion.setFechaSolicitudCambio(null);
-
-        suscripcionRepository.save(suscripcion);
+        solicitarEstado(suscripcion, EstadoSuscripcion.BAJA);
     }
 
     /**
-     * Pausa una suscripción actualmente activa. Una suscripción pausada
-     * no ingresa al padrón del próximo corte hasta que se reanude.
+     * Pausa una suscripción activa según la fecha de corte: antes del corte la pausa es inmediata
+     * (no ingresa al padrón de la edición que se cierra); desde el día del corte queda pendiente y
+     * la suscripción todavía entra a esta edición.
      */
     @Transactional
     public void pausar(Long suscripcionId) {
-        Suscripcion suscripcion = suscripcionRepository.findById(suscripcionId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No existe la suscripcion con id " + suscripcionId
-                ));
+        Suscripcion suscripcion = buscarSuscripcion(suscripcionId);
 
-        if (suscripcion.getEstado() != EstadoSuscripcion.ACTIVA) {
+        if (estadoEfectivo(suscripcion) != EstadoSuscripcion.ACTIVA) {
             throw new IllegalStateException(
-                    "Solo se puede pausar una suscripción que este ACTIVA (estado actual: "
-                            + suscripcion.getEstado() + ")."
+                    "Solo se puede pausar una suscripción que esté ACTIVA (estado actual: "
+                            + estadoEfectivo(suscripcion) + ")."
             );
         }
 
-        suscripcion.setEstado(EstadoSuscripcion.PAUSADA);
-        suscripcionRepository.save(suscripcion);
+        solicitarEstado(suscripcion, EstadoSuscripcion.PAUSADA);
     }
 
     /**
-     * Reanuda una suscripción pausada, volviendo a dejarla ACTIVA.
+     * Reanuda una suscripción pausada según la fecha de corte: antes del corte vuelve a ACTIVA
+     * enseguida (puede entrar a la edición que se cierra); desde el día del corte queda pendiente
+     * y rige desde la siguiente. Reanudar una suscripción con pausa pendiente cancela esa pausa.
      */
     @Transactional
     public void reanudar(Long suscripcionId) {
-        Suscripcion suscripcion = suscripcionRepository.findById(suscripcionId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No existe la suscripción con id " + suscripcionId
-                ));
+        Suscripcion suscripcion = buscarSuscripcion(suscripcionId);
 
-        if (suscripcion.getEstado() != EstadoSuscripcion.PAUSADA) {
+        if (estadoEfectivo(suscripcion) != EstadoSuscripcion.PAUSADA) {
             throw new IllegalStateException(
-                    "Solo se puede reanudar una suscripción que esta PAUSADA (estado actual: "
-                            + suscripcion.getEstado() + ")."
+                    "Solo se puede reanudar una suscripción que esté PAUSADA (estado actual: "
+                            + estadoEfectivo(suscripcion) + ")."
             );
         }
 
-        suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
-        suscripcionRepository.save(suscripcion);
+        solicitarEstado(suscripcion, EstadoSuscripcion.ACTIVA);
     }
 
     /**
@@ -227,14 +226,9 @@ public class SuscripcionService {
         }
 
         // El cupo de la categoría destino no se valida acá: se controla en CierreEdicionService, al ejecutar el corte.
-        Edicion edicionAbierta = edicionRepository.findByEstado(EstadoEdicion.ABIERTA);
         LocalDate hoy = LocalDate.now(clock);
 
-        boolean desdeElCorte = edicionAbierta != null
-                && edicionAbierta.getFechaCorte() != null
-                && !hoy.isBefore(edicionAbierta.getFechaCorte());
-
-        if (desdeElCorte) {
+        if (esDesdeElCorte(hoy)) {
             // Desde el día del corte y hasta que se ejecute: rige desde la edición siguiente.
             suscripcion.setProximaCategoria(categoriaNueva);
             suscripcion.setFechaSolicitudCambio(hoy);
@@ -245,5 +239,54 @@ public class SuscripcionService {
             suscripcion.setFechaSolicitudCambio(null);
         }
         return suscripcionRepository.save(suscripcion);
+    }
+
+    private Suscripcion buscarSuscripcion(Long suscripcionId) {
+        return suscripcionRepository.findById(suscripcionId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No existe la suscripción con id " + suscripcionId
+                ));
+    }
+
+    // Estado que va a tener la suscripción una vez aplicado lo pendiente.
+    private EstadoSuscripcion estadoEfectivo(Suscripcion suscripcion) {
+        return suscripcion.getProximoEstado() != null
+                ? suscripcion.getProximoEstado()
+                : suscripcion.getEstado();
+    }
+
+    // Desde el día del corte (inclusive) y hasta que se ejecute el cierre, los cambios rigen desde la edición siguiente.
+    // Sin edición abierta (la anterior ya está congelada), el cambio es inmediato.
+    private boolean esDesdeElCorte(LocalDate hoy) {
+        return esDesdeElCorte(edicionRepository.findByEstado(EstadoEdicion.ABIERTA), hoy);
+    }
+
+    private boolean esDesdeElCorte(Edicion edicion, LocalDate hoy) {
+        return edicion != null
+                && edicion.getFechaCorte() != null
+                && !hoy.isBefore(edicion.getFechaCorte());
+    }
+
+    /**
+     * Antes del corte aplica el estado ya. Desde el corte lo deja como pendiente (proximoEstado + fechaSolicitudEstado),
+     * salvo que el destino coincida con el estado vigente: en ese caso cancela el pedido pendiente anterior.
+     */
+    private void solicitarEstado(Suscripcion suscripcion, EstadoSuscripcion destino) {
+        LocalDate hoy = LocalDate.now(clock);
+
+        if (esDesdeElCorte(hoy)) {
+            if (destino == suscripcion.getEstado()) {
+                suscripcion.setProximoEstado(null);
+                suscripcion.setFechaSolicitudEstado(null);
+            } else {
+                suscripcion.setProximoEstado(destino);
+                suscripcion.setFechaSolicitudEstado(hoy);
+            }
+        } else {
+            suscripcion.setProximoEstado(destino);
+            suscripcion.setFechaSolicitudEstado(hoy);
+            suscripcion.promoverProximoEstado();
+        }
+        suscripcionRepository.save(suscripcion);
     }
 }

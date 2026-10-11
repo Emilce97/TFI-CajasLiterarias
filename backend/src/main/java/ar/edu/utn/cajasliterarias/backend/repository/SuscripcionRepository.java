@@ -22,7 +22,7 @@ public interface SuscripcionRepository extends JpaRepository<Suscripcion, Long> 
     // Suscripciones con cambio de categoría pendiente.
     // Incluye pausadas: el cambio se promueve al ejecutar el corte.
     List<Suscripcion> findByProximaCategoriaIsNotNull();
-    
+
     // Suscripciones con pausa/reanudacion/baja pendiente: se promueven al ejecutar el corte.
     List<Suscripcion> findByProximoEstadoIsNotNull();
 }
