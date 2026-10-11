@@ -2,6 +2,7 @@ package ar.edu.utn.cajasliterarias.backend.service;
 
 import ar.edu.utn.cajasliterarias.backend.dto.ResumenCierreDTO;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoEdicion;
+import ar.edu.utn.cajasliterarias.backend.enums.EstadoFaltante;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoPago;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoSuscripcion;
 import ar.edu.utn.cajasliterarias.backend.enums.MotivoExclusion;
@@ -550,6 +551,84 @@ class CierreEdicionServiceTest {
         assertEquals(misterio, suscripcion.getCategoria());
         // pero el pedido que ya se genero (snapshot inmutable) no se ve afectado
         assertEquals("Romance", pedidoGenerado.getCategoriaCongelada());
+    }
+
+    // nombre del destinatario y demanda
+
+    /**
+     * Prepara un corte con una sola suscripcion ACTIVA, pago validado y curaduria,
+     * para que se genere exactamente un pedido.
+     */
+    private Suscriptor prepararCorteConUnPedido() {
+        Edicion edicion = new Edicion();
+        edicion.setId(1L);
+        edicion.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(edicion));
+        when(pedidoEdicionRepository.existsByEdicionId(1L)).thenReturn(false);
+
+        Suscriptor suscriptor = new Suscriptor();
+        suscriptor.setNombre("Juana Diaz");
+        suscriptor.setDireccion("Calle Falsa 123");
+
+        Categoria romance = new Categoria();
+        romance.setId(10L);
+        romance.setNombre("Romance");
+
+        Suscripcion suscripcion = new Suscripcion();
+        suscripcion.setId(100L);
+        suscripcion.setSuscriptor(suscriptor);
+        suscripcion.setCategoria(romance);
+        suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
+        when(suscripcionRepository.findByEstado(EstadoSuscripcion.ACTIVA)).thenReturn(List.of(suscripcion));
+
+        Pago pago = new Pago();
+        pago.setId(1L);
+        pago.setSuscripcion(suscripcion);
+        pago.setEstado(EstadoPago.VALIDADO);
+        when(pagoRepository.findByEdicionId(1L)).thenReturn(List.of(pago));
+
+        Libro libro = new Libro();
+        libro.setId(1L);
+        libro.setTitulo("El Aleph");
+
+        CuraduriaEdicion curaduria = new CuraduriaEdicion();
+        curaduria.setCategoria(romance);
+        curaduria.setLibro(libro);
+        curaduria.setPrecioVigente(BigDecimal.valueOf(5000));
+        when(curaduriaEdicionRepository.findByEdicionId(1L)).thenReturn(List.of(curaduria));
+
+        return suscriptor;
+    }
+
+    @Test
+    void elPedidoCongelaElNombreDelDestinatario_yNoCambiaSiElSuscriptorCambiaDespues() {
+        Suscriptor suscriptor = prepararCorteConUnPedido();
+
+        service.ejecutarCorte(1L);
+
+        ArgumentCaptor<PedidoEdicion> captor = ArgumentCaptor.forClass(PedidoEdicion.class);
+        verify(pedidoEdicionRepository).save(captor.capture());
+        PedidoEdicion pedido = captor.getValue();
+        assertEquals("Juana Diaz", pedido.getNombreDestinatario());
+
+        // Despues del corte la suscriptora cambia su nombre: el pedido ya congelado no se entera.
+        suscriptor.setNombre("Juana Diaz de Perez");
+        assertEquals("Juana Diaz", pedido.getNombreDestinatario());
+    }
+
+    @Test
+    void laDemandaRecienCalculadaQuedaComoFaltante() {
+        prepararCorteConUnPedido();
+
+        service.ejecutarCorte(1L);
+
+        ArgumentCaptor<DemandaEdicion> captor = ArgumentCaptor.forClass(DemandaEdicion.class);
+        verify(demandaEdicionRepository).save(captor.capture());
+        DemandaEdicion demanda = captor.getValue();
+        assertEquals(1, demanda.getCantidadRequerida());
+        assertEquals(0, demanda.getCantidadRecibida());
+        // Todavia no llego ningun libro: no puede figurar como "sin faltante".
+        assertEquals(EstadoFaltante.FALTANTE, demanda.getEstadoFaltante());
     }
 
     // cierres simultaneos

@@ -119,6 +119,7 @@ CREATE TABLE pedido_edicion (
     categoria_congelada VARCHAR(50) NOT NULL,
     libro_congelado VARCHAR(255) NOT NULL,
     precio_aplicado DECIMAL(10,2) NOT NULL,
+    nombre_destinatario VARCHAR(150) NOT NULL,
     direccion_entrega VARCHAR(255) NOT NULL,
     estado_pedido VARCHAR(30) NOT NULL, -- PENDIENTE_DE_EMPAQUE / EMPAQUETADO / DESPACHADO / ENTREGADO
     tracking VARCHAR(100),
@@ -164,7 +165,7 @@ CREATE TABLE demanda_edicion (
     libro_id BIGINT NOT NULL,
     cantidad_requerida INT NOT NULL,
     cantidad_recibida INT DEFAULT 0,
-    estado_faltante VARCHAR(20) DEFAULT 'SIN_FALTANTE',
+    estado_faltante VARCHAR(20) DEFAULT 'FALTANTE',
     CONSTRAINT fk_demanda_edicion
         FOREIGN KEY (edicion_id) REFERENCES edicion(id),
     CONSTRAINT fk_demanda_libro
