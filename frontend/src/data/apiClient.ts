@@ -11,9 +11,12 @@ export async function apiGet<T>(path: string): Promise<T> {
     return response.json();
 }
 
-export async function apiPatch<T>(path: string): Promise<T> {
+// body es opcional: validar un pago no manda nada, registrar una recepcion si.
+export async function apiPatch<T>(path: string, body?: unknown): Promise<T> {
     const response = await fetch(`${API_BASE_URL}${path}`, {
         method: "PATCH",
+        headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
     });
     if (!response.ok) {
         throw new Error(`Error al llamar a ${path}: ${response.status}`);
