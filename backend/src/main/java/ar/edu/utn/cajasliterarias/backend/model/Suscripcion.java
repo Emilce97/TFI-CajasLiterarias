@@ -32,6 +32,33 @@ public class Suscripcion {
     private Categoria proximaCategoria;
 
     private LocalDate fechaSolicitudCambio;
+
+    // Pausa, reanudacion o baja pedida desde el dia del corte: no pisa "estado" hasta que
+    // se ejecute el cierre, asi la suscripcion sigue contando en el padron de la edicion que se cierra.
+    @Enumerated(EnumType.STRING)
+    private EstadoSuscripcion proximoEstado;
+
+    private LocalDate fechaSolicitudEstado;
+
     private LocalDate fechaAlta;
     private LocalDate fechaBaja;
+
+    /**
+     * Aplica la pausa/reanudación/baja pendiente, si la hay. Lo usa el service de suscripción
+     * (cambio inmediato) y el cierre de edición (cambio pedido desde el día del corte).
+     */
+    public void promoverProximoEstado() {
+        if (proximoEstado == null) {
+            return;
+        }
+        estado = proximoEstado;
+        if (estado == EstadoSuscripcion.BAJA) {
+            fechaBaja = fechaSolicitudEstado;
+            // una suscripción dada de baja no necesita un cambio de categoría pendiente
+            proximaCategoria = null;
+            fechaSolicitudCambio = null;
+        }
+        proximoEstado = null;
+        fechaSolicitudEstado = null;
+    }
 }
