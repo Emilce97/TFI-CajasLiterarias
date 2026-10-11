@@ -419,4 +419,151 @@ class SuscripcionServiceTest {
         assertNull(resultado.getProximaCategoria());
         assertNull(resultado.getFechaSolicitudCambio());
     }
+    
+    // Alta, baja, pausa y reanudación según la fecha de corte
+    private Suscripcion suscripcionEn(EstadoSuscripcion estado) {
+        Suscripcion suscripcion = new Suscripcion();
+        suscripcion.setEstado(estado);
+        when(suscripcionRepository.findById(100L)).thenReturn(Optional.of(suscripcion));
+        return suscripcion;
+    }
+
+    private void edicionConCorteEn(int diasDesdeHoy) {
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA))
+                .thenReturn(edicionAbiertaConCorte(LocalDate.now(clock).plusDays(diasDesdeHoy)));
+    }
+
+    @Test
+    void crear_elDiaDelCorte_lanzaExcepcionPorVentanaDeAltasCerrada() {
+        CrearSuscripcionRequest request = requestAlta("Juana Diaz", "juana@mail.com", "Calle Falsa 123", 10L);
+        Suscriptor suscriptor = new Suscriptor();
+        suscriptor.setId(1L);
+
+        when(suscriptorRepository.findByEmail("juana@mail.com")).thenReturn(Optional.of(suscriptor));
+        when(categoriaRepository.findById(10L)).thenReturn(Optional.of(categoria(10L, "Romance")));
+        when(suscripcionRepository.existsBySuscriptorIdAndCategoriaIdAndEstado(1L, 10L, EstadoSuscripcion.ACTIVA))
+                .thenReturn(false);
+        edicionConCorteEn(0);
+
+        assertThrows(IllegalStateException.class, () -> service.crearSuscripcion(request));
+        verify(suscripcionRepository, never()).save(any(Suscripcion.class));
+    }
+
+    @Test
+    void crear_antesDelCorte_creaLaSuscripcion() {
+        CrearSuscripcionRequest request = requestAlta("Juana Diaz", "juana@mail.com", "Calle Falsa 123", 10L);
+        Suscriptor suscriptor = new Suscriptor();
+        suscriptor.setId(1L);
+
+        when(suscriptorRepository.findByEmail("juana@mail.com")).thenReturn(Optional.of(suscriptor));
+        when(categoriaRepository.findById(10L)).thenReturn(Optional.of(categoria(10L, "Romance")));
+        when(suscripcionRepository.existsBySuscriptorIdAndCategoriaIdAndEstado(1L, 10L, EstadoSuscripcion.ACTIVA))
+                .thenReturn(false);
+        edicionConCorteEn(5);
+        when(curaduriaEdicionRepository.findByEdicionIdAndCategoriaId(1L, 10L))
+                .thenReturn(Optional.of(curaduria(5)));
+        when(suscripcionRepository.countByCategoriaIdAndEstado(10L, EstadoSuscripcion.ACTIVA))
+                .thenReturn(2L);
+        when(suscripcionRepository.save(any(Suscripcion.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Suscripcion resultado = service.crearSuscripcion(request);
+
+        assertEquals(EstadoSuscripcion.ACTIVA, resultado.getEstado());
+    }
+
+    @Test
+    void pausar_antesDelCorte_quedaPausadaEnElActo() {
+        Suscripcion suscripcion = suscripcionEn(EstadoSuscripcion.ACTIVA);
+        edicionConCorteEn(5);
+
+        service.pausar(100L);
+
+        assertEquals(EstadoSuscripcion.PAUSADA, suscripcion.getEstado());
+        assertNull(suscripcion.getProximoEstado());
+    }
+
+    @Test
+    void pausar_elDiaDelCorte_quedaPendienteYSigueActivaParaEstaEdicion() {
+        Suscripcion suscripcion = suscripcionEn(EstadoSuscripcion.ACTIVA);
+        edicionConCorteEn(0);
+
+        service.pausar(100L);
+
+        assertEquals(EstadoSuscripcion.ACTIVA, suscripcion.getEstado());
+        assertEquals(EstadoSuscripcion.PAUSADA, suscripcion.getProximoEstado());
+        assertEquals(LocalDate.now(clock), suscripcion.getFechaSolicitudEstado());
+    }
+
+    @Test
+    void reanudar_antesDelCorte_quedaActivaEnElActo() {
+        Suscripcion suscripcion = suscripcionEn(EstadoSuscripcion.PAUSADA);
+        edicionConCorteEn(5);
+
+        service.reanudar(100L);
+
+        assertEquals(EstadoSuscripcion.ACTIVA, suscripcion.getEstado());
+        assertNull(suscripcion.getProximoEstado());
+    }
+
+    @Test
+    void reanudar_elDiaDelCorte_quedaPendienteYSigueSiendoPausadaParaEstaEdicion() {
+        Suscripcion suscripcion = suscripcionEn(EstadoSuscripcion.PAUSADA);
+        edicionConCorteEn(0);
+
+        service.reanudar(100L);
+
+        assertEquals(EstadoSuscripcion.PAUSADA, suscripcion.getEstado());
+        assertEquals(EstadoSuscripcion.ACTIVA, suscripcion.getProximoEstado());
+    }
+
+    @Test
+    void reanudar_conPausaPendiente_laCancela() {
+        Suscripcion suscripcion = suscripcionEn(EstadoSuscripcion.ACTIVA);
+        suscripcion.setProximoEstado(EstadoSuscripcion.PAUSADA);
+        suscripcion.setFechaSolicitudEstado(LocalDate.now(clock));
+        edicionConCorteEn(0);
+
+        service.reanudar(100L);
+
+        assertEquals(EstadoSuscripcion.ACTIVA, suscripcion.getEstado());
+        assertNull(suscripcion.getProximoEstado());
+        assertNull(suscripcion.getFechaSolicitudEstado());
+    }
+
+    @Test
+    void baja_conPausaPendiente_laReemplazaPorLaBaja() {
+        Suscripcion suscripcion = suscripcionEn(EstadoSuscripcion.ACTIVA);
+        suscripcion.setProximoEstado(EstadoSuscripcion.PAUSADA);
+        suscripcion.setFechaSolicitudEstado(LocalDate.now(clock).minusDays(1));
+        edicionConCorteEn(0);
+
+        service.darDeBaja(100L);
+
+        assertEquals(EstadoSuscripcion.ACTIVA, suscripcion.getEstado());
+        assertEquals(EstadoSuscripcion.BAJA, suscripcion.getProximoEstado());
+        assertEquals(LocalDate.now(clock), suscripcion.getFechaSolicitudEstado());
+    }
+
+    @Test
+    void baja_elDiaDelCorte_quedaPendienteYNoTocaElEstadoVigente() {
+        Suscripcion suscripcion = suscripcionEn(EstadoSuscripcion.ACTIVA);
+        edicionConCorteEn(0);
+
+        service.darDeBaja(100L);
+
+        assertEquals(EstadoSuscripcion.ACTIVA, suscripcion.getEstado());
+        assertEquals(EstadoSuscripcion.BAJA, suscripcion.getProximoEstado());
+        assertNull(suscripcion.getFechaBaja());
+    }
+
+    @Test
+    void conBajaPendiente_noSePuedePausarReanudarNiDarDeBajaDeNuevo() {
+        Suscripcion suscripcion = suscripcionEn(EstadoSuscripcion.ACTIVA);
+        suscripcion.setProximoEstado(EstadoSuscripcion.BAJA);
+
+        assertThrows(IllegalStateException.class, () -> service.pausar(100L));
+        assertThrows(IllegalStateException.class, () -> service.reanudar(100L));
+        assertThrows(IllegalStateException.class, () -> service.darDeBaja(100L));
+    }
 }
