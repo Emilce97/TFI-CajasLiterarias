@@ -7,7 +7,8 @@
 CREATE TABLE administradora (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
-    email VARCHAR(150) NOT NULL
+    email VARCHAR(150) NOT NULL,
+    password_hash VARCHAR(100) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE categoria (
