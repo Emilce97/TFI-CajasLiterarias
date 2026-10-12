@@ -129,6 +129,11 @@ public class SuscripcionService {
             );
         }
 
+        // Email ya registrado: los datos que llegan en el alta pasan a ser los vigentes.
+        // No afecta el historial, porque PedidoEdicion congela nombre y direccion en cada corte.
+        // Se hace recien aca, cuando el alta ya paso todas las validaciones.
+        actualizarDatosDelSuscriptor(suscriptor, request);
+
         Suscripcion suscripcion = new Suscripcion();
         suscripcion.setSuscriptor(suscriptor);
         suscripcion.setCategoria(categoria);
@@ -136,6 +141,29 @@ public class SuscripcionService {
         suscripcion.setFechaAlta(LocalDate.now(clock));
 
         return suscripcionRepository.save(suscripcion);
+    }
+
+    /**
+     * Si el email ya existia, actualiza nombre y direccion con los datos del alta.
+     * Solo reemplaza un dato si llega completo y es distinto, y solo guarda si hubo cambios.
+     */
+    private void actualizarDatosDelSuscriptor(Suscriptor suscriptor, CrearSuscripcionRequest request) {
+        boolean huboCambios = false;
+
+        if (!request.getNombre().equals(suscriptor.getNombre())) {
+            suscriptor.setNombre(request.getNombre());
+            huboCambios = true;
+        }
+
+        String direccion = request.getDireccion();
+        if (direccion != null && !direccion.isBlank() && !direccion.equals(suscriptor.getDireccion())) {
+            suscriptor.setDireccion(direccion);
+            huboCambios = true;
+        }
+
+        if (huboCambios) {
+            suscriptorRepository.save(suscriptor);
+        }
     }
 
     /**
