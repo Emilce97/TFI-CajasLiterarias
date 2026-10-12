@@ -43,4 +43,5 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	environment 'JWT_SECRET', 'clave-de-prueba-de-al-menos-32-caracteres-123'
 }
