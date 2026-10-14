@@ -1,15 +1,19 @@
 package ar.edu.utn.cajasliterarias.backend.controller;
 
+import ar.edu.utn.cajasliterarias.backend.config.SecurityConfig;
 import ar.edu.utn.cajasliterarias.backend.dto.CrearEdicionRequest;
 import ar.edu.utn.cajasliterarias.backend.dto.CuraduriaItemDTO;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoEdicion;
 import ar.edu.utn.cajasliterarias.backend.model.Edicion;
+import ar.edu.utn.cajasliterarias.backend.security.JwtService;
 import ar.edu.utn.cajasliterarias.backend.service.EdicionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -27,6 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(EdicionController.class)
+@Import(SecurityConfig.class)
+@WithMockUser(roles = "ADMIN")
 class EdicionControllerTest {
 
     @Autowired
@@ -36,6 +42,9 @@ class EdicionControllerTest {
 
     @MockitoBean
     private EdicionService edicionService;
+
+    @MockitoBean
+    private JwtService jwtService;
 
     private CrearEdicionRequest requestValido() {
         CuraduriaItemDTO item = new CuraduriaItemDTO();

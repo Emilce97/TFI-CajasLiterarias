@@ -1,7 +1,9 @@
 package ar.edu.utn.cajasliterarias.backend.config;
 
-import ar.edu.utn.cajasliterarias.backend.security.JwtAuthFilter;
 import java.io.IOException;
+
+import ar.edu.utn.cajasliterarias.backend.security.JwtAuthFilter;
+import ar.edu.utn.cajasliterarias.backend.security.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
+    private final JwtService jwtService;
 
     @Bean
     SecurityFilterChain chain(HttpSecurity http) throws Exception {
@@ -43,7 +45,7 @@ public class SecurityConfig {
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) -> escribir(res, 401, "No autenticado", "Iniciá sesión para continuar"))
                         .accessDeniedHandler((req, res, ex) -> escribir(res, 403, "Sin permisos", "No tenés permisos para esta operación")))
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

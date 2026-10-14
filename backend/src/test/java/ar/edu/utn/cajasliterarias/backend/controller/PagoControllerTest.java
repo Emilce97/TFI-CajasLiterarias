@@ -1,14 +1,18 @@
 package ar.edu.utn.cajasliterarias.backend.controller;
 
+import ar.edu.utn.cajasliterarias.backend.config.SecurityConfig;
 import ar.edu.utn.cajasliterarias.backend.dto.CrearPagoRequest;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoPago;
 import ar.edu.utn.cajasliterarias.backend.model.Pago;
+import ar.edu.utn.cajasliterarias.backend.security.JwtService;
 import ar.edu.utn.cajasliterarias.backend.service.PagoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -31,6 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * y con el JSON bien armado, incluidos los errores que traduce GlobalExceptionHandler.
  */
 @WebMvcTest(PagoController.class)
+@Import(SecurityConfig.class)
+@WithMockUser(roles = "ADMIN")
 class PagoControllerTest {
 
     @Autowired
@@ -40,6 +46,9 @@ class PagoControllerTest {
 
     @MockitoBean
     private PagoService pagoService;
+
+    @MockitoBean
+    private JwtService jwtService;
 
     // helpers
 
