@@ -1,11 +1,13 @@
 import { apiGet, apiPatch } from "../data/apiClient";
 import type { Pago } from "../types";
+import { exigirRol } from "../utils/auth";
 
 /**
  * Renderiza el panel de conciliacion de pagos: lista los pagos pendientes
  * de validar, con un boton para validar cada uno.
  */
 export async function renderPagosPage(container: HTMLElement) {
+    if (!exigirRol("ADMIN")) return;
     container.innerHTML = "<h1>Pagos pendientes</h1><p>Cargando...</p>";
 
     try {

@@ -10,6 +10,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         suscripcion: resolve(__dirname, 'suscripcion.html'),
+        login: resolve(__dirname, 'login.html'),
       },
     },
   },
