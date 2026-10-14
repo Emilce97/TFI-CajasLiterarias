@@ -111,6 +111,29 @@ class EdicionControllerTest {
                 .andExpect(jsonPath("$[0].nombre").value("Septiembre 2026"))
                 .andExpect(jsonPath("$[1].nombre").value("Octubre 2026"));
     }
+
+    @Test
+    @WithMockUser(roles = "OTRO")
+    void listarEdiciones_sinSerAdmin_devuelveSoloLaAbierta() throws Exception {
+        Edicion cerrada = new Edicion();
+        cerrada.setId(1L);
+        cerrada.setNombre("Septiembre 2026");
+        cerrada.setEstado(EstadoEdicion.CERRADA);
+
+        Edicion abierta = new Edicion();
+        abierta.setId(2L);
+        abierta.setNombre("Octubre 2026");
+        abierta.setEstado(EstadoEdicion.ABIERTA);
+
+        when(edicionService.listarEdiciones()).thenReturn(List.of(cerrada, abierta));
+
+        mockMvc.perform(get("/api/ediciones"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].nombre").value("Octubre 2026"))
+                .andExpect(jsonPath("$[0].estado").value("ABIERTA"));
+    }
+
     @Test
     void listarCuradurias_conEdicionExistente_devuelveLista() throws Exception {
         Categoria categoria = new Categoria();
