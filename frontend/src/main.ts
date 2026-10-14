@@ -27,11 +27,11 @@ document.querySelector("#nav-ediciones")!.addEventListener("click", () => {
     renderEdicionesPage(contenido);
 });
 
-document.querySelector("#nav-pagos")!.addEventListener("click", () => {
+document.querySelector("#nav-pagos")?.addEventListener("click", () => {
     renderPagosPage(contenido);
 });
 
-document.querySelector("#nav-demanda")!.addEventListener("click", () => {
+document.querySelector("#nav-demanda")?.addEventListener("click", () => {
     renderDemandaPage(contenido);
 });
 
