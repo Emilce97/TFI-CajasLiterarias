@@ -154,6 +154,13 @@ public class CierreEdicionService {
             pedidosGenerados.add(pedido);
         }
 
+        // Pausas, reanudaciones y bajas pedidas desde el día del corte: rigen desde la edición siguiente.
+        // Va antes que la promoción de categoría: una baja limpia el cambio de categoría pendiente.
+        for (Suscripcion suscripcion : suscripcionRepository.findByProximoEstadoIsNotNull()) {
+            suscripcion.promoverProximoEstado();
+            suscripcionRepository.save(suscripcion);
+        }
+
         for (Suscripcion suscripcion : suscripcionRepository.findByProximaCategoriaIsNotNull()) {
             suscripcion.setCategoria(suscripcion.getProximaCategoria());
             suscripcion.setProximaCategoria(null);

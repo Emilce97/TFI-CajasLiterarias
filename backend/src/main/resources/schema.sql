@@ -78,6 +78,9 @@ CREATE TABLE suscripcion (
     -- hasta el proximo cierre.
     proxima_categoria_id  BIGINT,
     fecha_solicitud_cambio DATE,
+    -- Pausa/reanudacion/baja pedida desde el dia del corte: no pisa 'estado' hasta el proximo cierre.
+    proximo_estado VARCHAR(30),
+    fecha_solicitud_estado DATE,
     fecha_alta DATE,
     fecha_baja DATE,
     CONSTRAINT fk_suscripcion_suscriptor
