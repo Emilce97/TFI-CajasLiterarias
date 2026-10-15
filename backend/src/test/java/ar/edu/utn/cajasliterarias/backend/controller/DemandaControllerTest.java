@@ -1,12 +1,16 @@
 package ar.edu.utn.cajasliterarias.backend.controller;
 
+import ar.edu.utn.cajasliterarias.backend.config.SecurityConfig;
 import ar.edu.utn.cajasliterarias.backend.dto.DemandaItemDTO;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoFaltante;
+import ar.edu.utn.cajasliterarias.backend.security.JwtService;
 import ar.edu.utn.cajasliterarias.backend.service.DemandaService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -19,6 +23,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(DemandaController.class)
+@Import(SecurityConfig.class)
+@WithMockUser(roles = "ADMIN")
 class DemandaControllerTest {
 
     @Autowired
@@ -26,6 +32,9 @@ class DemandaControllerTest {
 
     @MockitoBean
     private DemandaService demandaService;
+
+    @MockitoBean
+    private JwtService jwtService;
 
     private DemandaItemDTO item() {
         DemandaItemDTO item = new DemandaItemDTO();

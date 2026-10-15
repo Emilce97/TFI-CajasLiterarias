@@ -55,7 +55,7 @@ A futuro, las administradoras planean incorporar una modalidad premium con un Cl
 
 | Carpeta | Contenido |
 | :--- | :--- |
-| `docs/` | Documentación del TFI en Markdown: propuesta y plan de trabajo (Etapa 1), modelo de datos / DER (Etapa 2 semana 1) y futuras entregas. |
+| `docs/` | Documentación del TFI en Markdown: propuesta y plan de trabajo (Etapa 1), modelo de datos / DER (Etapa 2 semana 1), [autenticación y configuración](./docs/autenticacion.md) y futuras entregas. |
 | `backend/` | API en Spring Boot (Java) + Spring Data JPA. |
 | `frontend/` | Cliente en HTML, CSS y TypeScript con Vite. |
 
@@ -94,7 +94,8 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 * **Gestión de stock e inventario mensual:** Cálculo automático de la demanda de libros e insumos por edición cerrada, registro de cantidades recibidas de proveedores y detección/alerta de faltantes previo a la etapa de empaquetado.  
 * **Validación manual de pagos:** Panel de conciliación para que las administradoras verifiquen transferencias y habiliten los pedidos antes del día 21.  
 * **Panel de despacho:** Armado de pedidos, generación de remito interno, carga manual de código de seguimiento y actualización de estados del envío (Pendiente de empaque → Empaquetado → Despachado → Entregado).  
-* **Historial de suscriptor:** Registro relacional de pedidos previos para prevenir repetición involuntaria de títulos.
+* **Historial de suscriptor:** Registro relacional de pedidos previos para prevenir repetición involuntaria de títulos.  
+* **Acceso de la administradora:** login con JWT; las rutas de administración (validación de pagos, cierre de edición, demanda) requieren sesión y el resto de la plataforma es pública.
 
 ### Nice to have (si sobra tiempo dentro del cronograma)  
 * **Recordatorios y avisos automáticos por correo:** Alertas preventivas programadas. Por ejemplo, recordatorio el día 17 sobre el vencimiento del plazo de pago el día 20 y aviso automático el día 21 informando si la suscripción ingresó a la edición o quedó pospuesta para el mes entrante por falta de pago. *(Nota: En el MVP, esta información se consulta de forma pasiva directamente en el panel web del suscriptor).*

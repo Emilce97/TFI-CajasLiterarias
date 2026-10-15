@@ -14,4 +14,7 @@ public class Administradora {
 
     private String nombre;
     private String email;
+
+    @Column(name = "password_hash", length = 100)
+    private String passwordHash;
 }

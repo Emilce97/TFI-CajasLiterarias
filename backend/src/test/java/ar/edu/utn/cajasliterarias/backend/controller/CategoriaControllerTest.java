@@ -1,10 +1,13 @@
 package ar.edu.utn.cajasliterarias.backend.controller;
 
+import ar.edu.utn.cajasliterarias.backend.config.SecurityConfig;
 import ar.edu.utn.cajasliterarias.backend.model.Categoria;
 import ar.edu.utn.cajasliterarias.backend.repository.CategoriaRepository;
+import ar.edu.utn.cajasliterarias.backend.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -16,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CategoriaController.class)
+@Import(SecurityConfig.class)
 class CategoriaControllerTest {
 
     @Autowired
@@ -23,6 +27,9 @@ class CategoriaControllerTest {
 
     @MockitoBean
     private CategoriaRepository categoriaRepository;
+
+    @MockitoBean
+    private JwtService jwtService;
 
     @Test
     void listarCategorias_devuelveLasCuatroCategorias() throws Exception {

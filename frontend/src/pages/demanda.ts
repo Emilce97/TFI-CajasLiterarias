@@ -1,11 +1,13 @@
 import { apiGet, apiPatch } from "../data/apiClient";
 import type { DemandaItem, Edicion } from "../types";
+import { exigirRol } from "../utils/auth";
 
 /**
  * Panel de demanda para proveedores: la administradora elige una edicion cerrada,
  * ve cuantos libros tiene que pedirle a cada proveedor y registra lo que va llegando.
  */
 export async function renderDemandaPage(container: HTMLElement) {
+    if (!exigirRol("ADMIN")) return;
     container.innerHTML = "<h1>Demanda para proveedores</h1><p>Cargando...</p>";
 
     try {

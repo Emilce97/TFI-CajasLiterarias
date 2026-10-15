@@ -1,5 +1,6 @@
 import { apiGet } from "../data/apiClient";
 import type { Edicion, CuraduriaEdicion } from "../types";
+import { tieneRol } from "../utils/auth";
 
 /**
  * Renderiza la pagina de "Ediciones" dentro del elemento contenedor dado.
@@ -10,8 +11,12 @@ export async function renderEdicionesPage(container: HTMLElement) {
     container.innerHTML = "<h1>Ediciones</h1><p>Cargando ediciones...</p>";
 
     try {
-        const ediciones = await apiGet<Edicion[]>("/ediciones");
-        renderListaDeEdiciones(container, ediciones);
+        const todas = await apiGet<Edicion[]>("/ediciones");
+        // Visitantes: solo la edición abierta. Administradora: todas (para ver el historial).
+        const visibles = tieneRol("ADMIN")
+            ? todas
+            : todas.filter((edicion) => edicion.estado === "ABIERTA");
+        renderListaDeEdiciones(container, visibles);
     } catch (error) {
         container.innerHTML = "<h1>Ediciones</h1><p> No se pudieron cargar las ediciones.</p>";
         console.error(error);
@@ -19,8 +24,11 @@ export async function renderEdicionesPage(container: HTMLElement) {
 }
 
 function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[]) {
+    const titulo = tieneRol("ADMIN") ? "Ediciones" : "Edición actual";
+    
     container.innerHTML = `
-    <h1>Ediciones</h1>
+    <h1>${titulo}</h1>
+    ${ediciones.length === 0 ? "<p>No hay una edición abierta por el momento.</p>" : ""}
     <ul id="lista-ediciones"></ul>
   `;
 
@@ -54,7 +62,8 @@ function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[]) {
             const curadurias = await apiGet<CuraduriaEdicion[]>(
                 `/ediciones/${edicionId}/curadurias`
             );
-            renderCuradurias(contenedorCuradurias, curadurias);
+            const edicion = ediciones.find((e) => String(e.id) === edicionId);
+            renderCuradurias(contenedorCuradurias, curadurias, edicion?.estado === "ABIERTA");
         } catch (error) {
             contenedorCuradurias.innerHTML = " No se pudo cargar el detalle.";
             console.error(error);
@@ -62,19 +71,27 @@ function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[]) {
     });
 }
 
-function renderCuradurias(contenedor: Element, curadurias: CuraduriaEdicion[]) {
+function renderCuradurias(
+    contenedor: Element,
+    curadurias: CuraduriaEdicion[],
+    permiteSuscripcion: boolean
+) {
     contenedor.innerHTML = `
     <ul>
       ${curadurias
-        .map(
-            (c) => `
+            .map(
+                (c) => `
         <li>
           ${c.categoria.nombre}: "${c.libro.titulo}"
           — $${c.precioVigente} — cupo: ${c.cupoMaximo}
+          ${permiteSuscripcion
+                        ? `— <a href="/suscripcion.html?categoriaId=${c.categoria.id}">Suscribirme</a>`
+                        : ""
+                    }
         </li>
       `
-        )
-        .join("")}
+            )
+            .join("")}
     </ul>
   `;
 }
