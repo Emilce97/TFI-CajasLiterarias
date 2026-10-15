@@ -11,6 +11,7 @@ El backend protege las rutas de administración con JWT y rol `ADMIN`.
 | `ADMIN_EMAIL` | Email de la administradora inicial. |
 | `ADMIN_PASSWORD` | Contraseña inicial. |
 | `DB_USERNAME`, `DB_PASSWORD` | Acceso a MySQL. |
+| `FRONTEND_URL` | Origen permitido para CORS (la dirección del frontend). Por defecto, `http://localhost:5173`. |
 
 `ADMIN_PASSWORD` solo se aplica la primera vez: si la administradora ya tiene contraseña, cambiar la variable no la actualiza. Para resetearla, poner `password_hash` en NULL en esa fila de `administradora` y reiniciar el backend.
 

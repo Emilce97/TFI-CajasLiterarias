@@ -32,7 +32,7 @@ public class EdicionController {
     }
 
     /**
-     * Lista todas las ediciones existentes.
+     * Lista todas las ediciones si quien consulta es ADMIN; al público, solo la abierta.
      * GET /api/ediciones
      */
     @GetMapping

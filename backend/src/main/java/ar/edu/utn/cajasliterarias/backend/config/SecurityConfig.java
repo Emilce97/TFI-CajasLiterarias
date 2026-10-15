@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(a -> a
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
-                        // públicas por ahora (la guía 2 las reemplaza por reglas de SUSCRIPTOR)
+                        // públicas por ahora: cuando exista el rol SUSCRIPTOR, pasan a requerirlo
                         .requestMatchers(HttpMethod.GET, "/api/categorias").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ediciones", "/api/ediciones/*/curadurias").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/suscripciones", "/api/pagos").permitAll()
@@ -41,7 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/pagos/pendientes", "/api/pagos/*/validar").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/ediciones/*/demanda").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/demanda/*/recepcion").hasRole("ADMIN")
-                        .anyRequest().authenticated())
+                        .anyRequest().hasRole("ADMIN"))
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) -> escribir(res, 401, "No autenticado", "Iniciá sesión para continuar"))
                         .accessDeniedHandler((req, res, ex) -> escribir(res, 403, "Sin permisos", "No tenés permisos para esta operación")))
