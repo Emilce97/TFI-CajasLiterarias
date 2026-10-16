@@ -1,7 +1,10 @@
 package ar.edu.utn.cajasliterarias.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
+
 import java.time.LocalDate;
 
 @Entity
@@ -17,4 +20,11 @@ public class Suscriptor {
     private String email;
     private String direccion;
     private LocalDate fechaRegistro;
+
+    // Hash BCrypt. Nullable: los suscriptores creados con el alta vieja no tienen password y no pueden loguearse.
+    // @JsonIgnore: Pago y Suscripcion contienen un Suscriptor y se devuelven como JSON; el hash nunca tiene que salir.
+    @JsonIgnore
+    @ToString.Exclude
+    @Column(name = "password_hash", length = 100)
+    private String passwordHash;
 }

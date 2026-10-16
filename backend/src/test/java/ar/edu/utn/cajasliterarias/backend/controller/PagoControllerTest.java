@@ -4,6 +4,8 @@ import ar.edu.utn.cajasliterarias.backend.config.SecurityConfig;
 import ar.edu.utn.cajasliterarias.backend.dto.CrearPagoRequest;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoPago;
 import ar.edu.utn.cajasliterarias.backend.model.Pago;
+import ar.edu.utn.cajasliterarias.backend.model.Suscripcion;
+import ar.edu.utn.cajasliterarias.backend.model.Suscriptor;
 import ar.edu.utn.cajasliterarias.backend.security.JwtService;
 import ar.edu.utn.cajasliterarias.backend.service.PagoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -134,6 +136,23 @@ class PagoControllerTest {
         mockMvc.perform(get("/api/pagos/pendientes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void listarPendientes_noExponeElHashDeLaPassword() throws Exception {
+        Suscriptor suscriptor = new Suscriptor();
+        suscriptor.setNombre("Juana Diaz");
+        suscriptor.setPasswordHash("$2a$10$hash-de-prueba");
+        Suscripcion suscripcion = new Suscripcion();
+        suscripcion.setSuscriptor(suscriptor);
+        Pago conSuscriptor = pago(5L, EstadoPago.PENDIENTE);
+        conSuscriptor.setSuscripcion(suscripcion);
+        when(pagoService.listarPendientes()).thenReturn(List.of(conSuscriptor));
+
+        mockMvc.perform(get("/api/pagos/pendientes"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].suscripcion.suscriptor.nombre").value("Juana Diaz"))
+                .andExpect(jsonPath("$[0].suscripcion.suscriptor.passwordHash").doesNotExist());
     }
 
     // PATCH /api/pagos/{id}/validar

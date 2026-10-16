@@ -36,6 +36,7 @@ CREATE TABLE suscriptor (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL,
+    password_hash VARCHAR(100) NULL,
     direccion VARCHAR(255),
     fecha_registro DATE,
     CONSTRAINT uq_suscriptor_email UNIQUE (email)
