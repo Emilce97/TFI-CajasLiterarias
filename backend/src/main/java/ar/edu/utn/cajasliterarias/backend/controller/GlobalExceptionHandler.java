@@ -1,6 +1,7 @@
 package ar.edu.utn.cajasliterarias.backend.controller;
 
 import ar.edu.utn.cajasliterarias.backend.exception.EdicionYaCerradaException;
+import ar.edu.utn.cajasliterarias.backend.exception.EmailYaRegistradoException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,5 +61,15 @@ public class GlobalExceptionHandler {
                 ex.getMessage()
         );
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(EmailYaRegistradoException.class)
+    public ResponseEntity<ErrorResponse> handleEmailYaRegistrado(EmailYaRegistradoException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Email ya registrado",
+                ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 }

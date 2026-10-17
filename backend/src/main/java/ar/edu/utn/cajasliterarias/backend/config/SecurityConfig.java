@@ -30,7 +30,8 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/registro").permitAll()
                         // públicas por ahora: cuando exista el rol SUSCRIPTOR, pasan a requerirlo
                         .requestMatchers(HttpMethod.GET, "/api/categorias").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ediciones", "/api/ediciones/*/curadurias").permitAll()
