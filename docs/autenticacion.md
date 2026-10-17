@@ -23,7 +23,7 @@ Entrar a `/login.html` (o al enlace "Ingresar" del inicio) con `ADMIN_EMAIL` y `
 
 ## Rutas
 - **Públicas:** `POST /api/auth/login`, `GET /api/categorias`, `GET /api/ediciones` (a quien no es ADMIN solo le devuelve la edición abierta), `GET /api/ediciones/{id}/curadurias`, `POST /api/suscripciones`, `PATCH /api/suscripciones/**`, `POST /api/pagos`.
-- **Solo ADMIN:** `POST /api/ediciones`, `POST /api/ediciones/{id}/cierre`, `GET /api/pagos/pendientes`, `PATCH /api/pagos/{id}/validar`, `GET /api/ediciones/{id}/demanda`, `PATCH /api/demanda/{id}/recepcion`.
+- **Solo ADMIN:** `POST /api/ediciones`, `POST /api/ediciones/{id}/cierre`, `GET /api/pagos/pendientes`, `PATCH /api/pagos/{id}/validar`, `GET /api/ediciones/{id}/demanda`, `PATCH /api/demanda/{id}/recepcion`, `GET /api/ediciones/{id}/pedidos`, `PATCH /api/pedidos/{id}/estado`.
 - Cualquier ruta nueva queda protegida por defecto (401) hasta que se la declare pública.
 
 ## Alcance y limitaciones

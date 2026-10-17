@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.Clock;
 import java.util.List;
 
 @Service
@@ -24,6 +25,7 @@ public class DespachoService {
     private final PedidoEdicionRepository pedidoRepo;
     private final EdicionRepository edicionRepo;
     private final AdministradoraRepository adminRepo;
+    private final Clock clock;
 
     /** Pedidos de una edición cerrada; si estado es null, trae todos. */
     public List<PedidoDespachoResponse> listarPedidos(Long edicionId, EstadoPedido estado) {
@@ -75,7 +77,7 @@ public class DespachoService {
 
         pedido.setEstadoPedido(req.estado());
         pedido.setModificadoPor(admin);
-        pedido.setFechaModificacion(LocalDateTime.now());
+        pedido.setFechaModificacion(LocalDateTime.now(clock));
 
         return PedidoDespachoResponse.desde(pedidoRepo.save(pedido));
     }
