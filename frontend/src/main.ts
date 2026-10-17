@@ -1,12 +1,13 @@
 import { renderEdicionesPage } from "./pages/ediciones";
 import { renderPagosPage } from "./pages/pagos";
 import { renderDemandaPage } from "./pages/demanda";
+import { renderDespachoPage } from "./pages/despacho";
 import { cerrarSesion, tieneRol } from "./utils/auth";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const esAdmin = tieneRol("ADMIN");
 
-// Pagos y Demanda son solo de la administradora: sin sesion no se muestran los botones.
+// Pagos, Demanda y Despacho son solo de la administradora: sin sesion no se muestran los botones.
 app.innerHTML = `
   <nav>
     <button id="nav-ediciones">Ediciones</button>
@@ -14,6 +15,7 @@ app.innerHTML = `
         esAdmin
             ? `<button id="nav-pagos">Pagos</button>
                <button id="nav-demanda">Demanda</button>
+               <button id="nav-despacho">Despacho</button>
                <button id="nav-salir">Cerrar sesión</button>`
             : `<a href="/login.html">Ingresar</a>`
     }
@@ -33,6 +35,10 @@ document.querySelector("#nav-pagos")?.addEventListener("click", () => {
 
 document.querySelector("#nav-demanda")?.addEventListener("click", () => {
     renderDemandaPage(contenido);
+});
+
+document.querySelector("#nav-despacho")?.addEventListener("click", () => {
+    renderDespachoPage(contenido);
 });
 
 document.querySelector("#nav-salir")?.addEventListener("click", cerrarSesion);
