@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Snapshot inmutable (a nivel de negocio) generado al corte, solo para
@@ -57,6 +58,7 @@ public class PedidoEdicion {
     @JoinColumn(name = "modificado_por_admin_id")
     private Administradora modificadoPor;
 
-    private LocalDate fechaModificacion;
+    // Con hora: un pedido puede cambiar de estado más de una vez el mismo día.
+    private LocalDateTime fechaModificacion;
     private LocalDate fechaCreacion;
 }
