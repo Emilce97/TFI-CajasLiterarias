@@ -130,7 +130,7 @@ CREATE TABLE pedido_edicion (
     tracking VARCHAR(100),
     observaciones TEXT,
     modificado_por_admin_id BIGINT,
-    fecha_modificacion DATE,
+    fecha_modificacion DATETIME(6),
     fecha_creacion DATE NOT NULL,
     CONSTRAINT fk_pedido_suscripcion
         FOREIGN KEY (suscripcion_id) REFERENCES suscripcion(id),

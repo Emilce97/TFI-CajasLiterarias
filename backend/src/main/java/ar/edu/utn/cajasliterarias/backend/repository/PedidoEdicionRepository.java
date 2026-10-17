@@ -1,6 +1,8 @@
 package ar.edu.utn.cajasliterarias.backend.repository;
 
 import ar.edu.utn.cajasliterarias.backend.model.PedidoEdicion;
+import ar.edu.utn.cajasliterarias.backend.enums.EstadoPedido;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,4 +13,9 @@ public interface PedidoEdicionRepository extends JpaRepository<PedidoEdicion, Lo
     // el corte ya se ejecutó y no debe reprocesarse.
     boolean existsByEdicionId(Long edicionId);
 
+    // Panel de despacho: todos los pedidos de una edición.
+    List<PedidoEdicion> findByEdicionIdOrderByIdAsc(Long edicionId);
+
+    // Panel de despacho: pedidos de una edición en un estado puntual.
+    List<PedidoEdicion> findByEdicionIdAndEstadoPedidoOrderByIdAsc(Long edicionId, EstadoPedido estadoPedido);
 }
