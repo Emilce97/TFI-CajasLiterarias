@@ -6,6 +6,7 @@ import ar.edu.utn.cajasliterarias.backend.model.Suscripcion;
 import ar.edu.utn.cajasliterarias.backend.service.SuscripcionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,24 +35,28 @@ public class SuscripcionController {
     }
 
     @PatchMapping("/{id}/baja")
+    @PreAuthorize("@suscripcionAcceso.esPropia(#id, authentication.name)")
     public ResponseEntity<Void> darDeBaja(@PathVariable Long id) {
         suscripcionService.darDeBaja(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/pausa")
+    @PreAuthorize("@suscripcionAcceso.esPropia(#id, authentication.name)")
     public ResponseEntity<Void> pausar(@PathVariable Long id) {
         suscripcionService.pausar(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/reanudar")
+    @PreAuthorize("@suscripcionAcceso.esPropia(#id, authentication.name)")
     public ResponseEntity<Void> reanudar(@PathVariable Long id) {
         suscripcionService.reanudar(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/categoria")
+    @PreAuthorize("@suscripcionAcceso.esPropia(#id, authentication.name)")
     public ResponseEntity<Suscripcion> cambiarCategoria(
             @PathVariable Long id,
             @RequestBody CambiarCategoriaRequest request

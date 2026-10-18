@@ -7,8 +7,10 @@ import ar.edu.utn.cajasliterarias.backend.model.Pago;
 import ar.edu.utn.cajasliterarias.backend.model.Suscripcion;
 import ar.edu.utn.cajasliterarias.backend.model.Suscriptor;
 import ar.edu.utn.cajasliterarias.backend.security.JwtService;
+import ar.edu.utn.cajasliterarias.backend.security.SuscripcionAcceso;
 import ar.edu.utn.cajasliterarias.backend.service.PagoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -23,6 +25,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -52,6 +56,14 @@ class PagoControllerTest {
     @MockitoBean
     private JwtService jwtService;
 
+    @MockitoBean(name = "suscripcionAcceso")
+    private SuscripcionAcceso acceso;
+
+    @BeforeEach
+    void permitirPorDefecto() {
+        when(acceso.esPropia(any(), any())).thenReturn(true);
+    }
+
     // helpers
 
     private CrearPagoRequest requestValido() {
@@ -73,6 +85,7 @@ class PagoControllerTest {
     // POST /api/pagos
 
     @Test
+    @WithMockUser(username = "juana@mail.com", roles = "SUSCRIPTOR")
     void registrar_conDatosValidos_devuelve201ConPagoPendiente() throws Exception {
         when(pagoService.registrarPago(any(CrearPagoRequest.class)))
                 .thenReturn(pago(5L, EstadoPago.PENDIENTE));
@@ -87,6 +100,7 @@ class PagoControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "juana@mail.com", roles = "SUSCRIPTOR")
     void registrar_conMontoInvalido_devuelve400ConMensaje() throws Exception {
         String mensaje = "El monto del pago es obligatorio y debe ser mayor a cero.";
         when(pagoService.registrarPago(any(CrearPagoRequest.class)))
@@ -101,6 +115,7 @@ class PagoControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "juana@mail.com", roles = "SUSCRIPTOR")
     void registrar_duplicado_devuelve409ConMensaje() throws Exception {
         String mensaje = "Ya existe un pago registrado para esta suscripcion en esta edicion.";
         when(pagoService.registrarPago(any(CrearPagoRequest.class)))
@@ -190,5 +205,29 @@ class PagoControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Datos inválidos"))
                 .andExpect(jsonPath("$.message").value(mensaje));
+    }
+
+    @Test
+    @WithMockUser(username = "juana@mail.com", roles = "SUSCRIPTOR")
+    void registrar_paraUnaSuscripcionAjena_devuelve403() throws Exception {
+        when(acceso.esPropia(eq(10L), eq("juana@mail.com"))).thenReturn(false);
+
+        mockMvc.perform(post("/api/pagos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestValido())))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Sin permisos"));
+
+        verifyNoInteractions(pagoService);
+    }
+
+    @Test // clase con ADMIN: la administradora no registra pagos
+    void registrar_comoAdmin_devuelve403() throws Exception {
+        mockMvc.perform(post("/api/pagos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestValido())))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(pagoService);
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -36,12 +38,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/categorias").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ediciones", "/api/ediciones/*/curadurias").permitAll()
                         // suscriptor (sesión obligatoria)
-                        .requestMatchers(HttpMethod.POST, "/api/suscripciones").hasRole("SUSCRIPTOR")
+                        .requestMatchers(HttpMethod.POST, "/api/suscripciones", "/api/pagos").hasRole("SUSCRIPTOR")
                         .requestMatchers(HttpMethod.GET, "/api/suscripciones/mis-suscripciones", "/api/suscriptores/mi-perfil").hasRole("SUSCRIPTOR")
-                        .requestMatchers(HttpMethod.PATCH, "/api/suscriptores/mi-perfil").hasRole("SUSCRIPTOR")
-                        // todavía públicas: pasan a SUSCRIPTOR en el commit 5
-                        .requestMatchers(HttpMethod.POST, "/api/pagos").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/api/suscripciones/**").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/suscripciones/**", "/api/suscriptores/mi-perfil").hasRole("SUSCRIPTOR")
                         // administración
                         .requestMatchers(HttpMethod.POST, "/api/ediciones", "/api/ediciones/*/cierre").hasRole("ADMIN")
                         .requestMatchers("/api/pagos/pendientes", "/api/pagos/*/validar").hasRole("ADMIN")

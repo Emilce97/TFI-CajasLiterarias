@@ -5,9 +5,13 @@ import ar.edu.utn.cajasliterarias.backend.dto.CrearSuscripcionRequest;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoSuscripcion;
 import ar.edu.utn.cajasliterarias.backend.model.Suscripcion;
 import ar.edu.utn.cajasliterarias.backend.security.JwtService;
+import ar.edu.utn.cajasliterarias.backend.security.SuscripcionAcceso;
 import ar.edu.utn.cajasliterarias.backend.service.SuscripcionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -21,10 +25,8 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -43,6 +45,14 @@ class SuscripcionControllerTest {
 
     @MockitoBean
     private JwtService jwtService;
+
+    @MockitoBean(name = "suscripcionAcceso")
+    private SuscripcionAcceso acceso;
+
+    @BeforeEach
+    void permitirPorDefecto() {
+        when(acceso.esPropia(any(), any())).thenReturn(true);
+    }
 
     private CrearSuscripcionRequest requestValido() {
         CrearSuscripcionRequest request = new CrearSuscripcionRequest();
@@ -103,5 +113,32 @@ class SuscripcionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(3));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "/api/suscripciones/10/baja",
+            "/api/suscripciones/10/pausa",
+            "/api/suscripciones/10/reanudar",
+            "/api/suscripciones/10/categoria"
+    })
+    void operarSobreUnaSuscripcionAjena_devuelve403SinLlamarAlService(String ruta) throws Exception {
+        when(acceso.esPropia(eq(10L), eq("juana@mail.com"))).thenReturn(false);
+
+        mockMvc.perform(patch(ruta)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"categoriaId\":2}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Sin permisos"));
+
+        verifyNoInteractions(suscripcionService);
+    }
+
+    @Test
+    void darDeBajaUnaSuscripcionPropia_devuelve204() throws Exception {
+        mockMvc.perform(patch("/api/suscripciones/10/baja"))
+                .andExpect(status().isNoContent());
+
+        verify(suscripcionService).darDeBaja(10L);
     }
 }
