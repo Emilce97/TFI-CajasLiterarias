@@ -6,12 +6,10 @@ import ar.edu.utn.cajasliterarias.backend.model.Suscripcion;
 import ar.edu.utn.cajasliterarias.backend.service.SuscripcionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/suscripciones")
@@ -24,9 +22,15 @@ public class SuscripcionController {
     }
 
     @PostMapping
-    public ResponseEntity<Suscripcion> crear(@RequestBody CrearSuscripcionRequest request) {
-        Suscripcion suscripcion = suscripcionService.crearSuscripcion(request);
+    public ResponseEntity<Suscripcion> crear(@RequestBody CrearSuscripcionRequest request,
+                                             Authentication authentication) {
+        Suscripcion suscripcion = suscripcionService.crearSuscripcion(authentication.getName(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(suscripcion);
+    }
+
+    @GetMapping("/mis-suscripciones")
+    public List<Suscripcion> listarMias(Authentication authentication) {
+        return suscripcionService.listarDelSuscriptor(authentication.getName());
     }
 
     @PatchMapping("/{id}/baja")

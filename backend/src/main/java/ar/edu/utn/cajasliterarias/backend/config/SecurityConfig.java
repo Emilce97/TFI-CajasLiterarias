@@ -32,10 +32,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/registro").permitAll()
-                        // públicas por ahora: cuando exista el rol SUSCRIPTOR, pasan a requerirlo
+                        // públicas (visitante)
                         .requestMatchers(HttpMethod.GET, "/api/categorias").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ediciones", "/api/ediciones/*/curadurias").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/suscripciones", "/api/pagos").permitAll()
+                        // suscriptor (sesión obligatoria)
+                        .requestMatchers(HttpMethod.POST, "/api/suscripciones").hasRole("SUSCRIPTOR")
+                        .requestMatchers(HttpMethod.GET, "/api/suscripciones/mis-suscripciones", "/api/suscriptores/mi-perfil").hasRole("SUSCRIPTOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/suscriptores/mi-perfil").hasRole("SUSCRIPTOR")
+                        // todavía públicas: pasan a SUSCRIPTOR en el commit 5
+                        .requestMatchers(HttpMethod.POST, "/api/pagos").permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/api/suscripciones/**").permitAll()
                         // administración
                         .requestMatchers(HttpMethod.POST, "/api/ediciones", "/api/ediciones/*/cierre").hasRole("ADMIN")
