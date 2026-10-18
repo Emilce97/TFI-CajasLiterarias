@@ -294,3 +294,22 @@ code {
     border-right-color: var(--border);
   }
 }
+
+#remito-dialog {
+  max-width: 520px;
+  padding: 24px;
+}
+
+/* Al imprimir sale solo el remito: se oculta la app, el fondo del dialogo y los botones. */
+@media print {
+  #app,
+  #remito-dialog::backdrop,
+  .remito-acciones {
+    display: none;
+  }
+  #remito-dialog {
+    position: static;
+    border: none;
+    max-width: none;
+  }
+}
