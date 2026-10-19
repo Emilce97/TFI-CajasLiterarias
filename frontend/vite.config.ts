@@ -11,6 +11,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         suscripcion: resolve(__dirname, 'suscripcion.html'),
         login: resolve(__dirname, 'login.html'),
+        registro: resolve(__dirname, 'registro.html'),
       },
     },
   },

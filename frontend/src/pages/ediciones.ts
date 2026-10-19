@@ -25,7 +25,7 @@ export async function renderEdicionesPage(container: HTMLElement) {
 
 function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[]) {
     const titulo = tieneRol("ADMIN") ? "Ediciones" : "Edición actual";
-    
+
     container.innerHTML = `
     <h1>${titulo}</h1>
     ${ediciones.length === 0 ? "<p>No hay una edición abierta por el momento.</p>" : ""}
@@ -63,7 +63,7 @@ function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[]) {
                 `/ediciones/${edicionId}/curadurias`
             );
             const edicion = ediciones.find((e) => String(e.id) === edicionId);
-            renderCuradurias(contenedorCuradurias, curadurias, edicion?.estado === "ABIERTA");
+            renderCuradurias(contenedorCuradurias, curadurias, edicion?.estado === "ABIERTA" && !tieneRol("ADMIN"));
         } catch (error) {
             contenedorCuradurias.innerHTML = " No se pudo cargar el detalle.";
             console.error(error);

@@ -19,6 +19,8 @@ function render(): void {
 
         <button type="submit">Ingresar</button>
       </form>
+      
+      <p>¿No tenés cuenta? <a id="link-registro" href="/registro.html">Registrate</a></p>
 
       <p id="mensaje" role="status" aria-live="polite"></p>
     </main>
@@ -85,6 +87,13 @@ function init(): void {
         return;
     }
     render();
+
+    const next = new URLSearchParams(window.location.search).get("next");
+    if (next) {
+        document.querySelector<HTMLAnchorElement>("#link-registro")!.href =
+            `/registro.html?next=${encodeURIComponent(next)}`;
+    }
+
     document.querySelector<HTMLFormElement>("#form-login")!.addEventListener("submit", manejarEnvio);
 }
 
