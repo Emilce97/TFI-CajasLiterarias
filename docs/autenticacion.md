@@ -1,7 +1,5 @@
 # Autenticación y roles
 
-`POST /api/auth/login` valida el email y la contraseña (guardada como hash BCrypt) y devuelve un token JWT firmado con `JWT_SECRET`. El frontend guarda la sesión en `localStorage` y envía el token en cada pedido como `Authorization: Bearer <token>`. El backend valida el token en cada request a una ruta de administración.
-
 Hay dos roles: **ADMIN** (la administradora) y **SUSCRIPTOR**. `POST /api/auth/login` valida el email y la contraseña (guardada como hash BCrypt) contra ambas tablas y devuelve un token JWT firmado con `JWT_SECRET`, con el rol adentro. `POST /api/auth/registro` crea la cuenta de un suscriptor y devuelve el token (queda logueado). El frontend guarda la sesión en `localStorage` y envía el token en cada pedido como `Authorization: Bearer <token>`. El backend valida el token en cada request a una ruta protegida.
 
 ## Variables de entorno

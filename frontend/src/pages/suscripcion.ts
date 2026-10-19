@@ -1,7 +1,7 @@
 import { apiGet, apiPost } from '../data/apiClient';
 import type { Categoria } from '../types';
 import { exigirRol, paginaActual } from '../utils/auth';
-import { esc } from '../utils/escape';
+import { escapar } from '../utils/html';
 import { obtenerSesion } from '../utils/session';
 
 interface CrearSuscripcionRequest {
@@ -15,7 +15,7 @@ function render(nombre: string): void {
     <main class="alta-suscripcion">
       <a class="volver" href="/">&larr; Volver a Ediciones</a>
       <h1>Sumate a tu caja literaria</h1>
-      <p class="subtitulo">Hola, ${esc(nombre)}. Elegí la temática a la que querés suscribirte.</p>
+      <p class="subtitulo">Hola, ${escapar(nombre)}. Elegí la temática a la que querés suscribirte.</p>
 
       <form id="form-suscripcion" novalidate>
         <label for="categoria">Temática</label>

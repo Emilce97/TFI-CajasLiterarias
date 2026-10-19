@@ -20,13 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.regex.Pattern;
 
 @Service
 public class SuscripcionService {
 
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$");
     private final SuscripcionRepository suscripcionRepository;
     private final SuscriptorRepository suscriptorRepository;
     private final CategoriaRepository categoriaRepository;

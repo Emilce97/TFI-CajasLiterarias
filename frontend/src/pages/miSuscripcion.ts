@@ -1,7 +1,7 @@
 import { apiGet, apiPatch } from "../data/apiClient";
 import type { Categoria, Suscripcion, Suscriptor } from "../types";
 import { exigirRol } from "../utils/auth";
-import { esc } from "../utils/escape";
+import { escapar } from "../utils/html";
 
 /**
  * "Mi suscripcion": las suscripciones de la persona logueada, con sus acciones
@@ -43,9 +43,9 @@ function renderPagina(
     <h2>Mis datos de entrega</h2>
     <form id="form-perfil" novalidate>
       <label for="perfil-nombre">Nombre y apellido</label>
-      <input id="perfil-nombre" value="${esc(perfil.nombre)}" maxlength="150" required />
+      <input id="perfil-nombre" value="${escapar(perfil.nombre)}" maxlength="150" required />
       <label for="perfil-direccion">Dirección de entrega</label>
-      <input id="perfil-direccion" value="${esc(perfil.direccion ?? "")}" maxlength="255" required />
+      <input id="perfil-direccion" value="${escapar(perfil.direccion ?? "")}" maxlength="255" required />
       <button type="submit">Guardar</button>
     </form>
     <p id="mensaje-perfil" role="status" aria-live="polite"></p>
@@ -62,10 +62,10 @@ function boton(id: number, accion: string, texto: string): string {
 function renderSuscripcion(s: Suscripcion, categorias: Categoria[]): string {
     const pendientes: string[] = [];
     if (s.proximoEstado) {
-        pendientes.push(`pasa a ${esc(s.proximoEstado)} desde la próxima edición`);
+        pendientes.push(`pasa a ${escapar(s.proximoEstado)} desde la próxima edición`);
     }
     if (s.proximaCategoria) {
-        pendientes.push(`cambia a ${esc(s.proximaCategoria.nombre)} desde la próxima edición`);
+        pendientes.push(`cambia a ${escapar(s.proximaCategoria.nombre)} desde la próxima edición`);
     }
 
     const acciones: string[] = [];
@@ -77,7 +77,7 @@ function renderSuscripcion(s: Suscripcion, categorias: Categoria[]): string {
         ? `<select data-categoria-de="${s.id}">
              ${categorias
                 .filter((c) => c.id !== s.categoria.id)
-                .map((c) => `<option value="${c.id}">${esc(c.nombre)}</option>`)
+                .map((c) => `<option value="${c.id}">${escapar(c.nombre)}</option>`)
                 .join("")}
            </select>
            ${boton(s.id, "categoria", "Cambiar temática")}`
@@ -85,7 +85,7 @@ function renderSuscripcion(s: Suscripcion, categorias: Categoria[]): string {
 
     return `
     <li>
-      <strong>${esc(s.categoria.nombre)}</strong> — ${esc(s.estado)}
+      <strong>${escapar(s.categoria.nombre)}</strong> — ${escapar(s.estado)}
       ${pendientes.length > 0 ? `<br><em>Pendiente: ${pendientes.join("; ")}.</em>` : ""}
       <div>${acciones.join(" ")} ${cambioDeCategoria}</div>
     </li>
@@ -134,7 +134,7 @@ function conectarPerfil(container: HTMLElement) {
             return;
         }
         try {
-            await apiPatch("/suscriptores/me", { nombre, direccion });
+            await apiPatch("/suscriptores/mi-perfil", { nombre, direccion });
             mensaje.textContent = "Datos actualizados. Se aplican a los próximos pedidos.";
         } catch (error) {
             mensaje.textContent = error instanceof Error ? error.message : "No se pudieron guardar los datos.";

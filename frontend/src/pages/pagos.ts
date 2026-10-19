@@ -1,7 +1,7 @@
 import { apiGet, apiPatch } from "../data/apiClient";
 import type { Pago } from "../types";
 import { exigirRol } from "../utils/auth";
-import { esc } from "../utils/escape";
+import { escapar } from "../utils/html";
 
 /**
  * Renderiza el panel de conciliacion de pagos: lista los pagos pendientes
@@ -32,9 +32,9 @@ function renderListaDePagos(container: HTMLElement, pagos: Pago[]) {
     pagos.forEach((pago) => {
         const item = document.createElement("li");
         item.innerHTML = `
-      <strong>${esc(pago.suscripcion.suscriptor.nombre)}</strong>
-      — ${esc(pago.suscripcion.categoria.nombre)}
-      — ${esc(pago.edicion.nombre)}
+      <strong>${escapar(pago.suscripcion.suscriptor.nombre)}</strong>
+      — ${escapar(pago.suscripcion.categoria.nombre)}
+      — ${escapar(pago.edicion.nombre)}
       — $${pago.monto}
       <button data-pago-id="${pago.id}">Validar</button>
     `;
