@@ -9,7 +9,8 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 const esAdmin = tieneRol("ADMIN");
 const esSuscriptor = tieneRol("SUSCRIPTOR");
 
-// Sin sesion: Ingresar y Registrarme. Suscriptor: Mi suscripcion. Administradora: Pagos y Demanda.
+// Sin sesion: Ingresar y Registrarme. Suscriptor: Mi suscripcion. 
+// Administradora: Pagos, Demanda y Despacho (solo de ella).
 const opcionesPorRol = esAdmin
     ? `<button id="nav-pagos">Pagos</button>
        <button id="nav-demanda">Demanda</button>

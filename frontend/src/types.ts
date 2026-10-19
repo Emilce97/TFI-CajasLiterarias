@@ -65,3 +65,33 @@ export interface DemandaItem {
     cantidadFaltante: number;
     estadoFaltante: "FALTANTE" | "SIN_FALTANTE";
 }
+
+// Panel de despacho
+export type EstadoPedido = "PENDIENTE_DE_EMPAQUE" | "EMPAQUETADO" | "DESPACHADO" | "ENTREGADO";
+
+// Lo que devuelve GET /api/ediciones/{id}/pedidos (PedidoDespachoResponse del backend)
+export interface PedidoDespacho {
+    id: number;
+    nombreDestinatario: string;
+    direccionEntrega: string;
+    categoria: string;
+    libro: string;
+    estado: EstadoPedido;
+    tracking: string | null;
+    observaciones: string | null;
+    fechaModificacion: string | null;
+    modificadoPor: string | null;
+}
+
+// Lo que devuelve GET /api/pedidos/{id}/remito (RemitoResponse del backend)
+export interface Remito {
+    numero: number;
+    fechaEmision: string;
+    edicion: string;
+    nombreDestinatario: string;
+    direccionEntrega: string;
+    categoria: string;
+    libro: string;
+    estado: EstadoPedido;
+    tracking: string | null;
+}
