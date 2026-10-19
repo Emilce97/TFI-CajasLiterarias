@@ -80,3 +80,16 @@ export interface PedidoDespacho {
     fechaModificacion: string | null;
     modificadoPor: string | null;
 }
+
+// Lo que devuelve GET /api/pedidos/{id}/remito (RemitoResponse del backend)
+export interface Remito {
+    numero: number;
+    fechaEmision: string;
+    edicion: string;
+    nombreDestinatario: string;
+    direccionEntrega: string;
+    categoria: string;
+    libro: string;
+    estado: EstadoPedido;
+    tracking: string | null;
+}

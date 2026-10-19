@@ -1,6 +1,7 @@
 import { apiGet, apiPatch } from "../data/apiClient";
 import type { Edicion, EstadoPedido, PedidoDespacho } from "../types";
 import { exigirRol } from "../utils/auth";
+import { abrirRemito } from "./remito";
 
 /**
  * Panel de despacho: la administradora elige una edicion cerrada, ve sus pedidos
@@ -87,6 +88,12 @@ function renderFiltros(container: HTMLElement, cerradas: Edicion[]) {
         const boton = event.target as HTMLElement;
         if (boton.tagName !== "BUTTON") return;
 
+        const remitoId = boton.getAttribute("data-remito-id");
+        if (remitoId) {
+            await abrirRemito(Number(remitoId));
+            return;
+        }
+
         const pedidoId = boton.getAttribute("data-pedido-id");
         const destino = boton.getAttribute("data-destino") as EstadoPedido;
 
@@ -161,9 +168,15 @@ function renderTabla(zona: HTMLElement, pedidos: PedidoDespacho[]) {
 
 function renderFila(pedido: PedidoDespacho): string {
     const siguiente = SIGUIENTE[pedido.estado];
-    const accion = siguiente
+    const botonEstado = siguiente
         ? `<button data-pedido-id="${pedido.id}" data-destino="${siguiente}">Pasar a ${ETIQUETA[siguiente]}</button>`
-        : "—";
+        : "";
+    // El remito se emite desde EMPAQUETADO en adelante (el backend lo valida igual).
+    const botonRemito = pedido.estado !== "PENDIENTE_DE_EMPAQUE"
+        ? `<button data-remito-id="${pedido.id}">Ver remito</button>`
+        : "";
+
+    const accion = [botonEstado, botonRemito].filter(Boolean).join(" ") || "—";
     const ultimoCambio = pedido.fechaModificacion
         ? `${formatearFecha(pedido.fechaModificacion)}<br>${escapar(pedido.modificadoPor)}`
         : "—";

@@ -15,4 +15,9 @@ public enum EstadoPedido {
             case ENTREGADO -> null;
         };
     }
+
+    /** El remito se emite desde EMPAQUETADO en adelante: ahí la caja ya está armada. */
+    public boolean permiteRemito() {
+        return this.ordinal() >= EMPAQUETADO.ordinal();
+    }
 }
