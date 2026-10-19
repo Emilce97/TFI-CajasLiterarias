@@ -33,19 +33,20 @@ public class SecurityConfig {
                 .authorizeHttpRequests(a -> a
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/api/auth/login", "/api/auth/registro").permitAll()
                         // públicas (visitante)
+                        .requestMatchers("/api/auth/login", "/api/auth/registro").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categorias").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ediciones", "/api/ediciones/*/curadurias").permitAll()
-                        // suscriptor (sesión obligatoria)
+                        // suscriptor
                         .requestMatchers(HttpMethod.POST, "/api/suscripciones", "/api/pagos").hasRole("SUSCRIPTOR")
                         .requestMatchers(HttpMethod.GET, "/api/suscripciones/mis-suscripciones", "/api/suscriptores/mi-perfil").hasRole("SUSCRIPTOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/suscripciones/**", "/api/suscriptores/mi-perfil").hasRole("SUSCRIPTOR")
-                        // administración
+                        // administradora
                         .requestMatchers(HttpMethod.POST, "/api/ediciones", "/api/ediciones/*/cierre").hasRole("ADMIN")
                         .requestMatchers("/api/pagos/pendientes", "/api/pagos/*/validar").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/ediciones/*/demanda").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/demanda/*/recepcion").hasRole("ADMIN")
+                        // lo que no está listado arriba es solo de la administradora
                         .anyRequest().hasRole("ADMIN"))
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint((req, res, ex) -> escribir(res, 401, "No autenticado", "Iniciá sesión para continuar"))
