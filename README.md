@@ -95,7 +95,7 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 * **Validación manual de pagos:** Panel de conciliación para que las administradoras verifiquen transferencias y habiliten los pedidos antes del día 21.  
 * **Panel de despacho:** Armado de pedidos, generación de remito interno, carga manual de código de seguimiento y actualización de estados del envío (Pendiente de empaque → Empaquetado → Despachado → Entregado).  
 * **Historial de suscriptor:** Registro relacional de pedidos previos para prevenir repetición involuntaria de títulos.  
-* **Acceso de la administradora:** login con JWT; las rutas de administración (validación de pagos, cierre de edición, demanda) requieren sesión y el resto de la plataforma es pública.
+* **Acceso por rol:** registro y login con JWT. La administradora (ADMIN) accede a las rutas de administración (validación de pagos, cierre de edición, demanda, despacho y remitos); el suscriptor (SUSCRIPTOR) se registra e inicia sesión para suscribirse y gestionar solo sus propias suscripciones. El inicio y las ediciones son públicos. Detalle en [`docs/autenticacion.md`](./docs/autenticacion.md).
 
 ### Nice to have (si sobra tiempo dentro del cronograma)  
 * **Recordatorios y avisos automáticos por correo:** Alertas preventivas programadas. Por ejemplo, recordatorio el día 17 sobre el vencimiento del plazo de pago el día 20 y aviso automático el día 21 informando si la suscripción ingresó a la edición o quedó pospuesta para el mes entrante por falta de pago. *(Nota: En el MVP, esta información se consulta de forma pasiva directamente en el panel web del suscriptor).*
