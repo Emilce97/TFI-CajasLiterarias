@@ -63,4 +63,15 @@ class JwtServiceTest {
         assertThatThrownBy(() -> new JwtService("corto", 60))
                 .isInstanceOf(IllegalStateException.class);
     }
+
+    @Test
+    void tokenDeSuscriptor_conservaElRol() {
+        String token = jwtService.generar("juana@test.com", "SUSCRIPTOR");
+
+        JwtClaims claims = jwtService.validar(token);
+
+        assertThat(claims).isNotNull();
+        assertThat(claims.email()).isEqualTo("juana@test.com");
+        assertThat(claims.rol()).isEqualTo("SUSCRIPTOR");
+    }
 }

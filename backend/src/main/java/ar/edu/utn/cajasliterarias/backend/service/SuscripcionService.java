@@ -19,13 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDate;
-import java.util.regex.Pattern;
+import java.util.List;
 
 @Service
 public class SuscripcionService {
 
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[\\w.+-]+@[\\w-]+\\.[a-zA-Z]{2,}$");
     private final SuscripcionRepository suscripcionRepository;
     private final SuscriptorRepository suscriptorRepository;
     private final CategoriaRepository categoriaRepository;
@@ -50,37 +48,19 @@ public class SuscripcionService {
     }
 
     /**
-     * Da de alta una suscripcion a una categoria. No asume un Suscriptor ya registrado: busca por email
-     * y, si no existe, lo crea con los datos del request (find-or-create). Si el email ya existe,
-     * reutiliza ese Suscriptor tal cual esta en la base.
-     * Valida que la categoria tenga curaduria en la edicion actualmente abierta y que no haya superado el cupoMaximo
-     * definido para esa categoria/edicion.
+     * Da de alta una suscripcion a una categoria para el suscriptor logueado (se identifica por el email del token;
+     * la cuenta se crea en el registro). Valida que la categoria tenga curaduria en la edicion actualmente abierta
+     * y que no haya superado el cupoMaximo definido para esa categoria/edicion.
      */
     @Transactional
-    public Suscripcion crearSuscripcion(CrearSuscripcionRequest request) {
+    public Suscripcion crearSuscripcion(String emailSuscriptor, CrearSuscripcionRequest request) {
 
-        if (request.getEmail() == null || request.getEmail().isBlank()) {
-            throw new IllegalArgumentException("El email del suscriptor es obligatorio.");
-        }
-        if (!EMAIL_PATTERN.matcher(request.getEmail()).matches()) {
-            throw new IllegalArgumentException("El email tiene un formato inválido.");
-        }
-        if (request.getNombre() == null || request.getNombre().isBlank()) {
-            throw new IllegalArgumentException("El nombre del suscriptor es obligatorio.");
-        }
-        if (request.getCategoriaId() == null) {
+        if (request == null || request.getCategoriaId() == null) {
             throw new IllegalArgumentException("La categoría es obligatoria.");
         }
 
-        Suscriptor suscriptor = suscriptorRepository.findByEmail(request.getEmail())
-                .orElseGet(() -> {
-                    Suscriptor nuevo = new Suscriptor();
-                    nuevo.setNombre(request.getNombre());
-                    nuevo.setEmail(request.getEmail());
-                    nuevo.setDireccion(request.getDireccion());
-                    nuevo.setFechaRegistro(LocalDate.now(clock));
-                    return suscriptorRepository.save(nuevo);
-                });
+        Suscriptor suscriptor = suscriptorRepository.findByEmail(emailSuscriptor)
+                .orElseThrow(() -> new IllegalArgumentException("No existe un suscriptor con ese email."));
 
         Categoria categoria = categoriaRepository.findById(request.getCategoriaId())
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -129,11 +109,6 @@ public class SuscripcionService {
             );
         }
 
-        // Email ya registrado: los datos que llegan en el alta pasan a ser los vigentes.
-        // No afecta el historial, porque PedidoEdicion congela nombre y direccion en cada corte.
-        // Se hace recien aca, cuando el alta ya paso todas las validaciones.
-        actualizarDatosDelSuscriptor(suscriptor, request);
-
         Suscripcion suscripcion = new Suscripcion();
         suscripcion.setSuscriptor(suscriptor);
         suscripcion.setCategoria(categoria);
@@ -143,27 +118,9 @@ public class SuscripcionService {
         return suscripcionRepository.save(suscripcion);
     }
 
-    /**
-     * Si el email ya existia, actualiza nombre y direccion con los datos del alta.
-     * Solo reemplaza un dato si llega completo y es distinto, y solo guarda si hubo cambios.
-     */
-    private void actualizarDatosDelSuscriptor(Suscriptor suscriptor, CrearSuscripcionRequest request) {
-        boolean huboCambios = false;
-
-        if (!request.getNombre().equals(suscriptor.getNombre())) {
-            suscriptor.setNombre(request.getNombre());
-            huboCambios = true;
-        }
-
-        String direccion = request.getDireccion();
-        if (direccion != null && !direccion.isBlank() && !direccion.equals(suscriptor.getDireccion())) {
-            suscriptor.setDireccion(direccion);
-            huboCambios = true;
-        }
-
-        if (huboCambios) {
-            suscriptorRepository.save(suscriptor);
-        }
+    @Transactional(readOnly = true)
+    public List<Suscripcion> listarDelSuscriptor(String emailSuscriptor) {
+        return suscripcionRepository.findBySuscriptorEmail(emailSuscriptor);
     }
 
     /**

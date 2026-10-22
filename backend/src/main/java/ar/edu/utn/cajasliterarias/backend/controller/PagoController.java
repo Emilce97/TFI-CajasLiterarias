@@ -5,6 +5,7 @@ import ar.edu.utn.cajasliterarias.backend.model.Pago;
 import ar.edu.utn.cajasliterarias.backend.service.PagoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class PagoController {
      * POST /api/pagos
      */
     @PostMapping
+    @PreAuthorize("@suscripcionAcceso.esPropia(#request.suscripcionId, authentication.name)")
     public ResponseEntity<Pago> registrar(@RequestBody CrearPagoRequest request) {
         Pago pago = pagoService.registrarPago(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(pago);

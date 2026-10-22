@@ -38,6 +38,8 @@ export interface Suscripcion {
     estado: string;
     categoria: Categoria;
     suscriptor: Suscriptor;
+    proximaCategoria: Categoria | null;
+    proximoEstado: string | null;
 }
 
 export interface Pago {

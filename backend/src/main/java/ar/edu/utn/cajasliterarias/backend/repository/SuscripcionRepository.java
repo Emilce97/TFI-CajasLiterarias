@@ -25,4 +25,7 @@ public interface SuscripcionRepository extends JpaRepository<Suscripcion, Long> 
 
     // Suscripciones con pausa/reanudacion/baja pendiente: se promueven al ejecutar el corte.
     List<Suscripcion> findByProximoEstadoIsNotNull();
+
+    // Para "Mi suscripción": las suscripciones del suscriptor logueado.
+    List<Suscripcion> findBySuscriptorEmail(String email);
 }

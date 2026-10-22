@@ -17,7 +17,7 @@ import java.util.Set;
 @Service
 public class JwtService {
 
-    private static final Set<String> ROLES_VALIDOS = Set.of("ADMIN"); // cuando exista el rol SUSCRIPTOR, se agrega acá
+    private static final Set<String> ROLES_VALIDOS = Set.of("ADMIN", "SUSCRIPTOR");
     private final SecretKey key;
     private final long expMinutes;
 
