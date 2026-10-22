@@ -1,14 +1,21 @@
 import { apiGet } from "../data/apiClient";
 import type { Edicion, CuraduriaEdicion } from "../types";
 import { tieneRol } from "../utils/auth";
+import { escapar } from "../utils/html";
+import { formatearFecha, formatearMonto } from "../utils/formato";
+import { mensajeCargando, mensajeError, mensajeVacio } from "../components/mensajes";
+
+const ESTADO: Record<Edicion["estado"], string> = {
+    ABIERTA: "Abierta",
+    CERRADA: "Cerrada",
+};
 
 /**
- * Renderiza la pagina de "Ediciones" dentro del elemento contenedor dado.
- * Muestra la lista de ediciones, y por cada una un boton para cargar
- * sus 4 curadurias (categoria, libro, precio, cupo) bajo demanda.
+ * Pagina de "Ediciones": la lista de ediciones y, por cada una, un boton para
+ * ver sus curadurias (categoria, libro, precio, cupo), que se cargan bajo demanda.
  */
 export async function renderEdicionesPage(container: HTMLElement) {
-    container.innerHTML = "<h1>Ediciones</h1><p>Cargando ediciones...</p>";
+    container.innerHTML = "<h1>Ediciones</h1>" + mensajeCargando("Cargando ediciones...");
 
     try {
         const todas = await apiGet<Edicion[]>("/ediciones");
@@ -18,7 +25,7 @@ export async function renderEdicionesPage(container: HTMLElement) {
             : todas.filter((edicion) => edicion.estado === "ABIERTA");
         renderListaDeEdiciones(container, visibles);
     } catch (error) {
-        container.innerHTML = "<h1>Ediciones</h1><p> No se pudieron cargar las ediciones.</p>";
+        container.innerHTML = "<h1>Ediciones</h1>" + mensajeError("No se pudieron cargar las ediciones.");
         console.error(error);
     }
 }
@@ -26,72 +33,78 @@ export async function renderEdicionesPage(container: HTMLElement) {
 function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[]) {
     const titulo = tieneRol("ADMIN") ? "Ediciones" : "Edición actual";
 
+    if (ediciones.length === 0) {
+        container.innerHTML = `<h1>${titulo}</h1>` + mensajeVacio("No hay una edición abierta por el momento.");
+        return;
+    }
+
     container.innerHTML = `
     <h1>${titulo}</h1>
-    ${ediciones.length === 0 ? "<p>No hay una edición abierta por el momento.</p>" : ""}
-    <ul id="lista-ediciones"></ul>
+    <ul id="lista-ediciones">
+      ${ediciones.map(renderEdicion).join("")}
+    </ul>
   `;
 
-    const lista = container.querySelector("#lista-ediciones")!;
-
-    ediciones.forEach((edicion) => {
-        const item = document.createElement("li");
-        item.innerHTML = `
-      <strong>${edicion.nombre}</strong> — ${edicion.estado}
-      (corte: ${edicion.fechaCorte})
-      <button data-edicion-id="${edicion.id}">Ver detalle</button>
-      <div class="curadurias" id="curadurias-${edicion.id}"></div>
-    `;
-        lista.appendChild(item);
-    });
+    const lista = container.querySelector<HTMLUListElement>("#lista-ediciones")!;
 
     // Un solo listener para todos los botones (delegacion de eventos),
     // en vez de agregar uno por cada boton individualmente.
     lista.addEventListener("click", async (event) => {
-        const boton = event.target as HTMLElement;
-        if (boton.tagName !== "BUTTON") return;
+        const boton = event.target;
+        if (!(boton instanceof HTMLButtonElement)) return;
 
-        const edicionId = boton.getAttribute("data-edicion-id");
-        const contenedorCuradurias = container.querySelector(`#curadurias-${edicionId}`)!;
+        const edicionId = boton.dataset.edicionId;
+        const detalle = container.querySelector<HTMLDivElement>(`#curadurias-${edicionId}`)!;
 
-        if (contenedorCuradurias.innerHTML.trim() !== "") return;
+        // Si ya se cargo, el boton solo muestra u oculta el detalle (sin volver a pedirlo).
+        if (detalle.dataset.cargado === "si") {
+            detalle.hidden = !detalle.hidden;
+            boton.textContent = detalle.hidden ? "Ver detalle" : "Ocultar detalle";
+            return;
+        }
 
-        contenedorCuradurias.innerHTML = "Cargando...";
+        detalle.innerHTML = mensajeCargando("Cargando detalle...");
 
         try {
-            const curadurias = await apiGet<CuraduriaEdicion[]>(
-                `/ediciones/${edicionId}/curadurias`
-            );
+            const curadurias = await apiGet<CuraduriaEdicion[]>(`/ediciones/${edicionId}/curadurias`);
             const edicion = ediciones.find((e) => String(e.id) === edicionId);
-            renderCuradurias(contenedorCuradurias, curadurias, edicion?.estado === "ABIERTA" && !tieneRol("ADMIN"));
+            const permiteSuscripcion = edicion?.estado === "ABIERTA" && !tieneRol("ADMIN");
+            detalle.innerHTML = renderCuradurias(curadurias, permiteSuscripcion);
+            detalle.dataset.cargado = "si";
+            boton.textContent = "Ocultar detalle";
         } catch (error) {
-            contenedorCuradurias.innerHTML = " No se pudo cargar el detalle.";
+            detalle.innerHTML = mensajeError("No se pudo cargar el detalle.");
             console.error(error);
         }
     });
 }
 
-function renderCuradurias(
-    contenedor: Element,
-    curadurias: CuraduriaEdicion[],
-    permiteSuscripcion: boolean
-) {
-    contenedor.innerHTML = `
+function renderEdicion(edicion: Edicion): string {
+    return `
+    <li class="edicion">
+      <strong>${escapar(edicion.nombre)}</strong> — ${ESTADO[edicion.estado]}
+      <br>
+      Corte: ${formatearFecha(edicion.fechaCorte)} ·
+      Despacho: del ${formatearFecha(edicion.fechaDespachoDesde)} al ${formatearFecha(edicion.fechaDespachoHasta)}
+      <br>
+      <button data-edicion-id="${edicion.id}">Ver detalle</button>
+      <div class="curadurias" id="curadurias-${edicion.id}"></div>
+    </li>
+  `;
+}
+
+function renderCuradurias(curadurias: CuraduriaEdicion[], permiteSuscripcion: boolean): string {
+    return `
     <ul>
-      ${curadurias
-            .map(
-                (c) => `
+      ${curadurias.map((c) => `
         <li>
-          ${c.categoria.nombre}: "${c.libro.titulo}"
-          — $${c.precioVigente} — cupo: ${c.cupoMaximo}
+          <strong>${escapar(c.categoria.nombre)}</strong>: "${escapar(c.libro.titulo)}"
+          — ${formatearMonto(c.precioVigente)} — cupo: ${c.cupoMaximo ?? "sin límite"}
           ${permiteSuscripcion
-                        ? `— <a href="/suscripcion.html?categoriaId=${c.categoria.id}">Suscribirme</a>`
-                        : ""
-                    }
+        ? `— <a href="/suscripcion.html?categoriaId=${c.categoria.id}">Suscribirme</a>`
+        : ""}
         </li>
-      `
-            )
-            .join("")}
+      `).join("")}
     </ul>
   `;
 }

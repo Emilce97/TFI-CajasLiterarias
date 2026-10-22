@@ -1,12 +1,19 @@
 import { apiGet, apiPatch } from "../data/apiClient";
 import type { Edicion, EstadoPedido, PedidoDespacho } from "../types";
 import { exigirRol } from "../utils/auth";
+import { escapar } from "../utils/html";
+import { formatearFechaHora } from "../utils/formato";
+import { mensajeCargando, mensajeError, mensajeVacio } from "../components/mensajes";
+import { cargarEdicionesCerradas, selectorEdicion } from "../components/selectorEdicion";
+import { ejecutarConBoton } from "../components/botonAccion";
 import { abrirRemito } from "./remito";
 
 /**
  * Panel de despacho: la administradora elige una edicion cerrada, ve sus pedidos
  * y los avanza de a un paso (empaquetar, despachar con tracking, entregar).
  */
+
+const TITULO = "<h1>Panel de despacho</h1>";
 
 // El circuito, igual que EstadoPedido.siguiente() del backend.
 const SIGUIENTE: Record<EstadoPedido, EstadoPedido | null> = {
@@ -25,39 +32,30 @@ const ETIQUETA: Record<EstadoPedido, string> = {
 
 export async function renderDespachoPage(container: HTMLElement) {
     if (!exigirRol("ADMIN")) return;
-    container.innerHTML = "<h1>Panel de despacho</h1><p>Cargando...</p>";
+    container.innerHTML = TITULO + mensajeCargando();
 
     try {
-        const ediciones = await apiGet<Edicion[]>("/ediciones");
         // Los pedidos se generan en el corte: solo hay pedidos en ediciones cerradas.
-        const cerradas = ediciones.filter((edicion) => edicion.estado === "CERRADA");
+        const cerradas = await cargarEdicionesCerradas();
         renderFiltros(container, cerradas);
     } catch (error) {
-        container.innerHTML = "<h1>Panel de despacho</h1><p>No se pudieron cargar las ediciones.</p>";
+        container.innerHTML = TITULO + mensajeError("No se pudieron cargar las ediciones.");
         console.error(error);
     }
 }
 
 function renderFiltros(container: HTMLElement, cerradas: Edicion[]) {
     if (cerradas.length === 0) {
-        container.innerHTML = `
-      <h1>Panel de despacho</h1>
-      <p>Todavía no hay ediciones cerradas. Los pedidos se generan al hacer el corte.</p>
-    `;
+        container.innerHTML = TITULO + mensajeVacio(
+            "Todavía no hay ediciones cerradas. Los pedidos se generan al hacer el corte.");
         return;
     }
 
     const estados = Object.keys(ETIQUETA) as EstadoPedido[];
 
     container.innerHTML = `
-    <h1>Panel de despacho</h1>
-    <label>
-      Edición:
-      <select id="select-edicion">
-        <option value="">Elegí una edición cerrada</option>
-        ${cerradas.map((edicion) => `<option value="${edicion.id}">${escapar(edicion.nombre)}</option>`).join("")}
-      </select>
-    </label>
+    ${TITULO}
+    ${selectorEdicion(cerradas)}
     <label>
       Estado:
       <select id="select-estado">
@@ -85,17 +83,17 @@ function renderFiltros(container: HTMLElement, cerradas: Edicion[]) {
 
     // Un solo listener para todos los botones (delegacion de eventos), como en Demanda.
     zonaTabla.addEventListener("click", async (event) => {
-        const boton = event.target as HTMLElement;
-        if (boton.tagName !== "BUTTON") return;
+        const boton = event.target;
+        if (!(boton instanceof HTMLButtonElement)) return;
 
-        const remitoId = boton.getAttribute("data-remito-id");
+        const remitoId = boton.dataset.remitoId;
         if (remitoId) {
             await abrirRemito(Number(remitoId));
             return;
         }
 
-        const pedidoId = boton.getAttribute("data-pedido-id");
-        const destino = boton.getAttribute("data-destino") as EstadoPedido;
+        const pedidoId = boton.dataset.pedidoId;
+        const destino = boton.dataset.destino as EstadoPedido;
 
         // Al despachar, el backend exige el tracking: lo pedimos antes de mandar.
         let tracking: string | undefined;
@@ -109,38 +107,33 @@ function renderFiltros(container: HTMLElement, cerradas: Edicion[]) {
             tracking = ingresado.trim();
         }
 
-        boton.setAttribute("disabled", "true");
-        boton.textContent = "Guardando...";
-
-        try {
-            await apiPatch(`/pedidos/${pedidoId}/estado`, { estado: destino, tracking });
-            // Recargamos para ver el estado nuevo, quien lo cambio y cuando.
-            await recargar();
-        } catch (error) {
-            boton.removeAttribute("disabled");
-            boton.textContent = `Pasar a ${ETIQUETA[destino]}`;
-            alert("No se pudo cambiar el estado. Recargá la lista y probá de nuevo.");
-            console.error(error);
-        }
+        const ok = await ejecutarConBoton(
+            boton,
+            "Guardando...",
+            () => apiPatch(`/pedidos/${pedidoId}/estado`, { estado: destino, tracking }),
+            "No se pudo cambiar el estado. Recargá la lista y probá de nuevo.",
+        );
+        // Recargamos para ver el estado nuevo, quien lo cambio y cuando.
+        if (ok) await recargar();
     });
 }
 
 async function cargarPedidos(zona: HTMLElement, edicionId: number, estado: string) {
-    zona.innerHTML = "<p>Cargando pedidos...</p>";
+    zona.innerHTML = mensajeCargando("Cargando pedidos...");
     const filtro = estado ? `?estado=${estado}` : "";
 
     try {
         const pedidos = await apiGet<PedidoDespacho[]>(`/ediciones/${edicionId}/pedidos${filtro}`);
         renderTabla(zona, pedidos);
     } catch (error) {
-        zona.innerHTML = "<p>No se pudieron cargar los pedidos de esta edición.</p>";
+        zona.innerHTML = mensajeError("No se pudieron cargar los pedidos de esta edición.");
         console.error(error);
     }
 }
 
 function renderTabla(zona: HTMLElement, pedidos: PedidoDespacho[]) {
     if (pedidos.length === 0) {
-        zona.innerHTML = "<p>No hay pedidos para mostrar con este filtro.</p>";
+        zona.innerHTML = mensajeVacio("No hay pedidos para mostrar con este filtro.");
         return;
     }
 
@@ -178,7 +171,7 @@ function renderFila(pedido: PedidoDespacho): string {
 
     const accion = [botonEstado, botonRemito].filter(Boolean).join(" ") || "—";
     const ultimoCambio = pedido.fechaModificacion
-        ? `${formatearFecha(pedido.fechaModificacion)}<br>${escapar(pedido.modificadoPor)}`
+        ? `${formatearFechaHora(pedido.fechaModificacion)}<br>${escapar(pedido.modificadoPor)}`
         : "—";
 
     return `
@@ -194,23 +187,4 @@ function renderFila(pedido: PedidoDespacho): string {
       <td>${accion}</td>
     </tr>
   `;
-}
-
-// "2026-10-17T17:19:57" → "17/10/2026 17:19". El backend ya manda la hora de Argentina:
-// se arma a mano para no depender del formato regional de cada navegador.
-function formatearFecha(iso: string): string {
-    const [fecha, hora] = iso.split("T");
-    const [anio, mes, dia] = fecha.split("-");
-    return `${dia}/${mes}/${anio} ${hora.slice(0, 5)}`;
-}
-
-// El nombre y la direccion los cargan los suscriptores en el formulario publico:
-// se escapan para que un texto con etiquetas HTML no se ejecute en el panel de la admin.
-function escapar(texto: string | null): string {
-    return (texto ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
 }
