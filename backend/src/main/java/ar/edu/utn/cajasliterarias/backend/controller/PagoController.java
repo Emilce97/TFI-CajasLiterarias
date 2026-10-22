@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -41,12 +42,12 @@ public class PagoController {
     }
 
     /**
-     * Marca un pago como validado.
+     * Marca un pago como validado y registra que administradora lo valido.
      * PATCH /api/pagos/{id}/validar
      */
     @PatchMapping("/{id}/validar")
-    public ResponseEntity<Pago> validar(@PathVariable Long id) {
-        Pago pago = pagoService.validarPago(id);
+    public ResponseEntity<Pago> validar(@PathVariable Long id, Authentication authentication) {
+        Pago pago = pagoService.validarPago(id, authentication.getName());
         return ResponseEntity.ok(pago);
     }
 }
