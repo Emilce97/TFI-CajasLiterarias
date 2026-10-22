@@ -2,64 +2,80 @@ import { apiGet, apiPatch } from "../data/apiClient";
 import type { Pago } from "../types";
 import { exigirRol } from "../utils/auth";
 import { escapar } from "../utils/html";
+import { formatearFecha, formatearMonto } from "../utils/formato";
+import { mensajeCargando, mensajeError, mensajeVacio } from "../components/mensajes";
+import { ejecutarConBoton } from "../components/botonAccion";
 
 /**
- * Renderiza el panel de conciliacion de pagos: lista los pagos pendientes
- * de validar, con un boton para validar cada uno.
+ * Panel de conciliacion de pagos: lista los pagos pendientes de validar,
+ * con un boton para validar cada uno.
  */
 export async function renderPagosPage(container: HTMLElement) {
     if (!exigirRol("ADMIN")) return;
-    container.innerHTML = "<h1>Pagos pendientes</h1><p>Cargando...</p>";
+    container.innerHTML = `<h1>Pagos pendientes</h1>${mensajeCargando()}`;
 
     try {
         const pagos = await apiGet<Pago[]>("/pagos/pendientes");
-        renderListaDePagos(container, pagos);
+        renderTablaDePagos(container, pagos);
     } catch (error) {
-        container.innerHTML = "<h1>Pagos pendientes</h1><p>❌ No se pudieron cargar los pagos.</p>";
+        container.innerHTML = `<h1>Pagos pendientes</h1>${mensajeError("No se pudieron cargar los pagos.")}`;
         console.error(error);
     }
 }
 
-function renderListaDePagos(container: HTMLElement, pagos: Pago[]) {
+function renderTablaDePagos(container: HTMLElement, pagos: Pago[]) {
+    if (pagos.length === 0) {
+        container.innerHTML = `<h1>Pagos pendientes</h1>${mensajeVacio("No hay pagos pendientes de validar.")}`;
+        return;
+    }
+
     container.innerHTML = `
     <h1>Pagos pendientes</h1>
-    ${pagos.length === 0 ? "<p>No hay pagos pendientes.</p>" : ""}
-    <ul id="lista-pagos"></ul>
+    <table>
+      <thead>
+        <tr>
+          <th>Suscriptor</th>
+          <th>Temática</th>
+          <th>Edición</th>
+          <th>Monto</th>
+          <th>Fecha de pago</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${pagos.map(renderFila).join("")}
+      </tbody>
+    </table>
   `;
 
-    const lista = container.querySelector("#lista-pagos")!;
-
-    pagos.forEach((pago) => {
-        const item = document.createElement("li");
-        item.innerHTML = `
-      <strong>${escapar(pago.suscripcion.suscriptor.nombre)}</strong>
-      — ${escapar(pago.suscripcion.categoria.nombre)}
-      — ${escapar(pago.edicion.nombre)}
-      — $${pago.monto}
-      <button data-pago-id="${pago.id}">Validar</button>
-    `;
-        lista.appendChild(item);
-    });
+    const tabla = container.querySelector("table")!;
 
     // Un solo listener para todos los botones (delegacion de eventos)
-    lista.addEventListener("click", async (event) => {
-        const boton = event.target as HTMLElement;
-        if (boton.tagName !== "BUTTON") return;
+    tabla.addEventListener("click", async (event) => {
+        const boton = event.target;
+        if (!(boton instanceof HTMLButtonElement)) return;
 
-        const pagoId = boton.getAttribute("data-pago-id");
-        boton.setAttribute("disabled", "true");
-        boton.textContent = "Validando...";
-
-        try {
-            await apiPatch(`/pagos/${pagoId}/validar`);
-            // Volvemos a pedir la lista completa, para que el pago recien
-            // validado ya no aparezca entre los pendientes.
-            await renderPagosPage(container);
-        } catch (error) {
-            boton.removeAttribute("disabled");
-            boton.textContent = "Validar";
-            alert("No se pudo validar el pago.");
-            console.error(error);
-        }
+        const ok = await ejecutarConBoton(
+            boton,
+            "Validando...",
+            () => apiPatch(`/pagos/${boton.dataset.pagoId}/validar`),
+            "No se pudo validar el pago.",
+        );
+        // Recargamos para que el pago validado ya no aparezca entre los pendientes.
+        if (ok) await renderPagosPage(container);
     });
+}
+
+function renderFila(pago: Pago): string {
+    const suscriptor = pago.suscripcion.suscriptor;
+    return `
+    <tr>
+      <td>${escapar(suscriptor.nombre)}<br>${escapar(suscriptor.email)}</td>
+      <td>${escapar(pago.suscripcion.categoria.nombre)}</td>
+      <td>${escapar(pago.edicion.nombre)}</td>
+      <td>${formatearMonto(pago.monto)}</td>
+      <td>${formatearFecha(pago.fechaPago)}</td>
+      <td><button data-pago-id="${pago.id}">Validar</button></td>
+    </tr>
+  `;
 }
