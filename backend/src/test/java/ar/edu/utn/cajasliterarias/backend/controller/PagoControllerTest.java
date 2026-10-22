@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -176,7 +177,7 @@ class PagoControllerTest {
     void validar_pagoPendiente_devuelve200ConPagoValidado() throws Exception {
         Pago validado = pago(5L, EstadoPago.VALIDADO);
         validado.setFechaValidacion(LocalDateTime.of(2026, 10, 10, 12, 0));
-        when(pagoService.validarPago(5L)).thenReturn(validado);
+        when(pagoService.validarPago(eq(5L), anyString())).thenReturn(validado);
 
         mockMvc.perform(patch("/api/pagos/5/validar"))
                 .andExpect(status().isOk())
@@ -188,7 +189,7 @@ class PagoControllerTest {
     @Test
     void validar_pagoYaValidado_devuelve409ConMensaje() throws Exception {
         String mensaje = "El pago 5 ya fue validado el 2026-10-01T09:30.";
-        when(pagoService.validarPago(5L)).thenThrow(new IllegalStateException(mensaje));
+        when(pagoService.validarPago(eq(5L), anyString())).thenThrow(new IllegalStateException(mensaje));
 
         mockMvc.perform(patch("/api/pagos/5/validar"))
                 .andExpect(status().isConflict())
@@ -199,7 +200,7 @@ class PagoControllerTest {
     @Test
     void validar_pagoInexistente_devuelve400ConMensaje() throws Exception {
         String mensaje = "No existe el pago con id 99";
-        when(pagoService.validarPago(99L)).thenThrow(new IllegalArgumentException(mensaje));
+        when(pagoService.validarPago(eq(99L), anyString())).thenThrow(new IllegalArgumentException(mensaje));
 
         mockMvc.perform(patch("/api/pagos/99/validar"))
                 .andExpect(status().isBadRequest())

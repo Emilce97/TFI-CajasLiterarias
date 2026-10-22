@@ -19,6 +19,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import ar.edu.utn.cajasliterarias.backend.model.Administradora;
+import ar.edu.utn.cajasliterarias.backend.repository.AdministradoraRepository;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -38,9 +40,16 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class PagoServiceTest {
 
-    @Mock private PagoRepository pagoRepository;
-    @Mock private SuscripcionRepository suscripcionRepository;
-    @Mock private EdicionRepository edicionRepository;
+    @Mock
+    private PagoRepository pagoRepository;
+    @Mock
+    private SuscripcionRepository suscripcionRepository;
+    @Mock
+    private EdicionRepository edicionRepository;
+    @Mock
+    private AdministradoraRepository administradoraRepository;
+
+    private static final String EMAIL_ADMIN = "admin@cajasliterarias.com";
 
     private PagoService service;
 
@@ -49,7 +58,8 @@ class PagoServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new PagoService(pagoRepository, suscripcionRepository, edicionRepository, clock);
+        service = new PagoService(pagoRepository, suscripcionRepository, edicionRepository,
+                administradoraRepository, clock);
     }
 
     // helpers
@@ -82,6 +92,13 @@ class PagoServiceTest {
         pago.setEdicion(edicion);
         pago.setEstado(estado);
         return pago;
+    }
+
+    private Administradora admin() {
+        Administradora admin = new Administradora();
+        admin.setId(1L);
+        admin.setEmail(EMAIL_ADMIN);
+        return admin;
     }
 
     // registrarPago
@@ -160,6 +177,7 @@ class PagoServiceTest {
         assertThrows(IllegalStateException.class,
                 () -> service.registrarPago(request(new BigDecimal("5000"))));
     }
+
     @Test
     void registrarPago_conSuscripcionInexistente_lanzaIllegalArgument() {
         when(suscripcionRepository.findById(10L)).thenReturn(Optional.empty());
@@ -185,15 +203,17 @@ class PagoServiceTest {
 
     // validarPago
     @Test
-    void validarPago_pendiente_quedaValidadoConFechaYHora() {
+    void validarPago_pendiente_quedaValidadoConFechaHoraYAdministradora() {
         Pago pendiente = pago(EstadoPago.PENDIENTE, edicion(EstadoEdicion.ABIERTA));
         when(pagoRepository.findByIdForUpdate(5L)).thenReturn(Optional.of(pendiente));
+        when(administradoraRepository.findByEmail(EMAIL_ADMIN)).thenReturn(Optional.of(admin()));
         when(pagoRepository.save(any(Pago.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Pago resultado = service.validarPago(5L);
+        Pago resultado = service.validarPago(5L, EMAIL_ADMIN);
 
         assertEquals(EstadoPago.VALIDADO, resultado.getEstado());
         assertEquals(LocalDateTime.of(2026, 10, 10, 12, 0), resultado.getFechaValidacion());
+        assertEquals(EMAIL_ADMIN, resultado.getValidadoPor().getEmail());
     }
 
     @Test
@@ -203,7 +223,7 @@ class PagoServiceTest {
         yaValidado.setFechaValidacion(primeraValidacion);
         when(pagoRepository.findByIdForUpdate(5L)).thenReturn(Optional.of(yaValidado));
 
-        assertThrows(IllegalStateException.class, () -> service.validarPago(5L));
+        assertThrows(IllegalStateException.class, () -> service.validarPago(5L, EMAIL_ADMIN));
 
         // La prioridad por cupo depende de esta fecha: no se puede modificar.
         assertEquals(primeraValidacion, yaValidado.getFechaValidacion());
@@ -215,7 +235,7 @@ class PagoServiceTest {
         Pago pendiente = pago(EstadoPago.PENDIENTE, edicion(EstadoEdicion.CERRADA));
         when(pagoRepository.findByIdForUpdate(5L)).thenReturn(Optional.of(pendiente));
 
-        assertThrows(IllegalStateException.class, () -> service.validarPago(5L));
+        assertThrows(IllegalStateException.class, () -> service.validarPago(5L, EMAIL_ADMIN));
         assertEquals(EstadoPago.PENDIENTE, pendiente.getEstado());
         verify(pagoRepository, never()).save(any());
     }
@@ -224,7 +244,18 @@ class PagoServiceTest {
     void validarPago_inexistente_lanzaIllegalArgument() {
         when(pagoRepository.findByIdForUpdate(99L)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> service.validarPago(99L));
+        assertThrows(IllegalArgumentException.class, () -> service.validarPago(99L, EMAIL_ADMIN));
+    }
+
+    @Test
+    void validarPago_conAdministradoraInexistente_lanzaIllegalStateYNoGuarda() {
+        Pago pendiente = pago(EstadoPago.PENDIENTE, edicion(EstadoEdicion.ABIERTA));
+        when(pagoRepository.findByIdForUpdate(5L)).thenReturn(Optional.of(pendiente));
+        when(administradoraRepository.findByEmail(EMAIL_ADMIN)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalStateException.class, () -> service.validarPago(5L, EMAIL_ADMIN));
+        assertEquals(EstadoPago.PENDIENTE, pendiente.getEstado());
+        verify(pagoRepository, never()).save(any());
     }
 
     // listarPendientes

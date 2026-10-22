@@ -13,6 +13,8 @@ import ar.edu.utn.cajasliterarias.backend.repository.SuscripcionRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ar.edu.utn.cajasliterarias.backend.model.Administradora;
+import ar.edu.utn.cajasliterarias.backend.repository.AdministradoraRepository;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -26,17 +28,20 @@ public class PagoService {
     private final PagoRepository pagoRepository;
     private final SuscripcionRepository suscripcionRepository;
     private final EdicionRepository edicionRepository;
+    private final AdministradoraRepository administradoraRepository;
     private final Clock clock;
 
     public PagoService(
             PagoRepository pagoRepository,
             SuscripcionRepository suscripcionRepository,
             EdicionRepository edicionRepository,
+            AdministradoraRepository administradoraRepository,
             Clock clock
     ) {
         this.pagoRepository = pagoRepository;
         this.suscripcionRepository = suscripcionRepository;
         this.edicionRepository = edicionRepository;
+        this.administradoraRepository = administradoraRepository;
         this.clock = clock;
     }
 
@@ -110,13 +115,13 @@ public class PagoService {
     }
 
     /**
-     * Marca un pago como validado, registrando fecha y hora.
+     * Marca un pago como validado, registrando fecha, hora y la administradora que lo valido.
      * Un pago se valida una sola vez: la fecha/hora de validacion define la prioridad por cupo en el corte,
      * asi que no puede pisarse. La fila se lee con bloqueo para que dos validaciones simultaneas
      * se serialicen. Tampoco se valida un pago de una edicion que ya no esta abierta.
      */
     @Transactional
-    public Pago validarPago(Long pagoId) {
+    public Pago validarPago(Long pagoId, String emailAdmin) {
         Pago pago = pagoRepository.findByIdForUpdate(pagoId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "No existe el pago con id " + pagoId
@@ -135,8 +140,14 @@ public class PagoService {
             );
         }
 
+        Administradora admin = administradoraRepository.findByEmail(emailAdmin)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No se encontro la administradora de la sesion."
+                ));
+
         pago.setEstado(EstadoPago.VALIDADO);
         pago.setFechaValidacion(LocalDateTime.now(clock));
+        pago.setValidadoPor(admin);
 
         return pagoRepository.save(pago);
     }
