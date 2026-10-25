@@ -86,7 +86,8 @@ function renderSuscripcion(s: Suscripcion, categorias: Categoria[]): string {
 
     return `
     <li>
-      <strong>${escapar(s.categoria.nombre)}</strong> — ${escapar(s.estado)}
+      <strong>${escapar(s.categoria.nombre)}</strong>
+      <span class="etiqueta etiqueta-${escapar(s.estado.toLowerCase())}">${escapar(s.estado)}</span>
       ${pendientes.length > 0 ? `<br><em>Pendiente: ${pendientes.join("; ")}.</em>` : ""}
       <div>${acciones.join(" ")} ${cambioDeCategoria}</div>
     </li>

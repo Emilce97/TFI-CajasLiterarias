@@ -82,7 +82,8 @@ function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[]) {
 function renderEdicion(edicion: Edicion): string {
     return `
     <li class="edicion">
-      <strong>${escapar(edicion.nombre)}</strong> — ${ESTADO[edicion.estado]}
+      <strong>${escapar(edicion.nombre)}</strong> 
+      <span class="etiqueta etiqueta-${edicion.estado.toLowerCase()}">${ESTADO[edicion.estado]}</span>
       <br>
       Corte: ${formatearFecha(edicion.fechaCorte)} ·
       Despacho: del ${formatearFecha(edicion.fechaDespachoDesde)} al ${formatearFecha(edicion.fechaDespachoHasta)}

@@ -5,6 +5,7 @@ import { mensajeError, mensajeExito } from '../components/mensajes';
 import { exigirRol, paginaActual } from '../utils/auth';
 import { escapar } from '../utils/html';
 import { obtenerSesion } from '../utils/session';
+import { encabezado } from '../components/encabezado';
 
 interface CrearSuscripcionRequest {
   categoriaId: number;
@@ -14,6 +15,7 @@ const app = document.querySelector<HTMLDivElement>('#app')!;
 
 function render(nombre: string): void {
   app.innerHTML = `
+    ${encabezado()}
     <main class="alta-suscripcion">
       <a class="volver" href="/">&larr; Volver a Ediciones</a>
       <h1>Sumate a tu caja literaria</h1>

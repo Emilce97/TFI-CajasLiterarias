@@ -3,11 +3,13 @@ import { ejecutarConBoton } from "../components/botonAccion";
 import { mensajeError } from "../components/mensajes";
 import { destinoTrasLogin } from "../utils/auth";
 import { guardarSesion, obtenerSesion, type Sesion } from "../utils/session";
+import { encabezado } from "../components/encabezado";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 function render(): void {
     app.innerHTML = `
+    ${encabezado()}
     <main class="login">
       <a class="volver" href="/">&larr; Volver al inicio</a>
       <h1>Ingresar</h1>

@@ -3,6 +3,7 @@ import { ejecutarConBoton } from "../components/botonAccion";
 import { mensajeError } from "../components/mensajes";
 import { destinoTrasLogin } from "../utils/auth";
 import { guardarSesion, obtenerSesion, type Sesion } from "../utils/session";
+import { encabezado } from "../components/encabezado";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const next = new URLSearchParams(window.location.search).get("next");
@@ -10,6 +11,7 @@ const next = new URLSearchParams(window.location.search).get("next");
 function render(): void {
     const linkLogin = next ? `/login.html?next=${encodeURIComponent(next)}` : "/login.html";
     app.innerHTML = `
+    ${encabezado()}
     <main class="login">
       <a class="volver" href="/">&larr; Volver al inicio</a>
       <h1>Crear cuenta</h1>
