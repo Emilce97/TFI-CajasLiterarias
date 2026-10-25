@@ -1,5 +1,7 @@
 import { apiGet, apiPost } from '../data/apiClient';
 import type { Categoria } from '../types';
+import { ejecutarConBoton } from '../components/botonAccion';
+import { mensajeError, mensajeExito } from '../components/mensajes';
 import { exigirRol, paginaActual } from '../utils/auth';
 import { escapar } from '../utils/html';
 import { obtenerSesion } from '../utils/session';
@@ -26,7 +28,7 @@ function render(nombre: string): void {
         <button type="submit">Suscribirme</button>
       </form>
 
-      <p id="mensaje" class="mensaje" role="status" aria-live="polite"></p>
+      <div id="mensaje" aria-live="polite"></div>
     </main>
   `;
 }
@@ -40,7 +42,7 @@ async function cargarCategorias(categoriaIdPreseleccionada: string | null): Prom
     select.innerHTML =
       '<option value="" disabled>Elegí una temática</option>' +
       categorias
-        .map((categoria) => `<option value="${categoria.id}">${categoria.nombre}</option>`)
+        .map((categoria) => `<option value="${categoria.id}">${escapar(categoria.nombre)}</option>`)
         .join('');
 
     if (categoriaIdPreseleccionada) {
@@ -50,14 +52,13 @@ async function cargarCategorias(categoriaIdPreseleccionada: string | null): Prom
     }
   } catch (error) {
     select.innerHTML = '<option value="" disabled selected>No se pudieron cargar las temáticas</option>';
-    mostrarMensaje('No pudimos cargar las temáticas disponibles. Recargá la página para reintentar.', 'error');
+    mostrarMensaje(mensajeError('No pudimos cargar las temáticas disponibles. Recargá la página para reintentar.'));
   }
 }
 
-function mostrarMensaje(texto: string, tipo: 'exito' | 'error'): void {
-  const mensaje = document.querySelector<HTMLParagraphElement>('#mensaje')!;
-  mensaje.textContent = texto;
-  mensaje.className = `mensaje ${tipo}`;
+// Recibe el HTML que arman los componentes (mensajeError, mensajeExito).
+function mostrarMensaje(html: string): void {
+  document.querySelector<HTMLElement>('#mensaje')!.innerHTML = html;
 }
 
 async function manejarEnvio(event: SubmitEvent): Promise<void> {
@@ -65,29 +66,29 @@ async function manejarEnvio(event: SubmitEvent): Promise<void> {
 
   const form = event.currentTarget as HTMLFormElement;
   const boton = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
-  const categoriaId = form.querySelector<HTMLSelectElement>('#categoria')!.value;
+  const select = form.querySelector<HTMLSelectElement>('#categoria')!;
 
-  if (!categoriaId) {
-    mostrarMensaje('Elegí una temática para continuar.', 'error');
+  if (!select.value) {
+    mostrarMensaje(mensajeError('Elegí una temática para continuar.'));
     return;
   }
 
-  const request: CrearSuscripcionRequest = { categoriaId: Number(categoriaId) };
+  const request: CrearSuscripcionRequest = { categoriaId: Number(select.value) };
+  mostrarMensaje('');
 
-  boton.disabled = true;
-  mostrarMensaje('Enviando...', 'exito');
-
-  try {
-    await apiPost('/suscripciones', request);
-    mostrarMensaje('¡Listo! Tu suscripción quedó registrada.', 'exito');
-    // Volvemos al placeholder de la temática.
-    form.querySelector<HTMLSelectElement>('#categoria')!.selectedIndex = 0;
-  } catch (error) {
-    // El mensaje viene del backend (cupo completo, ya suscripta, ventana cerrada...).
-    mostrarMensaje(error instanceof Error ? error.message : 'Ocurrió un error inesperado.', 'error');
-  } finally {
-    boton.disabled = false;
-  }
+  await ejecutarConBoton(
+    boton,
+    'Enviando...',
+    async () => {
+      await apiPost('/suscripciones', request);
+      mostrarMensaje(mensajeExito('¡Listo! Tu suscripción quedó registrada.'));
+      // Volvemos al placeholder de la temática.
+      select.selectedIndex = 0;
+    },
+    // Sin texto fijo: se muestra el mensaje del backend (cupo completo, ya suscripta, ventana cerrada...).
+    undefined,
+    (mensaje) => mostrarMensaje(mensajeError(mensaje)),
+  );
 }
 
 function init(): void {
