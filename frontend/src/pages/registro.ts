@@ -1,4 +1,6 @@
 import { API_BASE_URL } from "../data/apiClient";
+import { ejecutarConBoton } from "../components/botonAccion";
+import { mensajeError } from "../components/mensajes";
 import { destinoTrasLogin } from "../utils/auth";
 import { guardarSesion, obtenerSesion, type Sesion } from "../utils/session";
 
@@ -29,13 +31,14 @@ function render(): void {
       </form>
 
       <p>¿Ya tenés cuenta? <a href="${linkLogin}">Ingresá</a></p>
-      <p id="mensaje" role="status" aria-live="polite"></p>
+      <div id="mensaje" aria-live="polite"></div>
     </main>
   `;
 }
 
-function mostrarMensaje(texto: string): void {
-    document.querySelector<HTMLParagraphElement>("#mensaje")!.textContent = texto;
+// Recibe el HTML que arma el componente (mensajeError).
+function mostrarMensaje(html: string): void {
+    document.querySelector<HTMLElement>("#mensaje")!.innerHTML = html;
 }
 
 async function manejarEnvio(event: SubmitEvent): Promise<void> {
@@ -49,43 +52,44 @@ async function manejarEnvio(event: SubmitEvent): Promise<void> {
     const direccion = form.querySelector<HTMLInputElement>("#direccion")!.value.trim();
 
     if (!nombre || !email || !password || !direccion) {
-        mostrarMensaje("Completá todos los campos.");
+        mostrarMensaje(mensajeError("Completá todos los campos."));
         return;
     }
     if (password.length < 8) {
-        mostrarMensaje("La contraseña tiene que tener al menos 8 caracteres.");
+        mostrarMensaje(mensajeError("La contraseña tiene que tener al menos 8 caracteres."));
         return;
     }
 
-    boton.disabled = true;
-    mostrarMensaje("Creando tu cuenta...");
+    mostrarMensaje("");
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/auth/registro`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nombre, email, password, direccion }),
-        });
+    await ejecutarConBoton(
+        boton,
+        "Creando tu cuenta...",
+        async () => {
+            const response = await fetch(`${API_BASE_URL}/auth/registro`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nombre, email, password, direccion }),
+            });
 
-        if (!response.ok) {
-            let detalle = "No se pudo completar el registro.";
-            try {
-                const error = await response.json();
-                detalle = error.message || detalle;
-            } catch {
-                // Respuesta sin cuerpo JSON: se usa el mensaje generico.
+            if (!response.ok) {
+                let detalle = "No se pudo completar el registro.";
+                try {
+                    const error = await response.json();
+                    detalle = error.message || detalle;
+                } catch {
+                    // Respuesta sin cuerpo JSON: se usa el mensaje generico.
+                }
+                throw new Error(detalle);
             }
-            throw new Error(detalle);
-        }
 
-        const sesion: Sesion = await response.json();
-        guardarSesion(sesion);
-        window.location.href = "/" + destinoTrasLogin(sesion.rol, next);
-    } catch (error) {
-        mostrarMensaje(error instanceof Error ? error.message : "Ocurrió un error inesperado.");
-    } finally {
-        boton.disabled = false;
-    }
+            const sesion: Sesion = await response.json();
+            guardarSesion(sesion);
+            window.location.href = "/" + destinoTrasLogin(sesion.rol, next);
+        },
+        undefined, // se muestra el mensaje del backend
+        (mensaje) => mostrarMensaje(mensajeError(mensaje)),
+    );
 }
 
 function init(): void {
