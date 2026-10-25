@@ -11,6 +11,10 @@ export function mensajeError(texto: string): string {
     return `<p class="mensaje mensaje-error" role="alert">${escapar(texto)}</p>`;
 }
 
+export function mensajeExito(texto: string): string {
+    return `<p class="mensaje mensaje-exito" role="status">${escapar(texto)}</p>`;
+}
+
 export function mensajeVacio(texto: string): string {
     return `<p class="mensaje mensaje-vacio">${escapar(texto)}</p>`;
 }
