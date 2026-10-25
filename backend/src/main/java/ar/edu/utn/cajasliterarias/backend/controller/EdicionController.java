@@ -1,7 +1,6 @@
 package ar.edu.utn.cajasliterarias.backend.controller;
 
 import ar.edu.utn.cajasliterarias.backend.dto.CrearEdicionRequest;
-import ar.edu.utn.cajasliterarias.backend.enums.EstadoEdicion;
 import ar.edu.utn.cajasliterarias.backend.model.Edicion;
 import ar.edu.utn.cajasliterarias.backend.service.EdicionService;
 import org.springframework.http.HttpStatus;
@@ -37,12 +36,11 @@ public class EdicionController {
      */
     @GetMapping
     public List<Edicion> listarEdiciones(Authentication authentication) {
-        List<Edicion> todas = edicionService.listarEdiciones();
         boolean esAdmin = authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        if (esAdmin) return todas;
-        return todas.stream().filter(e -> e.getEstado() == EstadoEdicion.ABIERTA).toList();
+        return edicionService.listarEdiciones(esAdmin);
     }
+
     /**
      * Lista las curadurias (categoria, libro, precio, cupo) de una edicion puntual.
      * GET /api/ediciones/{id}/curadurias

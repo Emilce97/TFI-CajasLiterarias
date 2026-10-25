@@ -18,12 +18,9 @@ export async function renderEdicionesPage(container: HTMLElement) {
     container.innerHTML = "<h1>Ediciones</h1>" + mensajeCargando("Cargando ediciones...");
 
     try {
-        const todas = await apiGet<Edicion[]>("/ediciones");
-        // Visitantes: solo la edición abierta. Administradora: todas (para ver el historial).
-        const visibles = tieneRol("ADMIN")
-            ? todas
-            : todas.filter((edicion) => edicion.estado === "ABIERTA");
-        renderListaDeEdiciones(container, visibles);
+        // El backend ya filtra: a quien no es ADMIN le devuelve solo la edición abierta.
+        const ediciones = await apiGet<Edicion[]>("/ediciones");
+        renderListaDeEdiciones(container, ediciones);
     } catch (error) {
         container.innerHTML = "<h1>Ediciones</h1>" + mensajeError("No se pudieron cargar las ediciones.");
         console.error(error);
