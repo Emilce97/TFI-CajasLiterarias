@@ -1,4 +1,6 @@
 import { apiGet, apiPatch } from "../data/apiClient";
+import { ejecutarConBoton } from "../components/botonAccion";
+import { mensajeCargando, mensajeError, mensajeExito, mensajeVacio } from "../components/mensajes";
 import type { Categoria, Suscripcion, Suscriptor } from "../types";
 import { exigirRol } from "../utils/auth";
 import { escapar } from "../utils/html";
@@ -10,7 +12,7 @@ import { escapar } from "../utils/html";
  */
 export async function renderMiSuscripcionPage(container: HTMLElement) {
     if (!exigirRol("SUSCRIPTOR")) return;
-    container.innerHTML = "<h1>Mi suscripción</h1><p>Cargando...</p>";
+    container.innerHTML = "<h1>Mi suscripción</h1>" + mensajeCargando();
 
     try {
         const [suscripciones, categorias, perfil] = await Promise.all([
@@ -20,7 +22,7 @@ export async function renderMiSuscripcionPage(container: HTMLElement) {
         ]);
         renderPagina(container, suscripciones, categorias, perfil);
     } catch (error) {
-        container.innerHTML = "<h1>Mi suscripción</h1><p>No se pudo cargar tu información.</p>";
+        container.innerHTML = "<h1>Mi suscripción</h1>" + mensajeError("No se pudo cargar tu información");
         console.error(error);
     }
 }
@@ -35,9 +37,8 @@ function renderPagina(
     <h1>Mi suscripción</h1>
     <section id="mis-suscripciones">
       ${suscripciones.length === 0
-            ? '<p>Todavía no tenés suscripciones. <a href="/suscripcion.html">Suscribirme</a></p>'
-            : ""}
-      <ul>${suscripciones.map((s) => renderSuscripcion(s, categorias)).join("")}</ul>
+            ? mensajeVacio("Todavía no tenés suscripciones.") + '<p><a href="/suscripcion.html">Suscribirme</a></p>'
+            : `<ul>${suscripciones.map((s) => renderSuscripcion(s, categorias)).join("")}</ul>`}
     </section>
 
     <h2>Mis datos de entrega</h2>
@@ -48,7 +49,7 @@ function renderPagina(
       <input id="perfil-direccion" value="${escapar(perfil.direccion ?? "")}" maxlength="255" required />
       <button type="submit">Guardar</button>
     </form>
-    <p id="mensaje-perfil" role="status" aria-live="polite"></p>
+    <div id="mensaje-perfil" aria-live="polite"></div>
   `;
 
     conectarAcciones(container);
@@ -76,9 +77,9 @@ function renderSuscripcion(s: Suscripcion, categorias: Categoria[]): string {
     const cambioDeCategoria = s.estado === "ACTIVA"
         ? `<select data-categoria-de="${s.id}">
              ${categorias
-                .filter((c) => c.id !== s.categoria.id)
-                .map((c) => `<option value="${c.id}">${escapar(c.nombre)}</option>`)
-                .join("")}
+            .filter((c) => c.id !== s.categoria.id)
+            .map((c) => `<option value="${c.id}">${escapar(c.nombre)}</option>`)
+            .join("")}
            </select>
            ${boton(s.id, "categoria", "Cambiar temática")}`
         : "";
@@ -104,20 +105,17 @@ function conectarAcciones(container: HTMLElement) {
         const accion = clickeado.dataset.accion!;
         if (accion === "baja" && !confirm("¿Seguro que querés dar de baja esta suscripción?")) return;
 
-        clickeado.disabled = true;
-        try {
+        // Sin texto fijo: si falla, el alert muestra el mensaje del backend.
+        const ok = await ejecutarConBoton(clickeado, "Procesando...", async () => {
             if (accion === "categoria") {
                 const select = lista.querySelector<HTMLSelectElement>(`select[data-categoria-de="${id}"]`)!;
                 await apiPatch(`/suscripciones/${id}/categoria`, { categoriaId: Number(select.value) });
             } else {
                 await apiPatch(`/suscripciones/${id}/${accion}`);
             }
-            await renderMiSuscripcionPage(container);
-        } catch (error) {
-            clickeado.disabled = false;
-            alert(error instanceof Error ? error.message : "No se pudo completar la operación.");
-            console.error(error);
-        }
+        });
+        // Recargamos para ver el estado nuevo (o el cambio pendiente).
+        if (ok) await renderMiSuscripcionPage(container);
     });
 }
 
@@ -127,17 +125,25 @@ function conectarPerfil(container: HTMLElement) {
 
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
+        const boton = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
         const nombre = form.querySelector<HTMLInputElement>("#perfil-nombre")!.value.trim();
         const direccion = form.querySelector<HTMLInputElement>("#perfil-direccion")!.value.trim();
         if (!nombre || !direccion) {
-            mensaje.textContent = "Completá nombre y dirección.";
+            mensaje.innerHTML = mensajeError("Completá nombre y dirección.");
             return;
         }
-        try {
-            await apiPatch("/suscriptores/mi-perfil", { nombre, direccion });
-            mensaje.textContent = "Datos actualizados. Se aplican a los próximos pedidos.";
-        } catch (error) {
-            mensaje.textContent = error instanceof Error ? error.message : "No se pudieron guardar los datos.";
-        }
+        mensaje.innerHTML = "";
+
+        await ejecutarConBoton(
+            boton,
+            "Guardando...",
+            async () => {
+                await apiPatch("/suscriptores/mi-perfil", { nombre, direccion });
+                mensaje.innerHTML = mensajeExito("Datos actualizados. Se aplican a los próximos pedidos.");
+            },
+            undefined, // se muestra el mensaje del backend
+            (texto) => { mensaje.innerHTML = mensajeError(texto); },
+        );
     });
+
 }
