@@ -115,6 +115,13 @@ public class PagoService {
     }
 
     /**
+     * Historial de pagos validados (del mas reciente al mas viejo), con quien y cuando los valido.
+     */
+    public List<Pago> listarValidados() {
+        return pagoRepository.findByEstadoOrderByFechaValidacionDesc(EstadoPago.VALIDADO);
+    }
+
+    /**
      * Marca un pago como validado, registrando fecha, hora y la administradora que lo valido.
      * Un pago se valida una sola vez: la fecha/hora de validacion define la prioridad por cupo en el corte,
      * asi que no puede pisarse. La fila se lee con bloqueo para que dos validaciones simultaneas

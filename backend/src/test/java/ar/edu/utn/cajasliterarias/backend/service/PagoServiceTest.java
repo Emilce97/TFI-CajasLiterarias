@@ -267,4 +267,13 @@ class PagoServiceTest {
 
         assertEquals(List.of(pendiente), service.listarPendientes());
     }
+
+    @Test
+    void listarValidados_devuelveLosValidadosDelMasRecienteAlMasViejo() {
+        Pago validado = pago(EstadoPago.VALIDADO, edicion(EstadoEdicion.ABIERTA));
+        when(pagoRepository.findByEstadoOrderByFechaValidacionDesc(EstadoPago.VALIDADO))
+                .thenReturn(List.of(validado));
+
+        assertEquals(List.of(validado), service.listarValidados());
+    }
 }

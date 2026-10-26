@@ -6,6 +6,7 @@ import ar.edu.utn.cajasliterarias.backend.enums.EstadoPago;
 import ar.edu.utn.cajasliterarias.backend.model.Pago;
 import ar.edu.utn.cajasliterarias.backend.model.Suscripcion;
 import ar.edu.utn.cajasliterarias.backend.model.Suscriptor;
+import ar.edu.utn.cajasliterarias.backend.model.Administradora;
 import ar.edu.utn.cajasliterarias.backend.security.JwtService;
 import ar.edu.utn.cajasliterarias.backend.security.SuscripcionAcceso;
 import ar.edu.utn.cajasliterarias.backend.service.PagoService;
@@ -227,6 +228,35 @@ class PagoControllerTest {
         mockMvc.perform(post("/api/pagos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestValido())))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(pagoService);
+    }
+
+    // GET /api/pagos/validados
+
+    @Test
+    void listarValidados_devuelve200ConQuienValidoYSinElHash() throws Exception {
+        Administradora admin = new Administradora();
+        admin.setNombre("Administradora");
+        admin.setEmail("admin@cajasliterarias.com");
+        admin.setPasswordHash("$2a$10$hash-de-prueba");
+        Pago validado = pago(5L, EstadoPago.VALIDADO);
+        validado.setFechaValidacion(LocalDateTime.of(2026, 10, 10, 12, 0));
+        validado.setValidadoPor(admin);
+        when(pagoService.listarValidados()).thenReturn(List.of(validado));
+
+        mockMvc.perform(get("/api/pagos/validados"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].estado").value("VALIDADO"))
+                .andExpect(jsonPath("$[0].validadoPor.email").value("admin@cajasliterarias.com"))
+                .andExpect(jsonPath("$[0].validadoPor.passwordHash").doesNotExist());
+    }
+
+    @Test
+    @WithMockUser(username = "juana@mail.com", roles = "SUSCRIPTOR")
+    void listarValidados_comoSuscriptora_devuelve403() throws Exception {
+        mockMvc.perform(get("/api/pagos/validados"))
                 .andExpect(status().isForbidden());
 
         verifyNoInteractions(pagoService);

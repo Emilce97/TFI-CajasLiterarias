@@ -50,6 +50,7 @@ export interface Pago {
     estado: "PENDIENTE" | "VALIDADO";
     suscripcion: Suscripcion;
     edicion: Edicion;
+    validadoPor: { id: number; nombre: string; email: string } | null;
 }
 
 // Una fila de la demanda de una edicion (GET /api/ediciones/{id}/demanda).
