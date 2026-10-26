@@ -37,7 +37,7 @@ function renderPagina(
     <h1>Mi suscripción</h1>
     <section id="mis-suscripciones">
       ${suscripciones.length === 0
-            ? mensajeVacio("Todavía no tenés suscripciones.") + '<p><a href="/suscripcion.html">Suscribirme</a></p>'
+            ? mensajeVacio("Todavía no tenés suscripciones.") + '<p><a class="boton" href="/suscripcion.html">Suscribirme</a></p>'
             : `<ul>${suscripciones.map((s) => renderSuscripcion(s, categorias)).join("")}</ul>`}
     </section>
 

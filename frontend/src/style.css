@@ -1,315 +1,712 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
   color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  /* Neutros (gris calido, tipo papel) */
+  --fondo: light-dark(#fafaf9, #1c1917);
+  /* stone-50  / stone-900 */
+  --superficie: light-dark(#ffffff, #292524);
+  /* blanco    / stone-800 */
+  --texto: light-dark(#292524, #f5f5f4);
+  /* stone-800 / stone-100 */
+  --texto-suave: light-dark(#57534e, #a8a29e);
+  /* stone-600 / stone-400 */
+  --borde: light-dark(#e7e5e4, #44403c);
+  /* stone-200 / stone-700 */
+  --borde-fuerte: light-dark(#d6d3d1, #57534e);
+  /* stone-300 / stone-600 */
+  --fila-alterna: light-dark(#f5f5f4, #231f1e);
+
+  /* Accion primaria: azul */
+  --primario: light-dark(#1d4ed8, #2563eb);
+  /* blue-700 / blue-600 */
+  --primario-hover: light-dark(#1e40af, #1d4ed8);
+  /* blue-800 / blue-700 */
+  --primario-fondo: light-dark(#eff6ff, rgba(96, 165, 250, 0.15));
+  --sobre-primario: #ffffff;
+  --enlace: light-dark(#1d4ed8, #93c5fd);
+  /* blue-700 / blue-300 */
+
+  /* Variante primaria: indigo (menu y encabezados de tabla) */
+  --variante: light-dark(#312e81, #1e1b4b);
+  /* indigo-900 / indigo-950 */
+  --sobre-variante: #ffffff;
+
+  /* Estados */
+  --exito: light-dark(#15803d, #86efac);
+  --exito-fondo: light-dark(#f0fdf4, #052e16);
+  --exito-borde: light-dark(#86efac, #166534);
+
+  --error: light-dark(#b91c1c, #fca5a5);
+  --error-fondo: light-dark(#fef2f2, #450a0a);
+  --error-borde: light-dark(#fca5a5, #991b1b);
+  --peligro: light-dark(#b91c1c, #dc2626);
+  --peligro-hover: light-dark(#991b1b, #b91c1c);
+
+  --aviso: light-dark(#854d0e, #fde047);
+  --aviso-fondo: light-dark(#fefce8, #422006);
+  --aviso-borde: light-dark(#fde047, #854d0e);
+
+  /* Sombras */
+  --sombra-chica:  0 1px 3px light-dark(rgba(41, 37, 36, 0.10), rgba(0, 0, 0, 0.45));
+  --sombra-media:  0 4px 12px light-dark(rgba(41, 37, 36, 0.12), rgba(0, 0, 0, 0.55));
+  --sombra-grande: 0 10px 30px light-dark(rgba(41, 37, 36, 0.20), rgba(0, 0, 0, 0.65));
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --serif: Georgia, "Times New Roman", serif;
+  --ancho: 1100px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+/* La eleccion manual del boton pisa la preferencia del sistema */
+:root[data-tema="claro"] {
+  color-scheme: light;
+}
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+:root[data-tema="oscuro"] {
+  color-scheme: dark;
+}
+
+/* ---------- Base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 body {
   margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
-}
-
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
-
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-}
-
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
+  background: var(--fondo);
+  color: var(--texto);
+  font: 1rem/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
 }
 
 #app {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
   min-height: 100svh;
+}
+
+/* Contenido de cada pantalla, centrado y con un ancho maximo */
+#contenido,
+main {
+  max-width: var(--ancho);
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--serif);
+  line-height: 1.25;
+  color: var(--texto);
+}
+
+h1 {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  margin: 0 0 1.25rem;
+}
+
+h2 {
+  font-size: 1.35rem;
+  margin: 1.5rem 0 0.75rem;
+}
+
+h3 {
+  font-size: 1.1rem;
+  margin: 1rem 0 0.25rem;
+}
+
+p {
+  margin: 0 0 0.5rem;
+}
+
+a {
+  color: var(--enlace);
+}
+
+:focus-visible {
+  outline: 3px solid var(--primario);
+  outline-offset: 2px;
+}
+
+/* ---------- Encabezado y menu ---------- */
+.encabezado {
   display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+  padding: 0.75rem max(1rem, calc((100% - var(--ancho)) / 2 + 1rem));
+  background: var(--variante);
+  color: var(--sobre-variante);
 }
 
-#center {
+.marca {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+}
+
+.encabezado nav {
   display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-left: auto;
 }
 
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
+/* Los items del menu son botones y links: se ven igual, como pestañas sobre la barra */
+.encabezado nav button,
+.encabezado nav a {
+  --b-bg: transparent;
+  --b-bg-hover: rgba(255, 255, 255, 0.15);
+  --b-color: var(--sobre-variante);
+  --b-borde: transparent;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--b-color);
+  background: var(--b-bg);
+  border: 1px solid var(--b-borde);
+  cursor: pointer;
 }
 
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
+.encabezado nav a:hover {
+  background: var(--b-bg-hover);
 }
 
-#next-steps ul {
-  list-style: none;
+.encabezado :focus-visible {
+  outline-color: var(--sobre-variante);
+}
+
+/* Boton de tema: muestra el icono del tema al que se cambia */
+.tema-toggle {
+  --b-bg: transparent;
+  --b-bg-hover: rgba(255, 255, 255, 0.15);
+  --b-color: var(--sobre-variante);
+  --b-borde: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
   padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
+  border-radius: 999px;
 }
 
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
+.tema-toggle svg {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
-.ticks {
-  position: relative;
+:root[data-tema="oscuro"] .icono-luna,
+:root[data-tema="claro"] .icono-sol {
+  display: none;
+}
+
+/* Sin menu (login, registro): el boton va al extremo derecho */
+.marca+.tema-toggle {
+  margin-left: auto;
+}
+
+/* ---------- Botones ---------- */
+/* Por defecto un boton es de accion primaria (azul). Cada variante solo cambia estas variables. */
+button {
+  --b-bg: var(--primario);
+  --b-bg-hover: var(--primario-hover);
+  --b-color: var(--sobre-primario);
+  --b-borde: transparent;
+  min-height: 2.5rem;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--b-color);
+  background: var(--b-bg);
+  border: 1px solid var(--b-borde);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+button:hover:not(:disabled) {
+  background: var(--b-bg-hover);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Acciones secundarias: solo borde azul */
+button[data-edicion-id],
+button[data-remito-id],
+button[data-accion="pausa"],
+button[data-accion="reanudar"],
+button[data-accion="categoria"],
+#remito-cerrar {
+  --b-bg: transparent;
+  --b-bg-hover: var(--primario-fondo);
+  --b-color: var(--enlace);
+  --b-borde: var(--primario);
+}
+
+/* Accion destructiva: rojo */
+button[data-accion="baja"] {
+  --b-bg: var(--peligro);
+  --b-bg-hover: var(--peligro-hover);
+}
+
+.encabezado nav button:hover:not(:disabled) {
+  background: var(--b-bg-hover);
+}
+
+/* ---------- Formularios ---------- */
+label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 1rem 1rem 0;
+  font-weight: 600;
+}
+
+form label {
+  display: block;
+  margin: 1rem 0 0.35rem;
+}
+
+input,
+select {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: 6px;
+}
+
+form input,
+form select {
   width: 100%;
+}
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
+input:focus-visible,
+select:focus-visible {
+  outline-offset: 0;
+  border-color: var(--primario);
+}
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
-  }
+form button[type="submit"] {
+  margin-top: 1.25rem;
+}
+
+#form-perfil {
+  max-width: 480px;
+}
+
+/* Pantallas de una sola tarjeta: ingresar, registrarse y suscribirse */
+main.login,
+main.alta-suscripcion {
+  max-width: 440px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+}
+
+main.login form button[type="submit"],
+main.alta-suscripcion form button[type="submit"] {
+  width: 100%;
+}
+
+main.login>p {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.volver {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+/* Links de navegacion entre pantallas (volver, ingresar, registrarse): sin subrayado y en negrita.
+   Se subrayan al pasar el mouse o con el teclado, para no depender solo del color. */
+.volver,
+main.login > p a {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.volver:hover,
+.volver:focus-visible,
+main.login > p a:hover,
+main.login > p a:focus-visible {
+  text-decoration: underline;
+}
+
+.subtitulo {
+  margin: 0 0 1rem;
+  color: var(--texto-suave);
+}
+
+/* ---------- Tablas ---------- */
+table {
+  width: 100%;
+  margin: 0 0 1.5rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  font-size: 0.95rem;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+}
+
+th {
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--sobre-variante);
+  background: var(--variante);
+}
+
+td {
+  padding: 0.7rem 0.9rem;
+  vertical-align: top;
+  border-top: 1px solid var(--borde);
+}
+
+tbody tr:nth-child(even) {
+  background: var(--fila-alterna);
+}
+
+/* Botones de accion dentro de una celda: separados entre si */
+td button {
+  margin: 0 0.25rem 0.25rem 0;
+}
+
+/* ---------- Ediciones y Mi suscripcion: tarjetas ---------- */
+#lista-ediciones,
+#mis-suscripciones ul {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li.edicion,
+#mis-suscripciones li {
+  padding: 1rem 1.25rem;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+}
+
+li.edicion>button {
+  margin-top: 0.75rem;
+}
+
+li.edicion {
+  border-top: 4px solid var(--kraft);
+}
+
+.edicion-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+}
+
+.edicion-cabecera h2 {
+  margin: 0;
+}
+
+.edicion-fechas {
+  margin: 0.25rem 0 0;
+  color: var(--texto-suave);
+}
+
+.curadurias:not(:empty) {
+  margin-top: 1rem;
+}
+
+/* Curadurias: una tarjeta por categoria, tantas columnas como entren */
+.curadurias-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.curaduria {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+}
+
+.curaduria h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.curaduria-libro {
+  flex: 1;
+  margin: 0;
+  font-style: italic;
+  color: var(--texto-suave);
+}
+
+.curaduria-datos {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+}
+
+.precio {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--texto);
+}
+
+/* Link con aspecto de boton primario */
+a.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--sobre-primario);
+  background: var(--primario);
+  border-radius: 6px;
+}
+
+a.boton:hover {
+  background: var(--primario-hover);
+}
+
+.curaduria a.boton {
+  margin-top: 0.75rem;
+}
+
+#mis-suscripciones li>div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+/* Cambio pendiente de una suscripcion: es una advertencia */
+#mis-suscripciones li em {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.9rem;
+  font-style: normal;
+  color: var(--aviso);
+  background: var(--aviso-fondo);
+  border: 1px solid var(--aviso-borde);
+  border-radius: 6px;
+}
+
+/* ---------- Sombras ---------- */
+li.edicion,
+#mis-suscripciones li,
+main.login,
+main.alta-suscripcion,
+table {
+  box-shadow: var(--sombra-chica);
+}
+
+.encabezado {
+  position: relative; 
+  z-index: 1;
+  box-shadow: var(--sombra-media);
 }
 
 #remito-dialog {
+  box-shadow: var(--sombra-grande);
+}
+
+/* ---------- Remito (dialogo) ---------- */
+#remito-dialog {
+  width: calc(100% - 2rem);
   max-width: 520px;
   padding: 24px;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+}
+
+#remito-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.remito-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
 }
 
 /* Al imprimir sale solo el remito: se oculta la app, el fondo del dialogo y los botones. */
 @media print {
+
+  :root,
+  :root[data-tema] {
+    color-scheme: light;
+  }
+
   #app,
   #remito-dialog::backdrop,
   .remito-acciones {
     display: none;
   }
+
   #remito-dialog {
     position: static;
     border: none;
     max-width: none;
+  }
+}
+
+/* ---------- Mensajes (components/mensajes.ts) ---------- */
+.mensaje {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  color: var(--texto-suave);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-left-width: 4px;
+  border-radius: 8px;
+}
+
+.mensaje-cargando {
+  font-style: italic;
+}
+
+.mensaje-vacio {
+  padding: 2rem 1rem;
+  text-align: center;
+  border-style: dashed;
+  border-left-width: 1px;
+}
+
+.mensaje-exito {
+  color: var(--exito);
+  background: var(--exito-fondo);
+  border-color: var(--exito-borde);
+}
+
+.mensaje-error {
+  color: var(--error);
+  background: var(--error-fondo);
+  border-color: var(--error-borde);
+}
+
+/* ---------- Etiquetas de estado ---------- */
+.etiqueta {
+  display: inline-block;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  vertical-align: middle;
+  color: var(--texto-suave);
+  background: var(--fila-alterna);
+  border: 1px solid var(--borde-fuerte);
+  border-radius: 999px;
+}
+
+.etiqueta-activa,
+.etiqueta-abierta {
+  color: var(--exito);
+  background: var(--exito-fondo);
+  border-color: var(--exito-borde);
+}
+
+.etiqueta-pausada {
+  color: var(--aviso);
+  background: var(--aviso-fondo);
+  border-color: var(--aviso-borde);
+}
+
+.etiqueta-baja {
+  color: var(--error);
+  background: var(--error-fondo);
+  border-color: var(--error-borde);
+}
+
+/* ---------- Tablet ---------- */
+@media (max-width: 960px) {
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+/* ---------- Celular ---------- */
+@media (max-width: 640px) {
+
+  #contenido,
+  main {
+    padding: 1rem 1rem 2rem;
+  }
+
+  main.login,
+  main.alta-suscripcion {
+    margin: 1rem;
+    padding: 1.25rem;
+  }
+
+  /* El nombre del sitio arriba y el menu abajo, en su propia fila.
+     El margen negativo alinea el texto del primer item con el titulo. */
+  .encabezado nav {
+    order: 3;
+    width: 100%;
+    margin-left: -0.85rem;
+  }
+
+  .encabezado .tema-toggle {
+    margin-left: auto;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  /* Botones y campos comodos para el dedo */
+  button,
+  input,
+  select {
+    min-height: 2.75rem;
+  }
+
+  #mis-suscripciones li>div select {
+    flex: 1 1 10rem;
+  }
+
+  #remito-dialog {
+    padding: 1rem;
   }
 }
