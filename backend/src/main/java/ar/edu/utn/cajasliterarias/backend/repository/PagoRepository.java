@@ -22,6 +22,9 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
     // Para listar los pagos pendientes de validar (panel de conciliacion)
     List<Pago> findByEstado(EstadoPago estado);
 
+    // Historial: los pagos de un estado, del mas reciente al mas viejo segun la fecha de validacion.
+    List<Pago> findByEstadoOrderByFechaValidacionDesc(EstadoPago estado);
+
     // Chequeo previo para dar un mensaje claro. La garantia real es la restriccion UNIQUE
     // uk_pago_suscripcion_edicion (suscripcion_id, edicion_id) en la base de datos.
     boolean existsBySuscripcionIdAndEdicionId(Long suscripcionId, Long edicionId);
