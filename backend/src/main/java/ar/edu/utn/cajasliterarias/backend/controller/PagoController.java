@@ -42,6 +42,15 @@ public class PagoController {
     }
 
     /**
+     * Historial de pagos validados (panel de conciliacion).
+     * GET /api/pagos/validados
+     */
+    @GetMapping("/validados")
+    public List<Pago> listarValidados() {
+        return pagoService.listarValidados();
+    }
+
+    /**
      * Marca un pago como validado y registra que administradora lo valido.
      * PATCH /api/pagos/{id}/validar
      */

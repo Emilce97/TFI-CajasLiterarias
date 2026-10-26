@@ -43,7 +43,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/suscripciones/**", "/api/suscriptores/mi-perfil").hasRole("SUSCRIPTOR")
                         // administradora
                         .requestMatchers(HttpMethod.POST, "/api/ediciones", "/api/ediciones/*/cierre").hasRole("ADMIN")
-                        .requestMatchers("/api/pagos/pendientes", "/api/pagos/*/validar").hasRole("ADMIN")
+                        .requestMatchers("/api/pagos/pendientes", "/api/pagos/validados", "/api/pagos/*/validar").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/ediciones/*/demanda").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/demanda/*/recepcion").hasRole("ADMIN")
                         // lo que no está listado arriba es solo de la administradora
