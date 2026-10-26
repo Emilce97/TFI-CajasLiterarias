@@ -13,9 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -93,7 +96,7 @@ class EdicionControllerTest {
                 .andExpect(status().isBadRequest());
     }
     @Test
-    void listarEdiciones_devuelveLaListaDeEdiciones() throws Exception {
+    void listarEdiciones_comoAdmin_pideTodasLasEdiciones() throws Exception {
         Edicion edicion1 = new Edicion();
         edicion1.setId(1L);
         edicion1.setNombre("Septiembre 2026");
@@ -104,34 +107,40 @@ class EdicionControllerTest {
         edicion2.setNombre("Octubre 2026");
         edicion2.setEstado(EstadoEdicion.ABIERTA);
 
-        when(edicionService.listarEdiciones()).thenReturn(List.of(edicion1, edicion2));
+        when(edicionService.listarEdiciones(true)).thenReturn(List.of(edicion1, edicion2));
 
         mockMvc.perform(get("/api/ediciones"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].nombre").value("Septiembre 2026"))
                 .andExpect(jsonPath("$[1].nombre").value("Octubre 2026"));
     }
 
     @Test
-    @WithMockUser(roles = "OTRO")
-    void listarEdiciones_sinSerAdmin_devuelveSoloLaAbierta() throws Exception {
-        Edicion cerrada = new Edicion();
-        cerrada.setId(1L);
-        cerrada.setNombre("Septiembre 2026");
-        cerrada.setEstado(EstadoEdicion.CERRADA);
-
+    @WithMockUser(roles = "SUSCRIPTOR")
+    void listarEdiciones_sinSerAdmin_pideSoloLaAbierta() throws Exception {
         Edicion abierta = new Edicion();
         abierta.setId(2L);
         abierta.setNombre("Octubre 2026");
         abierta.setEstado(EstadoEdicion.ABIERTA);
 
-        when(edicionService.listarEdiciones()).thenReturn(List.of(cerrada, abierta));
+        when(edicionService.listarEdiciones(false)).thenReturn(List.of(abierta));
 
         mockMvc.perform(get("/api/ediciones"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].nombre").value("Octubre 2026"))
                 .andExpect(jsonPath("$[0].estado").value("ABIERTA"));
+
+        verify(edicionService).listarEdiciones(false);
+    }
+
+    @Test
+    @WithAnonymousUser
+    void listarEdiciones_sinSesion_pideSoloLaAbierta() throws Exception {
+        mockMvc.perform(get("/api/ediciones"))
+                .andExpect(status().isOk());
+
+        verify(edicionService).listarEdiciones(false);
     }
 
     @Test

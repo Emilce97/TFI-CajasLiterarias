@@ -84,10 +84,15 @@ public class EdicionService {
         return edicion;
     }
     /**
-     * Lista todas las ediciones existentes.
+     * Lista las ediciones visibles para quien consulta.
+     * Con incluirCerradas=true devuelve todas (administradora); con false, solo la abierta (público).
      */
-    public List<Edicion> listarEdiciones() {
-        return edicionRepository.findAll();
+    public List<Edicion> listarEdiciones(boolean incluirCerradas) {
+        if (incluirCerradas) {
+            return edicionRepository.findAll();
+        }
+        Edicion abierta = edicionRepository.findByEstado(EstadoEdicion.ABIERTA);
+        return abierta == null ? List.of() : List.of(abierta);
     }
 
     private void crearCuraduria(Edicion edicion, CuraduriaItemDTO item) {

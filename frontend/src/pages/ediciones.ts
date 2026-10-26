@@ -11,19 +11,16 @@ const ESTADO: Record<Edicion["estado"], string> = {
 };
 
 /**
- * Pagina de "Ediciones": la lista de ediciones y, por cada una, un boton para
- * ver sus curadurias (categoria, libro, precio, cupo), que se cargan bajo demanda.
- */
+* Pagina de "Ediciones". Al publico y a los suscriptores el backend les devuelve solo la edicion
+* abierta y ven sus curadurias directamente; la administradora ve todas y las abre con "Ver detalle".
+*/
 export async function renderEdicionesPage(container: HTMLElement) {
   container.innerHTML = "<h1>Ediciones</h1>" + mensajeCargando("Cargando ediciones...");
 
   try {
-    const todas = await apiGet<Edicion[]>("/ediciones");
-    // Visitantes: solo la edición abierta. Administradora: todas (para ver el historial).
-    const visibles = tieneRol("ADMIN")
-      ? todas
-      : todas.filter((edicion) => edicion.estado === "ABIERTA");
-    renderListaDeEdiciones(container, visibles);
+    // El backend ya filtra: a quien no es ADMIN le devuelve solo la edición abierta.
+    const ediciones = await apiGet<Edicion[]>("/ediciones");
+    renderListaDeEdiciones(container, ediciones);
   } catch (error) {
     container.innerHTML = "<h1>Ediciones</h1>" + mensajeError("No se pudieron cargar las ediciones.");
     console.error(error);
@@ -75,30 +72,32 @@ function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[]) {
     if (!edicion) return;
     if (await cargarDetalle(container, edicion)) boton.textContent = "Ocultar detalle";
   });
+}
 
-  /** Pide las curadurias de una edicion y las muestra en su tarjeta. Devuelve true si salio bien. */
-  async function cargarDetalle(container: HTMLElement, edicion: Edicion): Promise<boolean> {
-    const detalle = container.querySelector<HTMLDivElement>(`#curadurias-${edicion.id}`)!;
-    detalle.innerHTML = mensajeCargando("Cargando detalle...");
 
-    try {
-      const curadurias = await apiGet<CuraduriaEdicion[]>(`/ediciones/${edicion.id}/curadurias`);
-      const permiteSuscripcion = edicion?.estado === "ABIERTA" && !tieneRol("ADMIN");
-      detalle.innerHTML = renderCuradurias(curadurias, permiteSuscripcion);
-      detalle.dataset.cargado = "si";
-      return true;
-    } catch (error) {
-      detalle.innerHTML = mensajeError("No se pudo cargar el detalle.");
-      console.error(error);
-      return false;
-    }
+/** Pide las curadurias de una edicion y las muestra en su tarjeta. Devuelve true si salio bien. */
+async function cargarDetalle(container: HTMLElement, edicion: Edicion): Promise<boolean> {
+  const detalle = container.querySelector<HTMLDivElement>(`#curadurias-${edicion.id}`)!;
+  detalle.innerHTML = mensajeCargando("Cargando detalle...");
+
+  try {
+    const curadurias = await apiGet<CuraduriaEdicion[]>(`/ediciones/${edicion.id}/curadurias`);
+    const permiteSuscripcion = edicion.estado === "ABIERTA" && !tieneRol("ADMIN");
+    detalle.innerHTML = renderCuradurias(curadurias, permiteSuscripcion);
+    detalle.dataset.cargado = "si";
+    return true;
+  } catch (error) {
+    detalle.innerHTML = mensajeError("No se pudo cargar el detalle.");
+    console.error(error);
+    return false;
   }
+}
 
-  function renderEdicion(edicion: Edicion, conBotonDetalle: boolean): string {
-    return `
+function renderEdicion(edicion: Edicion, conBotonDetalle: boolean): string {
+  return `
     <li class="edicion">
       <div class="edicion-cabecera">
-        <h2>${escapar(edicion.nombre)}</h2> 
+        <h2>${escapar(edicion.nombre)}</h2>
         <span class="etiqueta etiqueta-${edicion.estado.toLowerCase()}">${ESTADO[edicion.estado]}</span>
       </div>
       <p class="edicion-fechas">
@@ -109,29 +108,28 @@ function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[]) {
       <div class="curadurias" id="curadurias-${edicion.id}"></div>
     </li>
   `;
+}
+
+function renderCuradurias(curadurias: CuraduriaEdicion[], permiteSuscripcion: boolean): string {
+  if (curadurias.length === 0) {
+    return mensajeVacio("Esta edición todavía no tiene curadurías.");
   }
 
-  function renderCuradurias(curadurias: CuraduriaEdicion[], permiteSuscripcion: boolean): string {
-    if (curadurias.length === 0) {
-      return mensajeVacio("Esta edición todavía no tiene curadurías.");
-    }
-
-    return `
+  return `
     <ul class="curadurias-grid">
       ${curadurias.map((c) => `
         <li class="curaduria">
           <h3>${escapar(c.categoria.nombre)}</h3>
           <p class="curaduria-libro">"${escapar(c.libro.titulo)}"</p>
           <p class="curaduria-datos">
-            <span class="precio">${formatearMonto(c.precioVigente)}</span> 
+            <span class="precio">${formatearMonto(c.precioVigente)}</span>
             <span>cupo: ${c.cupoMaximo ?? "sin límite"}</span>
           </p>
           ${permiteSuscripcion
-        ? `<a class="boton" href="/suscripcion.html?categoriaId=${c.categoria.id}">Suscribirme</a>`
-        : ""}
+      ? `<a class="boton" href="/suscripcion.html?categoriaId=${c.categoria.id}">Suscribirme</a>`
+      : ""}
         </li>
       `).join("")}
     </ul>
   `;
-  }
 }
