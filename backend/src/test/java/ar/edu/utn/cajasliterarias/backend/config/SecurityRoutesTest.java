@@ -146,6 +146,14 @@ class SecurityRoutesTest {
                 .andExpect(status().isOk());
     }
 
+    // Solo prueba que la ruta es pública (el service está mockeado).
+    // Que no filtre por estado lo cubre EdicionServiceTest.
+    @Test
+    void curadurias_sinToken_esPublico() throws Exception {
+        mockMvc.perform(get("/api/ediciones/1/curadurias"))
+                .andExpect(status().isOk());
+    }
+
     private static final String RUTAS_DE_SUSCRIPTOR = """
             POST,/api/suscripciones
             GET,/api/suscripciones/mis-suscripciones

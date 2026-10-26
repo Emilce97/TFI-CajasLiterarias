@@ -145,4 +145,54 @@ class EdicionServiceTest {
 
         verify(edicionRepository, never()).save(any());
     }
+
+    @Test
+    void listarEdiciones_incluyendoCerradas_devuelveTodas() {
+        Edicion cerrada = new Edicion();
+        cerrada.setId(1L);
+        cerrada.setEstado(EstadoEdicion.CERRADA);
+        Edicion abierta = new Edicion();
+        abierta.setId(2L);
+        abierta.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findAll()).thenReturn(List.of(cerrada, abierta));
+
+        List<Edicion> resultado = service.listarEdiciones(true);
+
+        assertEquals(2, resultado.size());
+    }
+
+    @Test
+    void listarEdiciones_sinCerradas_devuelveSoloLaAbierta() {
+        Edicion abierta = new Edicion();
+        abierta.setId(2L);
+        abierta.setEstado(EstadoEdicion.ABIERTA);
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(abierta);
+
+        List<Edicion> resultado = service.listarEdiciones(false);
+
+        assertEquals(1, resultado.size());
+        assertSame(abierta, resultado.get(0));
+        verify(edicionRepository, never()).findAll();
+    }
+
+    @Test
+    void listarEdiciones_sinCerradasYSinEdicionAbierta_devuelveListaVacia() {
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(null);
+
+        assertTrue(service.listarEdiciones(false).isEmpty());
+    }
+
+    // El listado de curadurías es público también para las ediciones cerradas:
+    // el service no mira el estado de la edición, solo que exista.
+    @Test
+    void listarCuradurias_noFiltraPorEstadoDeLaEdicion() {
+        when(edicionRepository.existsById(1L)).thenReturn(true);
+        when(curaduriaEdicionRepository.findByEdicionId(1L))
+                .thenReturn(List.of(new CuraduriaEdicion()));
+
+        List<CuraduriaEdicion> resultado = service.listarCuraduriasDeEdicion(1L);
+
+        assertEquals(1, resultado.size());
+        verify(edicionRepository, never()).findByEstado(any());
+    }
 }
