@@ -2,10 +2,11 @@ import { apiGet, apiPatch } from "../data/apiClient";
 import type { Categoria, Suscripcion, Suscriptor } from "../types";
 import { exigirRol } from "../utils/auth";
 import { escapar } from "../utils/html";
+import { renderPagarPage } from "./pagar";
 
 /**
  * "Mi suscripcion": las suscripciones de la persona logueada, con sus acciones
- * (pausar, reanudar, dar de baja, cambiar de tematica), y el formulario para
+ * (pagar, pausar, reanudar, dar de baja, cambiar de tematica), y el formulario para
  * actualizar nombre y direccion de entrega (rige para los proximos pedidos).
  */
 export async function renderMiSuscripcionPage(container: HTMLElement) {
@@ -69,7 +70,10 @@ function renderSuscripcion(s: Suscripcion, categorias: Categoria[]): string {
     }
 
     const acciones: string[] = [];
-    if (s.estado === "ACTIVA") acciones.push(boton(s.id, "pausa", "Pausar"));
+    if (s.estado === "ACTIVA") {
+        acciones.push(boton(s.id, "pagar", "Pagar"));
+        acciones.push(boton(s.id, "pausa", "Pausar"));
+    }
     if (s.estado === "PAUSADA") acciones.push(boton(s.id, "reanudar", "Reanudar"));
     if (s.estado !== "BAJA") acciones.push(boton(s.id, "baja", "Dar de baja"));
 
@@ -103,6 +107,12 @@ function conectarAcciones(container: HTMLElement) {
         const id = clickeado.dataset.id;
         const accion = clickeado.dataset.accion!;
         if (accion === "baja" && !confirm("¿Seguro que querés dar de baja esta suscripción?")) return;
+
+        // "Pagar" no llama al backend desde aca: lleva a la pantalla de pago.
+        if (accion === "pagar") {
+            await renderPagarPage(container, Number(id));
+            return;
+        }
 
         clickeado.disabled = true;
         try {
