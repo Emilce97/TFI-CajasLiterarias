@@ -1,11 +1,15 @@
 import { API_BASE_URL } from "../data/apiClient";
+import { ejecutarConBoton } from "../components/botonAccion";
+import { mensajeError } from "../components/mensajes";
 import { destinoTrasLogin } from "../utils/auth";
 import { guardarSesion, obtenerSesion, type Sesion } from "../utils/session";
+import { encabezado } from "../components/encabezado";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 function render(): void {
     app.innerHTML = `
+    ${encabezado()}
     <main class="login">
       <a class="volver" href="/">&larr; Volver al inicio</a>
       <h1>Ingresar</h1>
@@ -22,13 +26,14 @@ function render(): void {
       
       <p>¿No tenés cuenta? <a id="link-registro" href="/registro.html">Registrate</a></p>
 
-      <p id="mensaje" role="status" aria-live="polite"></p>
+      <div id="mensaje" aria-live="polite"></div>
     </main>
   `;
 }
 
-function mostrarMensaje(texto: string): void {
-    document.querySelector<HTMLParagraphElement>("#mensaje")!.textContent = texto;
+// Recibe el HTML que arma el componente (mensajeError).
+function mostrarMensaje(html: string): void {
+    document.querySelector<HTMLElement>("#mensaje")!.innerHTML = html;
 }
 
 function irAlDestino(sesion: Sesion): void {
@@ -45,39 +50,42 @@ async function manejarEnvio(event: SubmitEvent): Promise<void> {
     const password = form.querySelector<HTMLInputElement>("#password")!.value;
 
     if (!email || !password) {
-        mostrarMensaje("Completá email y contraseña.");
+        mostrarMensaje(mensajeError("Completá email y contraseña."));
         return;
     }
 
-    boton.disabled = true;
-    mostrarMensaje("Ingresando...");
+    mostrarMensaje("");
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/auth/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-        });
+    // Se usa fetch y no apiPost: un 401 acá significa "credenciales incorrectas", y apiClient
+    // lo trata como sesión vencida (borra la sesión y redirige al login).
+    await ejecutarConBoton(
+        boton,
+        "Ingresando...",
+        async () => {
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            });
 
-        if (!response.ok) {
-            let detalle = "No se pudo iniciar sesión.";
-            try {
-                const error = await response.json();
-                detalle = error.message ?? detalle;
-            } catch {
-                // Respuesta sin cuerpo JSON: se usa el mensaje generico.
+            if (!response.ok) {
+                let detalle = "No se pudo iniciar sesión.";
+                try {
+                    const error = await response.json();
+                    detalle = error.message ?? detalle;
+                } catch {
+                    // Respuesta sin cuerpo JSON: se usa el mensaje generico.
+                }
+                throw new Error(detalle);
             }
-            throw new Error(detalle);
-        }
 
-        const sesion: Sesion = await response.json();
-        guardarSesion(sesion);
-        irAlDestino(sesion);
-    } catch (error) {
-        mostrarMensaje(error instanceof Error ? error.message : "Ocurrió un error inesperado.");
-    } finally {
-        boton.disabled = false;
-    }
+            const sesion: Sesion = await response.json();
+            guardarSesion(sesion);
+            irAlDestino(sesion);
+        },
+        undefined, // se muestra el mensaje del backend
+        (mensaje) => mostrarMensaje(mensajeError(mensaje)),
+    );
 }
 
 function init(): void {

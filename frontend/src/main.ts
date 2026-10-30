@@ -4,6 +4,7 @@ import { renderDemandaPage } from "./pages/demanda";
 import { renderDespachoPage } from "./pages/despacho";
 import { renderMiSuscripcionPage } from "./pages/miSuscripcion";
 import { cerrarSesion, tieneRol } from "./utils/auth";
+import { encabezado } from "./components/encabezado";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const esAdmin = tieneRol("ADMIN");
@@ -23,10 +24,12 @@ const opcionesPorRol = esAdmin
            <a href="/registro.html">Registrarme</a>`;
 
 app.innerHTML = `
-  <nav>
-    <button id="nav-ediciones">Ediciones</button>
-    ${opcionesPorRol}
-  </nav>
+  ${encabezado(`
+    <nav>
+      <button id="nav-ediciones">Ediciones</button>
+      ${opcionesPorRol}
+    </nav>
+  `)}
   <div id="contenido"></div>
 `;
 
