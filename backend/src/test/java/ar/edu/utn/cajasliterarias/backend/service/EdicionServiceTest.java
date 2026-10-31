@@ -124,7 +124,7 @@ class EdicionServiceTest {
         edicionYaAbierta.setId(99L);
         when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA)).thenReturn(edicionYaAbierta);
 
-        assertThrows(IllegalArgumentException.class, () -> service.crearEdicion(requestValido()));
+        assertThrows(IllegalStateException.class, () -> service.crearEdicion(requestValido()));
 
         verify(edicionRepository, never()).save(any());
     }
@@ -144,6 +144,112 @@ class EdicionServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.crearEdicion(request));
 
         verify(edicionRepository, never()).save(any());
+    }
+
+    // Validaciones de datos generales: fallan antes de consultar la base.
+
+    @Test
+    void crearEdicion_sinNombre_lanzaExcepcionYNoConsultaLaBase() {
+        CrearEdicionRequest request = requestValido();
+        request.setNombre("   ");
+
+        assertThrows(IllegalArgumentException.class, () -> service.crearEdicion(request));
+        verifyNoInteractions(edicionRepository);
+    }
+
+    @Test
+    void crearEdicion_sinFechaDeCorte_lanzaExcepcion() {
+        CrearEdicionRequest request = requestValido();
+        request.setFechaCorte(null);
+
+        assertThrows(IllegalArgumentException.class, () -> service.crearEdicion(request));
+        verify(edicionRepository, never()).save(any());
+    }
+
+    @Test
+    void crearEdicion_conDespachoQueNoEmpiezaDespuesDelCorte_lanzaExcepcion() {
+        CrearEdicionRequest request = requestValido();
+        request.setFechaDespachoDesde(request.getFechaCorte()); // el mismo dia del corte no alcanza
+
+        assertThrows(IllegalArgumentException.class, () -> service.crearEdicion(request));
+        verify(edicionRepository, never()).save(any());
+    }
+
+    @Test
+    void crearEdicion_conDespachoHastaAnteriorAlDesde_lanzaExcepcion() {
+        CrearEdicionRequest request = requestValido();
+        request.setFechaDespachoHasta(request.getFechaDespachoDesde().minusDays(1));
+
+        assertThrows(IllegalArgumentException.class, () -> service.crearEdicion(request));
+        verify(edicionRepository, never()).save(any());
+    }
+
+    // Validaciones de las curadurias: pasan el chequeo del nombre y fallan antes de guardar.
+
+    @Test
+    void crearEdicion_conCuraduriaSinLibro_lanzaExcepcion() {
+        when(edicionRepository.existsByNombre("Octubre 2026")).thenReturn(false);
+        CrearEdicionRequest request = requestValido();
+        request.getCuradurias().get(0).setLibroId(null);
+
+        assertThrows(IllegalArgumentException.class, () -> service.crearEdicion(request));
+        verify(edicionRepository, never()).save(any());
+    }
+
+    @Test
+    void crearEdicion_conPrecioCero_lanzaExcepcion() {
+        when(edicionRepository.existsByNombre("Octubre 2026")).thenReturn(false);
+        CrearEdicionRequest request = requestValido();
+        request.getCuradurias().forEach(item -> item.setPrecioVigente(BigDecimal.ZERO));
+
+        assertThrows(IllegalArgumentException.class, () -> service.crearEdicion(request));
+        verify(edicionRepository, never()).save(any());
+    }
+
+    @Test
+    void crearEdicion_conCupoCero_lanzaExcepcion() {
+        when(edicionRepository.existsByNombre("Octubre 2026")).thenReturn(false);
+        CrearEdicionRequest request = requestValido();
+        request.getCuradurias().get(2).setCupoMaximo(0);
+
+        assertThrows(IllegalArgumentException.class, () -> service.crearEdicion(request));
+        verify(edicionRepository, never()).save(any());
+    }
+
+    @Test
+    void crearEdicion_conPreciosDistintos_lanzaExcepcionPorPrecioUnico() {
+        when(edicionRepository.existsByNombre("Octubre 2026")).thenReturn(false);
+        CrearEdicionRequest request = requestValido();
+        request.getCuradurias().get(3).setPrecioVigente(new BigDecimal("6500"));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> service.crearEdicion(request));
+
+        assertTrue(ex.getMessage().contains("precio unico"));
+        verify(edicionRepository, never()).save(any());
+    }
+
+    @Test
+    void crearEdicion_conMismoPrecioEscritoDistinto_loAcepta() {
+        // 5000 y 5000.00 son el mismo precio: se comparan por valor (compareTo), no por escala.
+        when(edicionRepository.existsByNombre("Octubre 2026")).thenReturn(false);
+        Edicion edicionGuardada = new Edicion();
+        edicionGuardada.setId(1L);
+        when(edicionRepository.save(any(Edicion.class))).thenReturn(edicionGuardada);
+        for (long i = 1L; i <= 4L; i++) {
+            Categoria categoria = new Categoria();
+            categoria.setId(i);
+            when(categoriaRepository.findById(i)).thenReturn(Optional.of(categoria));
+            Libro libro = new Libro();
+            libro.setId(i);
+            when(libroRepository.findById(i)).thenReturn(Optional.of(libro));
+        }
+        CrearEdicionRequest request = requestValido();
+        request.getCuradurias().get(1).setPrecioVigente(new BigDecimal("5000.00"));
+
+        service.crearEdicion(request);
+
+        verify(curaduriaEdicionRepository, times(4)).save(any(CuraduriaEdicion.class));
     }
 
     @Test

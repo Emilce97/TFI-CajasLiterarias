@@ -10,6 +10,8 @@ import ar.edu.utn.cajasliterarias.backend.repository.EdicionRepository;
 import ar.edu.utn.cajasliterarias.backend.repository.LibroRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import java.util.List;
 
@@ -36,41 +38,31 @@ public class EdicionService {
     /**
      * Crea una edicion nueva junto con la curaduria de sus 4 categorias
      * (libro, precio y cupo maximo por cada una).
+     * Datos incompletos o incoherentes -> IllegalArgumentException (400).
+     * Ya hay una edicion ABIERTA -> IllegalStateException (409).
      */
     @Transactional
     public Edicion crearEdicion(CrearEdicionRequest request) {
+        validarDatosGenerales(request);
 
-        if (edicionRepository.existsByNombre(request.getNombre())) {
+        String nombre = request.getNombre().trim();
+        if (edicionRepository.existsByNombre(nombre)) {
             throw new IllegalArgumentException(
-                    "Ya existe una edicion con el nombre '" + request.getNombre() + "'."
+                    "Ya existe una edicion con el nombre '" + nombre + "'."
             );
         }
 
-        if (request.getCuradurias() == null || request.getCuradurias().size() != 4) {
-            throw new IllegalArgumentException(
-                    "La edicion debe tener exactamente 4 curadurias (una por categoria)."
-            );
-        }
+        validarCuradurias(request.getCuradurias());
 
-// NUEVO: las 4 curadurias deben ser de categorias distintas
-        long categoriasDistintas = request.getCuradurias().stream()
-                .map(CuraduriaItemDTO::getCategoriaId)
-                .distinct()
-                .count();
-        if (categoriasDistintas != 4) {
-            throw new IllegalArgumentException(
-                    "Las 4 curadurias deben corresponder a categorias distintas."
-            );
-        }
-
-// NUEVO: no puede haber dos ediciones ABIERTA al mismo tiempo
+        // Solo puede haber una edicion ABIERTA al mismo tiempo: es una regla de estado (409).
         if (edicionRepository.findByEstado(EstadoEdicion.ABIERTA) != null) {
-            throw new IllegalArgumentException(
+            throw new IllegalStateException(
                     "Ya existe una edicion ABIERTA. Debe cerrarse antes de crear una nueva."
             );
         }
+
         Edicion edicion = new Edicion();
-        edicion.setNombre(request.getNombre());
+        edicion.setNombre(nombre);
         edicion.setFechaCorte(request.getFechaCorte());
         edicion.setFechaDespachoDesde(request.getFechaDespachoDesde());
         edicion.setFechaDespachoHasta(request.getFechaDespachoHasta());
@@ -83,6 +75,76 @@ public class EdicionService {
 
         return edicion;
     }
+
+    /** Nombre y fechas obligatorios, y el despacho siempre despues del corte. */
+    private void validarDatosGenerales(CrearEdicionRequest request) {
+        if (request == null || request.getNombre() == null || request.getNombre().isBlank()) {
+            throw new IllegalArgumentException("El nombre de la edicion es obligatorio.");
+        }
+        LocalDate corte = request.getFechaCorte();
+        LocalDate desde = request.getFechaDespachoDesde();
+        LocalDate hasta = request.getFechaDespachoHasta();
+        if (corte == null || desde == null || hasta == null) {
+            throw new IllegalArgumentException(
+                    "La fecha de corte y las fechas de despacho son obligatorias."
+            );
+        }
+        if (!desde.isAfter(corte)) {
+            throw new IllegalArgumentException(
+                    "El despacho tiene que empezar despues de la fecha de corte."
+            );
+        }
+        if (hasta.isBefore(desde)) {
+            throw new IllegalArgumentException(
+                    "La fecha 'despacho hasta' no puede ser anterior a 'despacho desde'."
+            );
+        }
+    }
+
+    /**
+     * Exactamente 4 curadurias completas, de categorias distintas, con precio y cupo positivos.
+     * Precio unico por edicion: las 4 tematicas cuestan lo mismo (simplificacion P0 documentada en der.md).
+     */
+    private void validarCuradurias(List<CuraduriaItemDTO> curadurias) {
+        if (curadurias == null || curadurias.size() != 4) {
+            throw new IllegalArgumentException(
+                    "La edicion debe tener exactamente 4 curadurias (una por categoria)."
+            );
+        }
+
+        for (CuraduriaItemDTO item : curadurias) {
+            if (item == null || item.getCategoriaId() == null
+                    || item.getLibroId() == null || item.getPrecioVigente() == null) {
+                throw new IllegalArgumentException("Cada curaduria necesita categoria, libro y precio.");
+            }
+            if (item.getPrecioVigente().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("El precio debe ser mayor a cero.");
+            }
+            if (item.getCupoMaximo() != null && item.getCupoMaximo() <= 0) {
+                throw new IllegalArgumentException("El cupo maximo, si se indica, debe ser mayor a cero.");
+            }
+        }
+
+        long categoriasDistintas = curadurias.stream()
+                .map(CuraduriaItemDTO::getCategoriaId)
+                .distinct()
+                .count();
+        if (categoriasDistintas != 4) {
+            throw new IllegalArgumentException(
+                    "Las 4 curadurias deben corresponder a categorias distintas."
+            );
+        }
+
+        BigDecimal precio = curadurias.get(0).getPrecioVigente();
+        boolean mismoPrecio = curadurias.stream()
+                .allMatch(item -> item.getPrecioVigente().compareTo(precio) == 0);
+        if (!mismoPrecio) {
+            throw new IllegalArgumentException(
+                    "El precio debe ser el mismo para las 4 tematicas (precio unico por edicion)."
+            );
+        }
+    }
+
     /**
      * Lista las ediciones visibles para quien consulta.
      * Con incluirCerradas=true devuelve todas (administradora); con false, solo la abierta (público).
