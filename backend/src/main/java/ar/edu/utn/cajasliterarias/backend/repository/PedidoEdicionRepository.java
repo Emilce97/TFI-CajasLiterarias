@@ -18,4 +18,8 @@ public interface PedidoEdicionRepository extends JpaRepository<PedidoEdicion, Lo
 
     // Panel de despacho: pedidos de una edición en un estado puntual.
     List<PedidoEdicion> findByEdicionIdAndEstadoPedidoOrderByIdAsc(Long edicionId, EstadoPedido estadoPedido);
+
+    // No repeticion de titulos: true si el suscriptor ya tiene algun pedido (de una edicion anterior)
+    // con ese libro. Se compara por el libro de la curaduria, no por el titulo congelado.
+    boolean existsBySuscripcionSuscriptorIdAndCuraduriaLibroId(Long suscriptorId, Long libroId);
 }
