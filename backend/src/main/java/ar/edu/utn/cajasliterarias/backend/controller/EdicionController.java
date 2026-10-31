@@ -21,13 +21,11 @@ public class EdicionController {
     }
 
     @PostMapping
-    public ResponseEntity<?> crearEdicion(@RequestBody CrearEdicionRequest request) {
-        try {
-            Edicion edicion = edicionService.crearEdicion(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(edicion);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Edicion> crearEdicion(@RequestBody CrearEdicionRequest request) {
+        // Los errores de validacion (400) y de edicion ya abierta (409) los maneja GlobalExceptionHandler,
+        // que responde con un JSON con "message": asi la pantalla puede mostrar el motivo real.
+        Edicion edicion = edicionService.crearEdicion(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(edicion);
     }
 
     /**
