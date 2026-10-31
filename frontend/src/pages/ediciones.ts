@@ -3,7 +3,8 @@ import type { Edicion, CuraduriaEdicion } from "../types";
 import { tieneRol } from "../utils/auth";
 import { escapar } from "../utils/html";
 import { formatearFecha, formatearMonto } from "../utils/formato";
-import { mensajeCargando, mensajeError, mensajeVacio } from "../components/mensajes";
+import { mensajeCargando, mensajeError, mensajeExito, mensajeVacio } from "../components/mensajes";
+import { renderFormularioNuevaEdicion } from "./nuevaEdicion";
 
 const ESTADO: Record<Edicion["estado"], string> = {
   ABIERTA: "Abierta",
@@ -11,37 +12,53 @@ const ESTADO: Record<Edicion["estado"], string> = {
 };
 
 /**
-* Pagina de "Ediciones". Al publico y a los suscriptores el backend les devuelve solo la edicion
-* abierta y ven sus curadurias directamente; la administradora ve todas y las abre con "Ver detalle".
-*/
-export async function renderEdicionesPage(container: HTMLElement) {
+ * Pagina de "Ediciones". Al publico y a los suscriptores el backend les devuelve solo la edicion
+ * abierta y ven sus curadurias directamente; la administradora ve todas y las abre con "Ver detalle".
+ * Si no hay una edicion abierta, la administradora ve ademas el formulario para crear una.
+ * "aviso" es un mensaje de exito opcional (ej. despues de crear una edicion).
+ */
+export async function renderEdicionesPage(container: HTMLElement, aviso?: string) {
   container.innerHTML = "<h1>Ediciones</h1>" + mensajeCargando("Cargando ediciones...");
 
   try {
     // El backend ya filtra: a quien no es ADMIN le devuelve solo la edición abierta.
     const ediciones = await apiGet<Edicion[]>("/ediciones");
-    renderListaDeEdiciones(container, ediciones);
+    renderListaDeEdiciones(container, ediciones, aviso);
   } catch (error) {
     container.innerHTML = "<h1>Ediciones</h1>" + mensajeError("No se pudieron cargar las ediciones.");
     console.error(error);
   }
 }
 
-function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[]) {
+function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[], aviso?: string) {
   const esAdmin = tieneRol("ADMIN");
   const titulo = esAdmin ? "Ediciones" : "Edición actual";
+  // Solo puede haber una edicion abierta a la vez (regla del backend): el formulario aparece si no hay ninguna.
+  const conFormulario = esAdmin && !ediciones.some((edicion) => edicion.estado === "ABIERTA");
 
-  if (ediciones.length === 0) {
+  if (ediciones.length === 0 && !conFormulario) {
     container.innerHTML = `<h1>${titulo}</h1>` + mensajeVacio("No hay una edición abierta por el momento.");
     return;
   }
 
   container.innerHTML = `
     <h1>${titulo}</h1>
-    <ul id="lista-ediciones">
-      ${ediciones.map((edicion) => renderEdicion(edicion, esAdmin)).join("")}
-    </ul>
+    ${aviso ? mensajeExito(aviso) : ""}
+    ${conFormulario ? '<section id="nueva-edicion"></section>' : ""}
+    ${ediciones.length > 0 ? `
+      <ul id="lista-ediciones">
+        ${ediciones.map((edicion) => renderEdicion(edicion, esAdmin)).join("")}
+      </ul>` : ""}
   `;
+
+  if (conFormulario) {
+    const zona = container.querySelector<HTMLElement>("#nueva-edicion")!;
+    renderFormularioNuevaEdicion(zona, (edicion) =>
+        renderEdicionesPage(container,
+            `Edición "${edicion.nombre}" creada. Ya está abierta para suscripciones y pagos.`));
+  }
+
+  if (ediciones.length === 0) return;
 
   // Publico y suscriptores: la edicion abierta muestra sus curadurias directamente.
   if (!esAdmin) {
