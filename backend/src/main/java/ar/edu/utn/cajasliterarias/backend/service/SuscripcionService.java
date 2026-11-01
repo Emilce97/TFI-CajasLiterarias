@@ -4,16 +4,8 @@ import ar.edu.utn.cajasliterarias.backend.dto.CambiarCategoriaRequest;
 import ar.edu.utn.cajasliterarias.backend.dto.CrearSuscripcionRequest;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoEdicion;
 import ar.edu.utn.cajasliterarias.backend.enums.EstadoSuscripcion;
-import ar.edu.utn.cajasliterarias.backend.model.Categoria;
-import ar.edu.utn.cajasliterarias.backend.model.CuraduriaEdicion;
-import ar.edu.utn.cajasliterarias.backend.model.Edicion;
-import ar.edu.utn.cajasliterarias.backend.model.Suscripcion;
-import ar.edu.utn.cajasliterarias.backend.model.Suscriptor;
-import ar.edu.utn.cajasliterarias.backend.repository.CategoriaRepository;
-import ar.edu.utn.cajasliterarias.backend.repository.CuraduriaEdicionRepository;
-import ar.edu.utn.cajasliterarias.backend.repository.EdicionRepository;
-import ar.edu.utn.cajasliterarias.backend.repository.SuscripcionRepository;
-import ar.edu.utn.cajasliterarias.backend.repository.SuscriptorRepository;
+import ar.edu.utn.cajasliterarias.backend.model.*;
+import ar.edu.utn.cajasliterarias.backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +21,7 @@ public class SuscripcionService {
     private final CategoriaRepository categoriaRepository;
     private final EdicionRepository edicionRepository;
     private final CuraduriaEdicionRepository curaduriaEdicionRepository;
+    private final PedidoEdicionRepository pedidoEdicionRepository;
     private final Clock clock;
 
     public SuscripcionService(
@@ -37,6 +30,7 @@ public class SuscripcionService {
             CategoriaRepository categoriaRepository,
             EdicionRepository edicionRepository,
             CuraduriaEdicionRepository curaduriaEdicionRepository,
+            PedidoEdicionRepository pedidoEdicionRepository,
             Clock clock
     ) {
         this.suscripcionRepository = suscripcionRepository;
@@ -44,6 +38,7 @@ public class SuscripcionService {
         this.categoriaRepository = categoriaRepository;
         this.edicionRepository = edicionRepository;
         this.curaduriaEdicionRepository = curaduriaEdicionRepository;
+        this.pedidoEdicionRepository = pedidoEdicionRepository;
         this.clock = clock;
     }
 
@@ -212,12 +207,17 @@ public class SuscripcionService {
 
         // El cupo de la categoría destino no se valida acá: se controla en CierreEdicionService, al ejecutar el corte.
         LocalDate hoy = LocalDate.now(clock);
+        Edicion edicionAbierta = edicionRepository.findByEstado(EstadoEdicion.ABIERTA);
 
-        if (esDesdeElCorte(hoy)) {
+        if (esDesdeElCorte(edicionAbierta, hoy)) {
             // Desde el día del corte y hasta que se ejecute: rige desde la edición siguiente.
             suscripcion.setProximaCategoria(categoriaNueva);
             suscripcion.setFechaSolicitudCambio(hoy);
         } else {
+            // El cambio rige para la edición abierta: si ya recibió el libro de la temática nueva, se rechaza.
+            // Desde el día del corte no se valida: el cambio rige desde la edición siguiente, que todavía no tiene
+            // curaduría; ahí la repetición se detecta y se marca en el corte.
+            validarLibroNoRecibido(suscripcion, categoriaNueva, edicionAbierta);
             // Antes del corte, o sin edición abierta (la anterior ya está congelada): rige para la próxima edición que se cierre.
             suscripcion.setCategoria(categoriaNueva);
             suscripcion.setProximaCategoria(null);
@@ -231,6 +231,29 @@ public class SuscripcionService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "No existe la suscripción con id " + suscripcionId
                 ));
+    }
+
+    /**
+     * No repetición de títulos: rechaza el cambio si el suscriptor ya recibió (en un pedido anterior)
+     * el libro que la temática nueva tiene curado en la edición abierta. Sin edición abierta o sin curaduría
+     * para esa temática no hay nada que comparar.
+     */
+    private void validarLibroNoRecibido(Suscripcion suscripcion, Categoria categoriaNueva, Edicion edicionAbierta) {
+        if (edicionAbierta == null) {
+            return;
+        }
+        curaduriaEdicionRepository
+                .findByEdicionIdAndCategoriaId(edicionAbierta.getId(), categoriaNueva.getId())
+                .ifPresent(curaduria -> {
+                    Libro libro = curaduria.getLibro();
+                    if (pedidoEdicionRepository.existsBySuscripcionSuscriptorIdAndCuraduriaLibroId(
+                            suscripcion.getSuscriptor().getId(), libro.getId())) {
+                        throw new IllegalStateException(
+                                "Ya recibiste «" + libro.getTitulo() + "», el libro de "
+                                        + categoriaNueva.getNombre() + " en esta edición. "
+                                        + "Elegí otra temática para no repetir el título.");
+                    }
+                });
     }
 
     // Estado que va a tener la suscripción una vez aplicado lo pendiente.

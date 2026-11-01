@@ -30,6 +30,7 @@ class SuscripcionServiceTest {
     @Mock private CategoriaRepository categoriaRepository;
     @Mock private EdicionRepository edicionRepository;
     @Mock private CuraduriaEdicionRepository curaduriaEdicionRepository;
+    @Mock private PedidoEdicionRepository pedidoEdicionRepository;
 
     private SuscripcionService service;
     private final Clock clock = Clock.fixed(
@@ -39,7 +40,7 @@ class SuscripcionServiceTest {
     void setUp() {
         service = new SuscripcionService(
                 suscripcionRepository, suscriptorRepository, categoriaRepository,
-                edicionRepository, curaduriaEdicionRepository, clock
+                edicionRepository, curaduriaEdicionRepository, pedidoEdicionRepository, clock
         );
     }
 
@@ -80,6 +81,15 @@ class SuscripcionServiceTest {
         CrearSuscripcionRequest request = new CrearSuscripcionRequest();
         request.setCategoriaId(categoriaId);
         return request;
+    }
+
+    private CuraduriaEdicion curaduriaConLibro(Long libroId, String titulo) {
+        Libro libro = new Libro();
+        libro.setId(libroId);
+        libro.setTitulo(titulo);
+        CuraduriaEdicion curaduria = new CuraduriaEdicion();
+        curaduria.setLibro(libro);
+        return curaduria;
     }
 
     @Test
@@ -273,6 +283,84 @@ class SuscripcionServiceTest {
         assertEquals(categoriaDestino, resultado.getCategoria());
         assertNull(resultado.getProximaCategoria());
         assertNull(resultado.getFechaSolicitudCambio());
+    }
+
+    @Test
+    void cambiarCategoria_antesDelCorte_siYaRecibioElLibroDeLaTematicaNueva_lanzaExcepcionYNoCambiaNada() {
+        Categoria categoriaActual = categoria(10L, "Romance");
+        Categoria categoriaDestino = categoria(20L, "Misterio/Terror");
+        Suscriptor suscriptor = new Suscriptor();
+        suscriptor.setId(5L);
+        Suscripcion suscripcion = new Suscripcion();
+        suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
+        suscripcion.setCategoria(categoriaActual);
+        suscripcion.setSuscriptor(suscriptor);
+
+        when(suscripcionRepository.findById(100L)).thenReturn(Optional.of(suscripcion));
+        when(categoriaRepository.findById(20L)).thenReturn(Optional.of(categoriaDestino));
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA))
+                .thenReturn(edicionAbiertaConCorte(LocalDate.now(clock).plusDays(5)));
+        when(curaduriaEdicionRepository.findByEdicionIdAndCategoriaId(1L, 20L))
+                .thenReturn(Optional.of(curaduriaConLibro(7L, "Drácula")));
+        when(pedidoEdicionRepository.existsBySuscripcionSuscriptorIdAndCuraduriaLibroId(5L, 7L))
+                .thenReturn(true);
+
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> service.cambiarCategoria(100L, request()));
+
+        assertTrue(e.getMessage().contains("Drácula"));
+        assertEquals(categoriaActual, suscripcion.getCategoria());
+        assertNull(suscripcion.getProximaCategoria());
+        verify(suscripcionRepository, never()).save(any());
+    }
+
+    @Test
+    void cambiarCategoria_antesDelCorte_siNuncaRecibioElLibro_seAplicaDirecto() {
+        Categoria categoriaActual = categoria(10L, "Romance");
+        Categoria categoriaDestino = categoria(20L, "Misterio/Terror");
+        Suscriptor suscriptor = new Suscriptor();
+        suscriptor.setId(5L);
+        Suscripcion suscripcion = new Suscripcion();
+        suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
+        suscripcion.setCategoria(categoriaActual);
+        suscripcion.setSuscriptor(suscriptor);
+
+        when(suscripcionRepository.findById(100L)).thenReturn(Optional.of(suscripcion));
+        when(categoriaRepository.findById(20L)).thenReturn(Optional.of(categoriaDestino));
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA))
+                .thenReturn(edicionAbiertaConCorte(LocalDate.now(clock).plusDays(5)));
+        when(curaduriaEdicionRepository.findByEdicionIdAndCategoriaId(1L, 20L))
+                .thenReturn(Optional.of(curaduriaConLibro(7L, "Drácula")));
+        when(pedidoEdicionRepository.existsBySuscripcionSuscriptorIdAndCuraduriaLibroId(5L, 7L))
+                .thenReturn(false);
+        when(suscripcionRepository.save(any(Suscripcion.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Suscripcion resultado = service.cambiarCategoria(100L, request());
+
+        assertEquals(categoriaDestino, resultado.getCategoria());
+    }
+
+    @Test
+    void cambiarCategoria_desdeElCorte_noControlaElHistorialPorqueRigeDesdeLaSiguienteEdicion() {
+        Categoria categoriaActual = categoria(10L, "Romance");
+        Categoria categoriaDestino = categoria(20L, "Misterio/Terror");
+        Suscripcion suscripcion = new Suscripcion();
+        suscripcion.setEstado(EstadoSuscripcion.ACTIVA);
+        suscripcion.setCategoria(categoriaActual);
+
+        when(suscripcionRepository.findById(100L)).thenReturn(Optional.of(suscripcion));
+        when(categoriaRepository.findById(20L)).thenReturn(Optional.of(categoriaDestino));
+        when(edicionRepository.findByEstado(EstadoEdicion.ABIERTA))
+                .thenReturn(edicionAbiertaConCorte(LocalDate.now(clock).minusDays(1)));
+        when(suscripcionRepository.save(any(Suscripcion.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Suscripcion resultado = service.cambiarCategoria(100L, request());
+
+        assertEquals(categoriaDestino, resultado.getProximaCategoria());
+        verifyNoInteractions(pedidoEdicionRepository);
+        verifyNoInteractions(curaduriaEdicionRepository);
     }
 
     @Test
