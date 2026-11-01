@@ -137,6 +137,12 @@ public class CierreEdicionService {
             }
             cupoUsadoPorCategoria.merge(categoriaId, 1, Integer::sum);
 
+            // No repetición de títulos: si la persona ya recibió este libro en un pedido anterior,
+            // el pedido se genera igual (pagó) pero queda marcado. No se excluye ni se le cambia el libro:
+            // la edición tiene que reflejar exactamente lo que era válido en el corte.
+            boolean libroRepetido = pedidoEdicionRepository.existsBySuscripcionSuscriptorIdAndCuraduriaLibroId(
+                    suscripcion.getSuscriptor().getId(), curaduria.getLibro().getId());
+
             PedidoEdicion pedido = new PedidoEdicion();
             pedido.setSuscripcion(suscripcion);
             pedido.setEdicion(edicion);
@@ -148,6 +154,7 @@ public class CierreEdicionService {
             pedido.setNombreDestinatario(suscripcion.getSuscriptor().getNombre());
             pedido.setDireccionEntrega(suscripcion.getSuscriptor().getDireccion());
             pedido.setEstadoPedido(EstadoPedido.PENDIENTE_DE_EMPAQUE);
+            pedido.setLibroRepetido(libroRepetido);
             pedido.setFechaCreacion(LocalDate.now(clock));
 
             pedidoEdicionRepository.save(pedido);
