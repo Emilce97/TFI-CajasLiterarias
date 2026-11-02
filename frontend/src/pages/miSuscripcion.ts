@@ -1,10 +1,18 @@
 import { apiGet, apiPatch } from "../data/apiClient";
 import { ejecutarConBoton } from "../components/botonAccion";
 import { mensajeCargando, mensajeError, mensajeExito, mensajeVacio } from "../components/mensajes";
-import type { Categoria, Suscripcion, Suscriptor } from "../types";
+import type { CajaRecibida, Categoria, EstadoPedido, Suscripcion, Suscriptor } from "../types";
 import { exigirRol } from "../utils/auth";
 import { escapar } from "../utils/html";
 import { renderPagarPage } from "./pagar";
+
+// Cómo se le muestra a la suscriptora el estado de cada caja (el panel de despacho usa los nombres internos).
+const ETIQUETA_CAJA: Record<EstadoPedido, string> = {
+    PENDIENTE_DE_EMPAQUE: "En preparación",
+    EMPAQUETADO: "Empaquetada",
+    DESPACHADO: "Despachada",
+    ENTREGADO: "Entregada",
+};
 
 /**
  * "Mi suscripcion": las suscripciones de la persona logueada, con sus acciones
@@ -16,12 +24,13 @@ export async function renderMiSuscripcionPage(container: HTMLElement) {
     container.innerHTML = "<h1>Mi suscripción</h1>" + mensajeCargando();
 
     try {
-        const [suscripciones, categorias, perfil] = await Promise.all([
+        const [suscripciones, categorias, perfil, cajas] = await Promise.all([
             apiGet<Suscripcion[]>("/suscripciones/mis-suscripciones"),
             apiGet<Categoria[]>("/categorias"),
             apiGet<Suscriptor>("/suscriptores/mi-perfil"),
+            apiGet<CajaRecibida[]>("/suscriptores/mis-cajas"),
         ]);
-        renderPagina(container, suscripciones, categorias, perfil);
+        renderPagina(container, suscripciones, categorias, perfil, cajas);
     } catch (error) {
         container.innerHTML = "<h1>Mi suscripción</h1>" + mensajeError("No se pudo cargar tu información");
         console.error(error);
@@ -32,7 +41,8 @@ function renderPagina(
     container: HTMLElement,
     suscripciones: Suscripcion[],
     categorias: Categoria[],
-    perfil: Suscriptor
+    perfil: Suscriptor,
+    cajas: CajaRecibida[],
 ) {
     container.innerHTML = `
     <h1>Mi suscripción</h1>
@@ -40,6 +50,13 @@ function renderPagina(
       ${suscripciones.length === 0
             ? mensajeVacio("Todavía no tenés suscripciones.") + '<p><a class="boton" href="/suscripcion.html">Suscribirme</a></p>'
             : `<ul>${suscripciones.map((s) => renderSuscripcion(s, categorias)).join("")}</ul>`}
+    </section>
+
+    <h2>Mis cajas recibidas</h2>
+    <section id="mis-cajas">
+      ${cajas.length === 0
+            ? mensajeVacio("Todavía no tenés cajas. Cuando se cierre una edición con tu pago validado, la vas a ver acá.")
+            : renderCajas(cajas)}
     </section>
 
     <h2>Mis datos de entrega</h2>
@@ -95,6 +112,32 @@ function renderSuscripcion(s: Suscripcion, categorias: Categoria[]): string {
       ${pendientes.length > 0 ? `<br><em>Pendiente: ${pendientes.join("; ")}.</em>` : ""}
       <div>${acciones.join(" ")} ${cambioDeCategoria}</div>
     </li>
+  `;
+}
+
+function renderCajas(cajas: CajaRecibida[]): string {
+    return `
+    <table>
+      <thead>
+        <tr>
+          <th>Edición</th>
+          <th>Temática</th>
+          <th>Libro</th>
+          <th>Estado</th>
+          <th>Seguimiento</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${cajas.map((c) => `
+        <tr>
+          <td>${escapar(c.edicion)}</td>
+          <td>${escapar(c.categoria)}</td>
+          <td>${escapar(c.libro)}</td>
+          <td><span class="etiqueta">${ETIQUETA_CAJA[c.estado]}</span></td>
+          <td>${escapar(c.tracking) || "—"}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
   `;
 }
 

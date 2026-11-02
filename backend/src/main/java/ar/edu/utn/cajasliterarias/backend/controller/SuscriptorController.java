@@ -1,6 +1,7 @@
 package ar.edu.utn.cajasliterarias.backend.controller;
 
 import ar.edu.utn.cajasliterarias.backend.dto.ActualizarPerfilRequest;
+import ar.edu.utn.cajasliterarias.backend.dto.CajaRecibidaResponse;
 import ar.edu.utn.cajasliterarias.backend.model.Suscriptor;
 import ar.edu.utn.cajasliterarias.backend.service.SuscriptorService;
 import org.springframework.security.core.Authentication;
@@ -9,6 +10,8 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /** Perfil del suscriptor logueado. Siempre opera sobre la cuenta del token, nunca sobre un id recibido. */
 @RestController
@@ -29,5 +32,10 @@ public class SuscriptorController {
     @PatchMapping("/mi-perfil")
     public Suscriptor actualizar(@RequestBody ActualizarPerfilRequest request, Authentication authentication) {
         return suscriptorService.actualizarPerfil(authentication.getName(), request);
+    }
+
+    @GetMapping("/mis-cajas")
+    public List<CajaRecibidaResponse> misCajas(Authentication authentication) {
+        return suscriptorService.listarCajasRecibidas(authentication.getName());
     }
 }

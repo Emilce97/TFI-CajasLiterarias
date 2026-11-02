@@ -39,7 +39,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/ediciones", "/api/ediciones/*/curadurias").permitAll()
                         // suscriptor
                         .requestMatchers(HttpMethod.POST, "/api/suscripciones", "/api/pagos").hasRole("SUSCRIPTOR")
-                        .requestMatchers(HttpMethod.GET, "/api/suscripciones/mis-suscripciones", "/api/suscriptores/mi-perfil").hasRole("SUSCRIPTOR")
+                        .requestMatchers(HttpMethod.GET, "/api/suscripciones/mis-suscripciones", "/api/suscriptores/mi-perfil", "/api/suscriptores/mis-cajas").hasRole("SUSCRIPTOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/suscripciones/**", "/api/suscriptores/mi-perfil").hasRole("SUSCRIPTOR")
                         // administradora
                         .requestMatchers(HttpMethod.POST, "/api/ediciones", "/api/ediciones/*/cierre").hasRole("ADMIN")
