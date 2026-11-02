@@ -130,6 +130,7 @@ CREATE TABLE pedido_edicion (
     estado_pedido VARCHAR(30) NOT NULL, -- PENDIENTE_DE_EMPAQUE / EMPAQUETADO / DESPACHADO / ENTREGADO
     tracking VARCHAR(100),
     observaciones TEXT,
+    libro_repetido BOOLEAN NOT NULL DEFAULT FALSE,
     modificado_por_admin_id BIGINT,
     fecha_modificacion DATETIME(6),
     fecha_creacion DATE NOT NULL,

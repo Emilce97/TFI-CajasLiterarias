@@ -611,7 +611,7 @@ class CierreEdicionServiceTest {
         PedidoEdicion pedido = captor.getValue();
         assertEquals("Juana Diaz", pedido.getNombreDestinatario());
 
-        // Despues del corte la suscriptora cambia su nombre: el pedido ya congelado no se entera.
+        // Despues del corte el suscriptor cambia su nombre: el pedido ya congelado no se entera.
         suscriptor.setNombre("Juana Diaz de Perez");
         assertEquals("Juana Diaz", pedido.getNombreDestinatario());
     }
@@ -671,5 +671,34 @@ class CierreEdicionServiceTest {
         // El padron se calculo una sola vez.
         verify(suscripcionRepository, times(1)).findByEstado(EstadoSuscripcion.ACTIVA);
         verify(pagoRepository, times(1)).findByEdicionId(1L);
+    }
+
+    @Test
+    void siElSuscriptorYaRecibioElLibro_elPedidoSeGeneraMarcadoYNoSeExcluye() {
+        prepararCorteConUnPedido();
+        when(pedidoEdicionRepository.existsBySuscripcionSuscriptorIdAndCuraduriaLibroId(any(), eq(1L)))
+                .thenReturn(true);
+
+        ResumenCierreDTO resumen = service.ejecutarCorte(1L);
+
+        ArgumentCaptor<PedidoEdicion> captor = ArgumentCaptor.forClass(PedidoEdicion.class);
+        verify(pedidoEdicionRepository).save(captor.capture());
+        assertTrue(captor.getValue().isLibroRepetido());
+        // Se genera igual, con el libro de la curaduría: ni se excluye ni se cambia.
+        assertEquals("El Aleph", captor.getValue().getLibroCongelado());
+        assertEquals(1, resumen.getTotalPedidosGenerados());
+        assertEquals(0, resumen.getTotalExcluidos());
+        verify(exclusionEdicionRepository, never()).save(any());
+    }
+
+    @Test
+    void siElSuscriptorNuncaRecibioElLibro_elPedidoNoQuedaMarcado() {
+        prepararCorteConUnPedido();
+
+        service.ejecutarCorte(1L);
+
+        ArgumentCaptor<PedidoEdicion> captor = ArgumentCaptor.forClass(PedidoEdicion.class);
+        verify(pedidoEdicionRepository).save(captor.capture());
+        assertFalse(captor.getValue().isLibroRepetido());
     }
 }

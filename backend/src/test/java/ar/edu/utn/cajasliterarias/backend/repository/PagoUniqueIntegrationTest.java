@@ -43,7 +43,7 @@ class PagoUniqueIntegrationTest {
         categoriaRepository.save(categoria);
 
         Suscriptor suscriptor = new Suscriptor();
-        suscriptor.setNombre("Suscriptora Pago IT");
+        suscriptor.setNombre("Suscriptor Pago IT");
         suscriptor.setEmail("pago-it-" + UUID.randomUUID() + "@test.com");
         suscriptor.setDireccion("Calle Falsa 123");
         suscriptor.setFechaRegistro(LocalDate.now());

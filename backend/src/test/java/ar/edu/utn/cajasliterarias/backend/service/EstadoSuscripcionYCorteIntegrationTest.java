@@ -63,7 +63,7 @@ class EstadoSuscripcionYCorteIntegrationTest {
         libroMisterio = guardarLibro("Libro Misterio EST");
 
         Suscriptor suscriptor = new Suscriptor();
-        suscriptor.setNombre("Suscriptora EST");
+        suscriptor.setNombre("Suscriptor EST");
         suscriptor.setEmail("est-" + UUID.randomUUID() + "@test.com");
         suscriptor.setDireccion("Calle Falsa 123");
         suscriptor.setFechaRegistro(LocalDate.now(clock));

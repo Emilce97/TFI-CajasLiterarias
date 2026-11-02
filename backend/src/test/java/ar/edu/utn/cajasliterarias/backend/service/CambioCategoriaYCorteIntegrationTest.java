@@ -63,7 +63,7 @@ class CambioCategoriaYCorteIntegrationTest {
         libroMisterio = guardarLibro("Libro Misterio IT");
 
         Suscriptor suscriptor = new Suscriptor();
-        suscriptor.setNombre("Suscriptora IT");
+        suscriptor.setNombre("Suscriptor IT");
         suscriptor.setEmail("it-" + UUID.randomUUID() + "@test.com");
         suscriptor.setDireccion("Calle Falsa 123");
         suscriptor.setFechaRegistro(LocalDate.now(clock));

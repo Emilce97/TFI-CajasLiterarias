@@ -163,6 +163,7 @@ class SecurityRoutesTest {
             PATCH,/api/suscripciones/1/categoria
             POST,/api/pagos
             GET,/api/suscriptores/mi-perfil
+            GET,/api/suscriptores/mis-cajas
             PATCH,/api/suscriptores/mi-perfil
             """;
 

@@ -8,7 +8,7 @@ import { renderMiSuscripcionPage } from "./miSuscripcion";
 import { renderEdicionesPage } from "./ediciones";
 
 /**
- * "Pagar": la suscriptora informa el pago de la edicion abierta para una de sus suscripciones.
+ * "Pagar": el suscriptor informa el pago de la edicion abierta para una de sus suscripciones.
  * El pago es por transferencia y la conciliacion es manual: aca se informa (queda PENDIENTE)
  * y la administradora lo valida desde el panel de pagos.
  */
