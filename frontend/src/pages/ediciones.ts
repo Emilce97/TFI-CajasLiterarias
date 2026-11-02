@@ -19,6 +19,15 @@ interface ResumenCierre {
   suscripcionesExcluidas: number[];
 }
 
+/** Lo que devuelve GET /api/ediciones/{id}/posibles-repeticiones (aviso antes del corte). */
+interface PosibleRepeticion {
+  suscripcionId: number;
+  suscriptora: string;
+  email: string;
+  categoria: string;
+  libro: string;
+}
+
 /**
  * Pagina de "Ediciones". Al publico y a los suscriptores el backend les devuelve solo la edicion
  * abierta y ven sus curadurias directamente; la administradora ve todas y las abre con "Ver detalle".
@@ -75,6 +84,11 @@ function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[], av
     return;
   }
 
+  // Aviso antes del corte: solo tiene sentido para la edicion abierta.
+  ediciones
+      .filter((edicion) => edicion.estado === "ABIERTA")
+      .forEach((edicion) => cargarAvisoRepeticiones(container, edicion));
+
   // Administradora: pueden ser muchas ediciones, asi que el detalle se pide bajo demanda.
   const lista = container.querySelector<HTMLUListElement>("#lista-ediciones")!;
 
@@ -112,10 +126,16 @@ function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[], av
  * Si sale bien, recarga la pagina con el resumen (y aparece el formulario para crear la siguiente).
  */
 async function cerrarEdicion(container: HTMLElement, edicion: Edicion, boton: HTMLButtonElement) {
+  // Si el aviso detecto libros repetidos, se repite en la confirmacion.
+  const zonaAviso = container.querySelector<HTMLDivElement>(`#aviso-${edicion.id}`);
+  const repetidos = Number(zonaAviso?.dataset.cantidad ?? 0);
+  const advertencia = repetidos > 0
+      ? `\n\nAtención: ${repetidos} suscriptora(s) recibirían un libro que ya tienen.`
+      : "";
   const confirmado = confirm(
       `¿Cerrar la edición "${edicion.nombre}"?\n\n` +
       "Se van a generar los pedidos de las suscripciones con pago validado y la edición " +
-      "ya no se va a poder volver a abrir.");
+      "ya no se va a poder volver a abrir." + advertencia);
   if (!confirmado) return;
 
   const resultado = container.querySelector<HTMLDivElement>(`#cierre-${edicion.id}`)!;
@@ -132,6 +152,40 @@ async function cerrarEdicion(container: HTMLElement, edicion: Edicion, boton: HT
         error instanceof Error ? error.message : "No se pudo cerrar la edición.");
     boton.disabled = false;
     boton.textContent = "Cerrar edición";
+    console.error(error);
+  }
+}
+
+/** Aviso antes del corte: lista a las suscriptoras que recibirian un libro que ya recibieron. */
+async function cargarAvisoRepeticiones(container: HTMLElement, edicion: Edicion) {
+  const zona = container.querySelector<HTMLDivElement>(`#aviso-${edicion.id}`);
+  if (!zona) return;
+
+  try {
+    const repeticiones = await apiGet<PosibleRepeticion[]>(
+        `/ediciones/${edicion.id}/posibles-repeticiones`);
+    zona.dataset.cantidad = String(repeticiones.length);
+
+    if (repeticiones.length === 0) {
+      zona.innerHTML = mensajeExito("Ninguna suscriptora recibiría un libro que ya tiene.");
+      return;
+    }
+
+    const titulo = repeticiones.length === 1
+        ? "1 suscriptora recibiría un libro que ya tiene"
+        : `${repeticiones.length} suscriptoras recibirían un libro que ya tienen`;
+    zona.innerHTML = `
+      <div class="mensaje mensaje-error" role="alert">
+        <strong>Atención: ${titulo}.</strong>
+        <ul>
+          ${repeticiones.map((r) => `
+            <li>${escapar(r.suscriptora)} (${escapar(r.email)}): "${escapar(r.libro)}", ${escapar(r.categoria)}</li>
+          `).join("")}
+        </ul>
+        <p>Revisalo antes de cerrar la edición.</p>
+      </div>`;
+  } catch (error) {
+    zona.innerHTML = mensajeError("No se pudo verificar si hay libros repetidos.");
     console.error(error);
   }
 }
@@ -180,6 +234,7 @@ function renderEdicion(edicion: Edicion, esAdmin: boolean): string {
       </p>
       ${esAdmin ? `<button data-accion="detalle" data-edicion-id="${edicion.id}">Ver detalle</button>` : ""}
       ${conCierre ? `<button data-accion="cerrar" data-edicion-id="${edicion.id}">Cerrar edición</button>` : ""}
+      ${conCierre ? `<div id="aviso-${edicion.id}"></div>` : ""}
       <div id="cierre-${edicion.id}" aria-live="polite"></div>
       <div class="curadurias" id="curadurias-${edicion.id}"></div>
     </li>
