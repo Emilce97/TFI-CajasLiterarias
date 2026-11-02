@@ -46,7 +46,7 @@ public class SuscriptorService {
         return suscriptorRepository.save(suscriptor);
     }
 
-    /** Historial de la suscriptora: todos sus pedidos, con el estado en que está cada caja. */
+    /** Historial del suscriptor: todos sus pedidos, con el estado en que está cada caja. */
     @Transactional(readOnly = true)
     public List<CajaRecibidaResponse> listarCajasRecibidas(String email) {
         return pedidoEdicionRepository.findBySuscripcionSuscriptorEmailOrderByIdDesc(email).stream()

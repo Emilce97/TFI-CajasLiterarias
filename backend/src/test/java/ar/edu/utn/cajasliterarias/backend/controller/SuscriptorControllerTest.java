@@ -90,7 +90,7 @@ class SuscriptorControllerTest {
     }
 
     @Test
-    void misCajas_devuelveLaListaDeLaSuscriptoraDeLaSesionSinDatosInternos() throws Exception {
+    void misCajas_devuelveLaListaDeLaSuscriptorDeLaSesionSinDatosInternos() throws Exception {
         when(suscriptorService.listarCajasRecibidas("juana@mail.com")).thenReturn(List.of(
                 new CajaRecibidaResponse(3L, "Edición Octubre", "Romance", "Orgullo y prejuicio",
                         EstadoPedido.ENTREGADO, "AR123")));

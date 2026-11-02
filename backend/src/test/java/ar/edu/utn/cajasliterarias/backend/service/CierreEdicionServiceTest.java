@@ -611,7 +611,7 @@ class CierreEdicionServiceTest {
         PedidoEdicion pedido = captor.getValue();
         assertEquals("Juana Diaz", pedido.getNombreDestinatario());
 
-        // Despues del corte la suscriptora cambia su nombre: el pedido ya congelado no se entera.
+        // Despues del corte el suscriptor cambia su nombre: el pedido ya congelado no se entera.
         suscriptor.setNombre("Juana Diaz de Perez");
         assertEquals("Juana Diaz", pedido.getNombreDestinatario());
     }

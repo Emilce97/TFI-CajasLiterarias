@@ -6,7 +6,7 @@ import { exigirRol } from "../utils/auth";
 import { escapar } from "../utils/html";
 import { renderPagarPage } from "./pagar";
 
-// Cómo se le muestra a la suscriptora el estado de cada caja (el panel de despacho usa los nombres internos).
+// Cómo se le muestra a el suscriptor el estado de cada caja (el panel de despacho usa los nombres internos).
 const ETIQUETA_CAJA: Record<EstadoPedido, string> = {
     PENDIENTE_DE_EMPAQUE: "En preparación",
     EMPAQUETADO: "Empaquetada",

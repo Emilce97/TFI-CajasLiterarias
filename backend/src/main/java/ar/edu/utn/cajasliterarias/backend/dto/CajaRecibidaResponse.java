@@ -4,7 +4,7 @@ import ar.edu.utn.cajasliterarias.backend.enums.EstadoPedido;
 import ar.edu.utn.cajasliterarias.backend.model.PedidoEdicion;
 
 /**
- * Lo que ve la suscriptora de cada pedido suyo en "Mis cajas recibidas". Es un DTO a propósito:
+ * Lo que ve el suscriptor de cada pedido suyo en "Mis cajas recibidas". Es un DTO a propósito:
  * no se devuelve la entidad para no exponer el pago, la administradora ni la suscripción.
  */
 public record CajaRecibidaResponse(
