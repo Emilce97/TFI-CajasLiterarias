@@ -107,7 +107,7 @@ class LibroYaRecibidoIntegrationTest {
 
     private Suscriptor suscriptor(String alias) {
         Suscriptor suscriptor = new Suscriptor();
-        suscriptor.setNombre("Suscriptora " + alias);
+        suscriptor.setNombre("Suscriptor " + alias);
         suscriptor.setEmail(alias + "@repeticion-it.com");
         suscriptor.setDireccion("Calle Falsa 123");
         suscriptor.setFechaRegistro(LocalDate.now().minusMonths(2));
@@ -115,7 +115,7 @@ class LibroYaRecibidoIntegrationTest {
     }
 
     @Test
-    void suscriptoraQueYaRecibioElLibro_devuelveTrue() {
+    void suscriptorQueYaRecibioElLibro_devuelveTrue() {
         assertThat(pedidoRepository.existsBySuscripcionSuscriptorIdAndCuraduriaLibroId(
                 lectora.getId(), libroRecibido.getId())).isTrue();
     }
@@ -127,7 +127,7 @@ class LibroYaRecibidoIntegrationTest {
     }
 
     @Test
-    void elLibroLoRecibioOtraPersona_noCuentaParaEstaSuscriptora() {
+    void elLibroLoRecibioOtraPersona_noCuentaParaEstaSuscriptor() {
         assertThat(pedidoRepository.existsBySuscripcionSuscriptorIdAndCuraduriaLibroId(
                 otraLectora.getId(), libroRecibido.getId())).isFalse();
     }

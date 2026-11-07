@@ -96,3 +96,13 @@ export interface Remito {
     estado: EstadoPedido;
     tracking: string | null;
 }
+
+// Lo que devuelve GET /api/suscriptores/mis-cajas (CajaRecibidaResponse del backend)
+export interface CajaRecibida {
+    id: number;
+    edicion: string;
+    categoria: string;
+    libro: string;
+    estado: EstadoPedido;
+    tracking: string | null;
+}

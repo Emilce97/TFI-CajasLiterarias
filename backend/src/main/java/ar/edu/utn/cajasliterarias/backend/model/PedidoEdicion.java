@@ -54,6 +54,11 @@ public class PedidoEdicion {
     private String tracking;
     private String observaciones;
 
+    // true si, al generarse el pedido en el corte, el suscriptor ya tenía otro pedido con este mismo libro.
+    // El pedido se genera igual (la persona pagó): la administradora lo resuelve a mano desde el panel de despacho.
+    @Column(name = "libro_repetido", nullable = false)
+    private boolean libroRepetido;
+
     @ManyToOne
     @JoinColumn(name = "modificado_por_admin_id")
     private Administradora modificadoPor;

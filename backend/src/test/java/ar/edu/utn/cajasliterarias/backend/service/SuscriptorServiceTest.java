@@ -1,7 +1,12 @@
 package ar.edu.utn.cajasliterarias.backend.service;
 
 import ar.edu.utn.cajasliterarias.backend.dto.ActualizarPerfilRequest;
+import ar.edu.utn.cajasliterarias.backend.dto.CajaRecibidaResponse;
+import ar.edu.utn.cajasliterarias.backend.enums.EstadoPedido;
+import ar.edu.utn.cajasliterarias.backend.model.Edicion;
+import ar.edu.utn.cajasliterarias.backend.model.PedidoEdicion;
 import ar.edu.utn.cajasliterarias.backend.model.Suscriptor;
+import ar.edu.utn.cajasliterarias.backend.repository.PedidoEdicionRepository;
 import ar.edu.utn.cajasliterarias.backend.repository.SuscriptorRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,10 +29,11 @@ class SuscriptorServiceTest {
 
     @Mock private SuscriptorRepository suscriptorRepository;
     private SuscriptorService service;
+    @Mock private PedidoEdicionRepository pedidoEdicionRepository;
 
     @BeforeEach
     void setUp() {
-        service = new SuscriptorService(suscriptorRepository);
+        service = new SuscriptorService(suscriptorRepository, pedidoEdicionRepository);
     }
 
     private Suscriptor juana() {
@@ -98,5 +105,26 @@ class SuscriptorServiceTest {
         when(suscriptorRepository.findByEmail("nadie@mail.com")).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class, () -> service.obtenerPerfil("nadie@mail.com"));
+    }
+
+    @Test
+    void listarCajasRecibidas_devuelveLosPedidosDeEseEmailConLosDatosCongelados() {
+        Edicion edicion = new Edicion();
+        edicion.setNombre("Edición Octubre");
+        PedidoEdicion pedido = new PedidoEdicion();
+        pedido.setId(3L);
+        pedido.setEdicion(edicion);
+        pedido.setCategoriaCongelada("Romance");
+        pedido.setLibroCongelado("Orgullo y prejuicio");
+        pedido.setEstadoPedido(EstadoPedido.ENTREGADO);
+        when(pedidoEdicionRepository.findBySuscripcionSuscriptorEmailOrderByIdDesc("juana@mail.com"))
+                .thenReturn(List.of(pedido));
+
+        List<CajaRecibidaResponse> cajas = service.listarCajasRecibidas("juana@mail.com");
+
+        assertEquals(1, cajas.size());
+        assertEquals("Edición Octubre", cajas.get(0).edicion());
+        assertEquals("Orgullo y prejuicio", cajas.get(0).libro());
+        assertEquals(EstadoPedido.ENTREGADO, cajas.get(0).estado());
     }
 }

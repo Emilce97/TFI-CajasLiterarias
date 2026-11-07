@@ -2,6 +2,8 @@ package ar.edu.utn.cajasliterarias.backend.controller;
 
 import ar.edu.utn.cajasliterarias.backend.config.SecurityConfig;
 import ar.edu.utn.cajasliterarias.backend.dto.ActualizarPerfilRequest;
+import ar.edu.utn.cajasliterarias.backend.dto.CajaRecibidaResponse;
+import ar.edu.utn.cajasliterarias.backend.enums.EstadoPedido;
 import ar.edu.utn.cajasliterarias.backend.model.Suscriptor;
 import ar.edu.utn.cajasliterarias.backend.security.JwtService;
 import ar.edu.utn.cajasliterarias.backend.service.SuscriptorService;
@@ -13,6 +15,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -83,5 +87,18 @@ class SuscriptorControllerTest {
                 .andExpect(status().isForbidden());
 
         verifyNoInteractions(suscriptorService);
+    }
+
+    @Test
+    void misCajas_devuelveLaListaDeLaSuscriptorDeLaSesionSinDatosInternos() throws Exception {
+        when(suscriptorService.listarCajasRecibidas("juana@mail.com")).thenReturn(List.of(
+                new CajaRecibidaResponse(3L, "Edición Octubre", "Romance", "Orgullo y prejuicio",
+                        EstadoPedido.ENTREGADO, "AR123")));
+
+        mockMvc.perform(get("/api/suscriptores/mis-cajas"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].libro").value("Orgullo y prejuicio"))
+                .andExpect(jsonPath("$[0].estado").value("ENTREGADO"))
+                .andExpect(jsonPath("$[0].pago").doesNotExist());
     }
 }

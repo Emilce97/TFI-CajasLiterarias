@@ -1,18 +1,25 @@
 package ar.edu.utn.cajasliterarias.backend.service;
 
 import ar.edu.utn.cajasliterarias.backend.dto.ActualizarPerfilRequest;
+import ar.edu.utn.cajasliterarias.backend.dto.CajaRecibidaResponse;
 import ar.edu.utn.cajasliterarias.backend.model.Suscriptor;
+import ar.edu.utn.cajasliterarias.backend.repository.PedidoEdicionRepository;
 import ar.edu.utn.cajasliterarias.backend.repository.SuscriptorRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class SuscriptorService {
 
     private final SuscriptorRepository suscriptorRepository;
+    private final PedidoEdicionRepository pedidoEdicionRepository;
 
-    public SuscriptorService(SuscriptorRepository suscriptorRepository) {
+    public SuscriptorService(SuscriptorRepository suscriptorRepository,
+                             PedidoEdicionRepository pedidoEdicionRepository) {
         this.suscriptorRepository = suscriptorRepository;
+        this.pedidoEdicionRepository = pedidoEdicionRepository;
     }
 
     @Transactional(readOnly = true)
@@ -37,6 +44,14 @@ public class SuscriptorService {
             suscriptor.setDireccion(limpiar(request.getDireccion(), "dirección", 255));
         }
         return suscriptorRepository.save(suscriptor);
+    }
+
+    /** Historial del suscriptor: todos sus pedidos, con el estado en que está cada caja. */
+    @Transactional(readOnly = true)
+    public List<CajaRecibidaResponse> listarCajasRecibidas(String email) {
+        return pedidoEdicionRepository.findBySuscripcionSuscriptorEmailOrderByIdDesc(email).stream()
+                .map(CajaRecibidaResponse::desde)
+                .toList();
     }
 
     private Suscriptor buscar(String email) {

@@ -55,7 +55,7 @@ class LibroControllerTest {
 
     @Test
     @WithMockUser(roles = "SUSCRIPTOR")
-    void listar_comoSuscriptora_devuelve403() throws Exception {
+    void listar_comoSuscriptor_devuelve403() throws Exception {
         mockMvc.perform(get("/api/libros"))
                 .andExpect(status().isForbidden());
 

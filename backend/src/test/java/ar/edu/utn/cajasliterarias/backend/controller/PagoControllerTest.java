@@ -255,7 +255,7 @@ class PagoControllerTest {
 
     @Test
     @WithMockUser(username = "juana@mail.com", roles = "SUSCRIPTOR")
-    void listarValidados_comoSuscriptora_devuelve403() throws Exception {
+    void listarValidados_comoSuscriptor_devuelve403() throws Exception {
         mockMvc.perform(get("/api/pagos/validados"))
                 .andExpect(status().isForbidden());
 

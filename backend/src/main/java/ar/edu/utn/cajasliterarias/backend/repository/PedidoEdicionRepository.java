@@ -22,4 +22,7 @@ public interface PedidoEdicionRepository extends JpaRepository<PedidoEdicion, Lo
     // No repeticion de titulos: true si el suscriptor ya tiene algun pedido (de una edicion anterior)
     // con ese libro. Se compara por el libro de la curaduria, no por el titulo congelado.
     boolean existsBySuscripcionSuscriptorIdAndCuraduriaLibroId(Long suscriptorId, Long libroId);
+
+    // "Mis cajas recibidas": todos los pedidos del suscriptor logueado, del más nuevo al más viejo.
+    List<PedidoEdicion> findBySuscripcionSuscriptorEmailOrderByIdDesc(String email);
 }
