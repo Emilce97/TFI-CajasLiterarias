@@ -202,7 +202,8 @@ a {
 }
 
 /* Boton de tema: muestra el icono del tema al que se cambia */
-.tema-toggle {
+.tema-toggle,
+.menu-toggle {
   --b-bg: transparent;
   --b-bg-hover: rgba(255, 255, 255, 0.15);
   --b-color: var(--sobre-variante);
@@ -216,10 +217,22 @@ a {
   border-radius: 999px;
 }
 
-.tema-toggle svg {
+.tema-toggle svg,
+.menu-toggle svg {
   display: block;
   width: 1.25rem;
   height: 1.25rem;
+}
+
+/* El boton de las 3 rayitas solo se muestra en el celular (ver @media mas abajo) */
+.menu-toggle {
+  display: none;
+}
+
+/* Cerrado muestra las rayitas; abierto muestra la X */
+.encabezado:not(.menu-abierto) .icono-cerrar,
+.encabezado.menu-abierto .icono-menu {
+  display: none;
 }
 
 :root[data-tema="oscuro"] .icono-luna,
@@ -330,6 +343,10 @@ form button[type="submit"] {
   margin-top: 1.25rem;
 }
 
+fieldset {
+  min-width: 0;
+}
+
 #form-perfil {
   max-width: 480px;
 }
@@ -417,10 +434,19 @@ td button {
   margin: 0 0.25rem 0.25rem 0;
 }
 
+/* Grupo de botones: en fila con espacio entre ellos, y uno debajo del otro si no entran */
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
 /* Ediciones y Mi suscripcion: tarjetas */
 #lista-ediciones,
 #mis-suscripciones ul {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   margin: 0;
   padding: 0;
@@ -430,6 +456,7 @@ td button {
 li.edicion,
 #mis-suscripciones li {
   padding: 1rem 1.25rem;
+  overflow-wrap: anywhere;
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: 10px;
@@ -816,13 +843,28 @@ table {
   /* El nombre del sitio arriba y el menu abajo, en su propia fila.
      El margen negativo alinea el texto del primer item con el titulo. */
   .encabezado nav {
+    display: none;
     order: 3;
     width: 100%;
     margin-left: -0.85rem;
   }
 
+  /* Menu desplegado: las opciones una debajo de la otra */
+  .encabezado.menu-abierto nav {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .encabezado .menu-toggle {
+    display: inline-flex;
+  }
+
   .encabezado .tema-toggle {
     margin-left: auto;
+  }
+
+  .encabezado .tema-toggle,
+  .encabezado .menu-toggle {
     width: 2.75rem;
     height: 2.75rem;
   }

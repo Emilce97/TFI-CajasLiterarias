@@ -87,7 +87,9 @@ function renderResumen(
     <p>Cuando hayas hecho la transferencia, informala acá. El pago queda pendiente
        hasta que la administradora lo valide.</p>
 
-    <button type="button" id="informar-pago">Ya transferí, informar pago</button>
+    <div class="acciones">
+      <button type="button" id="informar-pago">Ya transferí, informar pago</button>
+    </div>
     <div id="resultado-pago" aria-live="polite"></div>
     ${botonesVolver()}
   `;
@@ -130,10 +132,10 @@ function mostrarAviso(container: HTMLElement, texto: string) {
 
 function botonesVolver(): string {
     return `
-    <p>
+    <div class="acciones">
       <button type="button" data-volver="mi-suscripcion">Volver a Mi suscripción</button>
       <button type="button" data-volver="inicio">Volver al inicio</button>
-    </p>
+    </div>
   `;
 }
 
