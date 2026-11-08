@@ -4,6 +4,7 @@ import { mensajeError } from "../components/mensajes";
 import { destinoTrasLogin } from "../utils/auth";
 import { guardarSesion, obtenerSesion, type Sesion } from "../utils/session";
 import { encabezado } from "../components/encabezado";
+import { footer } from "../components/footer";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const next = new URLSearchParams(window.location.search).get("next");
@@ -35,6 +36,7 @@ function render(): void {
       <p>¿Ya tenés cuenta? <a href="${linkLogin}">Ingresá</a></p>
       <div id="mensaje" aria-live="polite"></div>
     </main>
+    ${footer()}
   `;
 }
 

@@ -6,6 +6,7 @@ import { exigirRol, paginaActual } from '../utils/auth';
 import { escapar } from '../utils/html';
 import { obtenerSesion } from '../utils/session';
 import { encabezado } from '../components/encabezado';
+import { footer } from '../components/footer';
 
 interface CrearSuscripcionRequest {
   categoriaId: number;
@@ -32,6 +33,7 @@ function render(nombre: string): void {
 
       <div id="mensaje" aria-live="polite"></div>
     </main>
+    ${footer()}
   `;
 }
 

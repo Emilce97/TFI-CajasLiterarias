@@ -4,6 +4,7 @@ import { mensajeError } from "../components/mensajes";
 import { destinoTrasLogin } from "../utils/auth";
 import { guardarSesion, obtenerSesion, type Sesion } from "../utils/session";
 import { encabezado } from "../components/encabezado";
+import { footer } from "../components/footer";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
@@ -28,6 +29,7 @@ function render(): void {
 
       <div id="mensaje" aria-live="polite"></div>
     </main>
+    ${footer()}
   `;
 }
 

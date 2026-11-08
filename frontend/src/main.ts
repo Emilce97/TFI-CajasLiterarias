@@ -5,6 +5,8 @@ import { renderDespachoPage } from "./pages/despacho";
 import { renderMiSuscripcionPage } from "./pages/miSuscripcion";
 import { cerrarSesion, tieneRol } from "./utils/auth";
 import { encabezado } from "./components/encabezado";
+import { footer } from "./components/footer";
+import { etiquetarTablas } from "./utils/tablas";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const esAdmin = tieneRol("ADMIN");
@@ -31,9 +33,11 @@ app.innerHTML = `
     </nav>
   `)}
   <div id="contenido"></div>
+  ${footer()}
 `;
 
 const contenido = app.querySelector<HTMLDivElement>("#contenido")!;
+etiquetarTablas(contenido);
 
 document.querySelector("#nav-ediciones")!.addEventListener("click", () => {
     renderEdicionesPage(contenido);

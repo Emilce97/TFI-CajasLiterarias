@@ -5,6 +5,8 @@ import { escapar } from "../utils/html";
 import { formatearFecha, formatearMonto } from "../utils/formato";
 import { mensajeCargando, mensajeError, mensajeExito, mensajeVacio } from "../components/mensajes";
 import { renderFormularioNuevaEdicion } from "./nuevaEdicion";
+import { banner } from "../components/banner";
+import { imagenDeCategoria } from "../components/imagenCaja";
 
 const ESTADO: Record<Edicion["estado"], string> = {
   ABIERTA: "Abierta",
@@ -60,6 +62,7 @@ function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[], av
   }
 
   container.innerHTML = `
+    ${esAdmin ? "" : banner()}
     <h1>${titulo}</h1>
     ${aviso ? mensajeExito(aviso) : ""}
     ${conFormulario ? '<section id="nueva-edicion"></section>' : ""}
@@ -250,6 +253,7 @@ function renderCuradurias(curadurias: CuraduriaEdicion[], permiteSuscripcion: bo
     <ul class="curadurias-grid">
       ${curadurias.map((c) => `
         <li class="curaduria">
+          <img class="curaduria-img" src="${imagenDeCategoria(c.categoria.nombre)}" alt="" width="400" height="280" loading="lazy" />
           <h3>${escapar(c.categoria.nombre)}</h3>
           <p class="curaduria-libro">"${escapar(c.libro.titulo)}"</p>
           <p class="curaduria-datos">
