@@ -179,7 +179,13 @@ function renderFila(pedido: PedidoDespacho): string {
       <td>${pedido.id}</td>
       <td>${escapar(pedido.nombreDestinatario)}</td>
       <td>${escapar(pedido.direccionEntrega)}</td>
-      <td>${escapar(pedido.categoria)}<br>${escapar(pedido.libro)}</td>
+      <td>
+        ${escapar(pedido.categoria)}<br>${escapar(pedido.libro)}
+        ${pedido.libroRepetido
+        ? `<br><span class="etiqueta etiqueta-repetido"
+                 title="Esta persona ya recibió este libro en una edición anterior">Libro repetido</span>`
+        : ""}
+      </td>
       <td>${ETIQUETA[pedido.estado]}</td>
       <td>${escapar(pedido.tracking) || "—"}</td>
       <td>${escapar(pedido.observaciones)}</td>

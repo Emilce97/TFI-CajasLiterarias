@@ -5,6 +5,7 @@ import type { CajaRecibida, Categoria, EstadoPedido, Suscripcion, Suscriptor } f
 import { exigirRol } from "../utils/auth";
 import { escapar } from "../utils/html";
 import { renderPagarPage } from "./pagar";
+import { esCategoriaSorpresa, TEXTO_SORPRESA } from "../utils/sorpresa";
 
 // Cómo se le muestra a el suscriptor el estado de cada caja (el panel de despacho usa los nombres internos).
 const ETIQUETA_CAJA: Record<EstadoPedido, string> = {
@@ -115,6 +116,13 @@ function renderSuscripcion(s: Suscripcion, categorias: Categoria[]): string {
   `;
 }
 
+// El libro de la Caja Sorpresa se revela recien cuando la caja fue entregada.
+function libroVisible(caja: CajaRecibida): string {
+    return esCategoriaSorpresa(caja.categoria) && caja.estado !== "ENTREGADO"
+        ? TEXTO_SORPRESA
+        : caja.libro;
+}
+
 function renderCajas(cajas: CajaRecibida[]): string {
     return `
     <table>
@@ -132,7 +140,7 @@ function renderCajas(cajas: CajaRecibida[]): string {
         <tr>
           <td>${escapar(c.edicion)}</td>
           <td>${escapar(c.categoria)}</td>
-          <td>${escapar(c.libro)}</td>
+          <td>${escapar(libroVisible(c))}</td>
           <td><span class="etiqueta">${ETIQUETA_CAJA[c.estado]}</span></td>
           <td>${escapar(c.tracking) || "—"}</td>
         </tr>`).join("")}
