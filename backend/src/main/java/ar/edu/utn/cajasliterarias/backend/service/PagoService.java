@@ -66,23 +66,23 @@ public class PagoService {
 
         Suscripcion suscripcion = suscripcionRepository.findById(request.getSuscripcionId())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "No existe la suscripcion con id " + request.getSuscripcionId()
+                        "No existe la suscripción con id " + request.getSuscripcionId()
                 ));
 
         Edicion edicion = edicionRepository.findById(request.getEdicionId())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "No existe la edicion con id " + request.getEdicionId()
+                        "No existe la edición con id " + request.getEdicionId()
                 ));
 
         if (edicion.getEstado() != EstadoEdicion.ABIERTA) {
             throw new IllegalStateException(
-                    "No se pueden registrar pagos para la edicion " + edicion.getId() + ": no esta abierta."
+                    "No se pueden registrar pagos para la edición " + edicion.getId() + ": no está abierta."
             );
         }
 
         if (suscripcion.getEstado() != EstadoSuscripcion.ACTIVA) {
             throw new IllegalStateException(
-                    "No se puede registrar un pago para una suscripcion en estado " + suscripcion.getEstado() + "."
+                    "No se puede registrar un pago para una suscripción en estado " + suscripcion.getEstado() + "."
             );
         }
 
@@ -142,14 +142,14 @@ public class PagoService {
 
         if (pago.getEdicion().getEstado() != EstadoEdicion.ABIERTA) {
             throw new IllegalStateException(
-                    "No se puede validar el pago " + pagoId + ": la edicion " + pago.getEdicion().getId()
-                            + " no esta abierta."
+                    "No se puede validar el pago " + pagoId + ": la edición " + pago.getEdicion().getId()
+                            + " no está abierta."
             );
         }
 
         Administradora admin = administradoraRepository.findByEmail(emailAdmin)
                 .orElseThrow(() -> new IllegalStateException(
-                        "No se encontro la administradora de la sesion."
+                        "No se encontró la administradora de la sesión."
                 ));
 
         pago.setEstado(EstadoPago.VALIDADO);
@@ -161,7 +161,7 @@ public class PagoService {
 
     private IllegalStateException pagoDuplicado() {
         return new IllegalStateException(
-                "Ya existe un pago registrado para esta suscripcion en esta edicion."
+                "Ya existe un pago registrado para esta suscripción en esta edición."
         );
     }
 

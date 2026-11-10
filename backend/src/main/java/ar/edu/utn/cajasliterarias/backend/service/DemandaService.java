@@ -40,7 +40,7 @@ public class DemandaService {
     @Transactional(readOnly = true)
     public List<DemandaItemDTO> listarDemandaDeEdicion(Long edicionId) {
         Edicion edicion = edicionRepository.findById(edicionId)
-                .orElseThrow(() -> new IllegalArgumentException("No existe la edicion con id " + edicionId));
+                .orElseThrow(() -> new IllegalArgumentException("No existe la edición con id " + edicionId));
 
         // La demanda se calcula en el corte: una edicion abierta todavia no la tiene.
         if (edicion.getEstado() == EstadoEdicion.ABIERTA) {

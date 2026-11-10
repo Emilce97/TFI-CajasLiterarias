@@ -59,7 +59,7 @@ public class SuscripcionService {
 
         Categoria categoria = categoriaRepository.findById(request.getCategoriaId())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "No existe la categoria con id " + request.getCategoriaId()
+                        "No existe la categoría con id " + request.getCategoriaId()
                 ));
 
         if (suscripcionRepository.existsBySuscriptorIdAndCategoriaIdAndEstado(
@@ -91,7 +91,7 @@ public class SuscripcionService {
                 .findByEdicionIdAndCategoriaId(edicionAbierta.getId(), categoria.getId())
                 .orElseThrow(() -> new IllegalStateException(
                         "La categoría '" + categoria.getNombre()
-                                + "' no tiene curaduria cargada en la edición abierta."
+                                + "' no tiene curaduría cargada en la edición abierta."
                 ));
 
         long activasEnCategoria = suscripcionRepository
@@ -164,7 +164,7 @@ public class SuscripcionService {
 
         if (estadoEfectivo(suscripcion) != EstadoSuscripcion.PAUSADA) {
             throw new IllegalStateException(
-                    "Solo se puede reanudar una suscripción que esté PAUSADA (estado actual: "
+                    "Sólo se puede reanudar una suscripción que esté PAUSADA (estado actual: "
                             + estadoEfectivo(suscripcion) + ")."
             );
         }
@@ -189,7 +189,7 @@ public class SuscripcionService {
 
         if (suscripcion.getEstado() != EstadoSuscripcion.ACTIVA) {
             throw new IllegalStateException(
-                    "Solo se puede cambiar la categoría de una suscripción ACTIVA (estado actual: "
+                    "Sólo se puede cambiar la categoría de una suscripción ACTIVA (estado actual: "
                             + suscripcion.getEstado() + ")."
             );
         }
@@ -201,7 +201,7 @@ public class SuscripcionService {
 
         if (categoriaNueva.getId().equals(suscripcion.getCategoria().getId())) {
             throw new IllegalArgumentException(
-                    "La suscripción ya pertenece a la categoria '" + categoriaNueva.getNombre() + "'."
+                    "La suscripción ya pertenece a la categoría '" + categoriaNueva.getNombre() + "'."
             );
         }
 

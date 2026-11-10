@@ -157,7 +157,7 @@ class DemandaServiceTest {
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> service.listarDemandaDeEdicion(99L));
-        assertTrue(ex.getMessage().contains("No existe la edicion"));
+        assertTrue(ex.getMessage().contains("No existe la edición"));
     }
 
     // registrarRecepcion

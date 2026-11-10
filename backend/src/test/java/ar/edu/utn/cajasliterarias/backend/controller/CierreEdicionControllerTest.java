@@ -61,7 +61,7 @@ class CierreEdicionControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("Edición ya cerrada"))
                 .andExpect(jsonPath("$.message").value(
-                        "La edicion con id 1 ya fue cerrada; no puede reprocesarse el corte."));
+                        "La edición con id 1 ya fue cerrada; no puede reprocesarse el corte."));
     }
 
     @Test

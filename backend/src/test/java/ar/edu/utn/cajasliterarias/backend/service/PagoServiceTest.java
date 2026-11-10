@@ -185,7 +185,7 @@ class PagoServiceTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> service.registrarPago(request(new BigDecimal("5000"))));
 
-        assertTrue(ex.getMessage().contains("No existe la suscripcion"));
+        assertTrue(ex.getMessage().contains("No existe la suscripción"));
         verify(pagoRepository, never()).saveAndFlush(any());
     }
 
@@ -197,7 +197,7 @@ class PagoServiceTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> service.registrarPago(request(new BigDecimal("5000"))));
 
-        assertTrue(ex.getMessage().contains("No existe la edicion"));
+        assertTrue(ex.getMessage().contains("No existe la edición"));
         verify(pagoRepository, never()).saveAndFlush(any());
     }
 

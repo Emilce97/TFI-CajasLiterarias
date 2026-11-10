@@ -48,7 +48,7 @@ public class EdicionService {
         String nombre = request.getNombre().trim();
         if (edicionRepository.existsByNombre(nombre)) {
             throw new IllegalArgumentException(
-                    "Ya existe una edicion con el nombre '" + nombre + "'."
+                    "Ya existe una edición con el nombre '" + nombre + "'."
             );
         }
 
@@ -57,7 +57,7 @@ public class EdicionService {
         // Solo puede haber una edicion ABIERTA al mismo tiempo: es una regla de estado (409).
         if (edicionRepository.findByEstado(EstadoEdicion.ABIERTA) != null) {
             throw new IllegalStateException(
-                    "Ya existe una edicion ABIERTA. Debe cerrarse antes de crear una nueva."
+                    "Ya existe una edicion ABIERTA. Debe cerrarse antes de crear una nueva edición."
             );
         }
 
@@ -79,7 +79,7 @@ public class EdicionService {
     /** Nombre y fechas obligatorios, y el despacho siempre despues del corte. */
     private void validarDatosGenerales(CrearEdicionRequest request) {
         if (request == null || request.getNombre() == null || request.getNombre().isBlank()) {
-            throw new IllegalArgumentException("El nombre de la edicion es obligatorio.");
+            throw new IllegalArgumentException("El nombre de la edición es obligatorio.");
         }
         LocalDate corte = request.getFechaCorte();
         LocalDate desde = request.getFechaDespachoDesde();
@@ -91,7 +91,7 @@ public class EdicionService {
         }
         if (!desde.isAfter(corte)) {
             throw new IllegalArgumentException(
-                    "El despacho tiene que empezar despues de la fecha de corte."
+                    "El despacho tiene que empezar después de la fecha de corte."
             );
         }
         if (hasta.isBefore(desde)) {
@@ -108,20 +108,20 @@ public class EdicionService {
     private void validarCuradurias(List<CuraduriaItemDTO> curadurias) {
         if (curadurias == null || curadurias.size() != 4) {
             throw new IllegalArgumentException(
-                    "La edicion debe tener exactamente 4 curadurias (una por categoria)."
+                    "La edición debe tener exactamente 4 curadurías (una por categoría)."
             );
         }
 
         for (CuraduriaItemDTO item : curadurias) {
             if (item == null || item.getCategoriaId() == null
                     || item.getLibroId() == null || item.getPrecioVigente() == null) {
-                throw new IllegalArgumentException("Cada curaduria necesita categoria, libro y precio.");
+                throw new IllegalArgumentException("Cada curaduría necesita categoría, libro y precio.");
             }
             if (item.getPrecioVigente().compareTo(BigDecimal.ZERO) <= 0) {
                 throw new IllegalArgumentException("El precio debe ser mayor a cero.");
             }
             if (item.getCupoMaximo() != null && item.getCupoMaximo() <= 0) {
-                throw new IllegalArgumentException("El cupo maximo, si se indica, debe ser mayor a cero.");
+                throw new IllegalArgumentException("El cupo máximo, si se indica, debe ser mayor a cero.");
             }
         }
 
@@ -131,7 +131,7 @@ public class EdicionService {
                 .count();
         if (categoriasDistintas != 4) {
             throw new IllegalArgumentException(
-                    "Las 4 curadurias deben corresponder a categorias distintas."
+                    "Las 4 curadurías deben corresponder a categorías distintas."
             );
         }
 
@@ -140,7 +140,7 @@ public class EdicionService {
                 .allMatch(item -> item.getPrecioVigente().compareTo(precio) == 0);
         if (!mismoPrecio) {
             throw new IllegalArgumentException(
-                    "El precio debe ser el mismo para las 4 tematicas (precio unico por edicion)."
+                    "El precio debe ser el mismo para las 4 temáticas (precio único por edición)."
             );
         }
     }
@@ -160,7 +160,7 @@ public class EdicionService {
     private void crearCuraduria(Edicion edicion, CuraduriaItemDTO item) {
         Categoria categoria = categoriaRepository.findById(item.getCategoriaId())
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "No existe la categoria con id " + item.getCategoriaId()
+                        "No existe la categoría con id " + item.getCategoriaId()
                 ));
 
         Libro libro = libroRepository.findById(item.getLibroId())
@@ -182,7 +182,7 @@ public class EdicionService {
      */
     public List<CuraduriaEdicion> listarCuraduriasDeEdicion(Long edicionId) {
         if (!edicionRepository.existsById(edicionId)) {
-            throw new IllegalArgumentException("No existe la edicion con id " + edicionId);
+            throw new IllegalArgumentException("No existe la edición con id " + edicionId);
         }
         return curaduriaEdicionRepository.findByEdicionId(edicionId);
     }

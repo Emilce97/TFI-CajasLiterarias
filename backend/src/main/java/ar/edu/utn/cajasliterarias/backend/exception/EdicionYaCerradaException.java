@@ -9,7 +9,7 @@ package ar.edu.utn.cajasliterarias.backend.exception;
 public class EdicionYaCerradaException extends RuntimeException {
 
     public EdicionYaCerradaException(Long edicionId) {
-        super("La edicion con id " + edicionId + " ya fue cerrada; no puede reprocesarse el corte.");
+        super("La edición con id " + edicionId + " ya fue cerrada; no puede reprocesarse el corte.");
     }
 
 }

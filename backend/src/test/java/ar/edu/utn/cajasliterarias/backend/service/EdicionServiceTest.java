@@ -225,7 +225,7 @@ class EdicionServiceTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> service.crearEdicion(request));
 
-        assertTrue(ex.getMessage().contains("precio unico"));
+        assertTrue(ex.getMessage().contains("precio único"));
         verify(edicionRepository, never()).save(any());
     }
 
