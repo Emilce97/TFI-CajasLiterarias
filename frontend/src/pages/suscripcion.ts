@@ -88,6 +88,10 @@ async function manejarEnvio(event: SubmitEvent): Promise<void> {
       mostrarMensaje(mensajeExito('¡Listo! Tu suscripción quedó registrada.'));
       // Volvemos al placeholder de la temática.
       select.selectedIndex = 0;
+      // Dejamos leer el mensaje un instante y la llevamos a Mi suscripción (ahí está el botón de pagar).
+      setTimeout(() => {
+        window.location.href = '/index.html?vista=mi-suscripcion';
+      }, 1500);
     },
     // Sin texto fijo: se muestra el mensaje del backend (cupo completo, ya suscripta, ventana cerrada...).
     undefined,
