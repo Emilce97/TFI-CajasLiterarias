@@ -82,6 +82,7 @@ export interface PedidoDespacho {
     observaciones: string | null;
     fechaModificacion: string | null;
     modificadoPor: string | null;
+    libroRepetido: boolean;
 }
 
 // Lo que devuelve GET /api/pedidos/{id}/remito (RemitoResponse del backend)
