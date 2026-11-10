@@ -1,11 +1,12 @@
 package ar.edu.utn.cajasliterarias.backend.controller;
 
+import ar.edu.utn.cajasliterarias.backend.dto.CrearLibroRequest;
 import ar.edu.utn.cajasliterarias.backend.model.Libro;
 import ar.edu.utn.cajasliterarias.backend.service.LibroService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,5 +24,10 @@ public class LibroController {
     @GetMapping
     public List<Libro> listar() {
         return libroService.listarLibros();
+    }
+    /** POST /api/libros: alta de un libro en el catalogo. */
+    @PostMapping
+    public ResponseEntity<Libro> crear(@RequestBody CrearLibroRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(libroService.crearLibro(request));
     }
 }

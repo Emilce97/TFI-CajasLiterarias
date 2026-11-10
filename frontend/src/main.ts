@@ -7,15 +7,17 @@ import { cerrarSesion, tieneRol } from "./utils/auth";
 import { encabezado } from "./components/encabezado";
 import { footer } from "./components/footer";
 import { etiquetarTablas } from "./utils/tablas";
+import { renderCatalogoPage } from "./pages/catalogo";
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const esAdmin = tieneRol("ADMIN");
 const esSuscriptor = tieneRol("SUSCRIPTOR");
 
-// Sin sesion: Ingresar y Registrarme. Suscriptor: Mi suscripcion. 
-// Administradora: Pagos, Demanda y Despacho (solo de ella).
+// Sin sesion: Ingresar y Registrarme. Suscriptor: Mi suscripcion.
+// Administradora: Catalogo, Pagos, Demanda y Despacho (solo de ella).
 const opcionesPorRol = esAdmin
-    ? `<button id="nav-pagos">Pagos</button>
+    ? `<button id="nav-catalogo">Catálogo</button>
+       <button id="nav-pagos">Pagos</button>
        <button id="nav-demanda">Demanda</button>
        <button id="nav-despacho">Despacho</button>
        <button id="nav-salir">Cerrar sesión</button>`
@@ -24,7 +26,6 @@ const opcionesPorRol = esAdmin
            <button id="nav-salir">Cerrar sesión</button>`
         : `<a href="/login.html">Ingresar</a>
            <a href="/registro.html">Registrarme</a>`;
-
 app.innerHTML = `
   ${encabezado(`
     <nav>
@@ -41,6 +42,10 @@ etiquetarTablas(contenido);
 
 document.querySelector("#nav-ediciones")!.addEventListener("click", () => {
     renderEdicionesPage(contenido);
+});
+
+document.querySelector("#nav-catalogo")?.addEventListener("click", () => {
+    renderCatalogoPage(contenido);
 });
 
 document.querySelector("#nav-pagos")?.addEventListener("click", () => {
