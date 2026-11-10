@@ -67,5 +67,13 @@ window.addEventListener("pageshow", (event) => {
     if (event.persisted) window.location.reload();
 });
 
-// Pagina que se muestra al cargar la app
-renderEdicionesPage(contenido);
+// Pagina que se muestra al cargar la app. Despues de suscribirse se llega con
+// ?vista=mi-suscripcion para caer directo donde esta el boton de pagar.
+const params = new URLSearchParams(window.location.search);
+if (params.get("vista") === "mi-suscripcion" && esSuscriptor) {
+    // Limpiamos la URL para que al recargar no quede el parametro.
+    window.history.replaceState(null, "", "/index.html");
+    renderMiSuscripcionPage(contenido);
+} else {
+    renderEdicionesPage(contenido);
+}

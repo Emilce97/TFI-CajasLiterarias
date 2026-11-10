@@ -7,6 +7,7 @@ import { mensajeCargando, mensajeError, mensajeExito, mensajeVacio } from "../co
 import { renderFormularioNuevaEdicion } from "./nuevaEdicion";
 import { banner } from "../components/banner";
 import { imagenDeCategoria } from "../components/imagenCaja";
+import { esCategoriaSorpresa, TEXTO_SORPRESA } from "../utils/sorpresa";
 
 const ESTADO: Record<Edicion["estado"], string> = {
   ABIERTA: "Abierta",
@@ -75,8 +76,8 @@ function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[], av
   if (conFormulario) {
     const zona = container.querySelector<HTMLElement>("#nueva-edicion")!;
     renderFormularioNuevaEdicion(zona, (edicion) =>
-        renderEdicionesPage(container,
-            `Edición "${edicion.nombre}" creada. Ya está abierta para suscripciones y pagos.`));
+      renderEdicionesPage(container,
+        `Edición "${edicion.nombre}" creada. Ya está abierta para suscripciones y pagos.`));
   }
 
   if (ediciones.length === 0) return;
@@ -89,8 +90,8 @@ function renderListaDeEdiciones(container: HTMLElement, ediciones: Edicion[], av
 
   // Aviso antes del corte: solo tiene sentido para la edicion abierta.
   ediciones
-      .filter((edicion) => edicion.estado === "ABIERTA")
-      .forEach((edicion) => cargarAvisoRepeticiones(container, edicion));
+    .filter((edicion) => edicion.estado === "ABIERTA")
+    .forEach((edicion) => cargarAvisoRepeticiones(container, edicion));
 
   // Administradora: pueden ser muchas ediciones, asi que el detalle se pide bajo demanda.
   const lista = container.querySelector<HTMLUListElement>("#lista-ediciones")!;
@@ -133,12 +134,12 @@ async function cerrarEdicion(container: HTMLElement, edicion: Edicion, boton: HT
   const zonaAviso = container.querySelector<HTMLDivElement>(`#aviso-${edicion.id}`);
   const repetidos = Number(zonaAviso?.dataset.cantidad ?? 0);
   const advertencia = repetidos > 0
-      ? `\n\nAtención: ${repetidos} suscriptora(s) recibirían un libro que ya tienen.`
-      : "";
+    ? `\n\nAtención: ${repetidos} suscriptora(s) recibirían un libro que ya tienen.`
+    : "";
   const confirmado = confirm(
-      `¿Cerrar la edición "${edicion.nombre}"?\n\n` +
-      "Se van a generar los pedidos de las suscripciones con pago validado y la edición " +
-      "ya no se va a poder volver a abrir." + advertencia);
+    `¿Cerrar la edición "${edicion.nombre}"?\n\n` +
+    "Se van a generar los pedidos de las suscripciones con pago validado y la edición " +
+    "ya no se va a poder volver a abrir." + advertencia);
   if (!confirmado) return;
 
   const resultado = container.querySelector<HTMLDivElement>(`#cierre-${edicion.id}`)!;
@@ -152,7 +153,7 @@ async function cerrarEdicion(container: HTMLElement, edicion: Edicion, boton: HT
   } catch (error) {
     // El backend valida (ej. la edicion ya estaba cerrada): mostramos su mensaje.
     resultado.innerHTML = mensajeError(
-        error instanceof Error ? error.message : "No se pudo cerrar la edición.");
+      error instanceof Error ? error.message : "No se pudo cerrar la edición.");
     boton.disabled = false;
     boton.textContent = "Cerrar edición";
     console.error(error);
@@ -166,7 +167,7 @@ async function cargarAvisoRepeticiones(container: HTMLElement, edicion: Edicion)
 
   try {
     const repeticiones = await apiGet<PosibleRepeticion[]>(
-        `/ediciones/${edicion.id}/posibles-repeticiones`);
+      `/ediciones/${edicion.id}/posibles-repeticiones`);
     zona.dataset.cantidad = String(repeticiones.length);
 
     if (repeticiones.length === 0) {
@@ -175,8 +176,8 @@ async function cargarAvisoRepeticiones(container: HTMLElement, edicion: Edicion)
     }
 
     const titulo = repeticiones.length === 1
-        ? "1 suscriptora recibiría un libro que ya tiene"
-        : `${repeticiones.length} suscriptoras recibirían un libro que ya tienen`;
+      ? "1 suscriptora recibiría un libro que ya tiene"
+      : `${repeticiones.length} suscriptoras recibirían un libro que ya tienen`;
     zona.innerHTML = `
       <div class="mensaje mensaje-error" role="alert">
         <strong>Atención: ${titulo}.</strong>
@@ -195,13 +196,13 @@ async function cargarAvisoRepeticiones(container: HTMLElement, edicion: Edicion)
 
 function textoResumen(edicion: Edicion, resumen: ResumenCierre): string {
   const pedidos = resumen.totalPedidosGenerados === 1
-      ? "Se generó 1 pedido"
-      : `Se generaron ${resumen.totalPedidosGenerados} pedidos`;
+    ? "Se generó 1 pedido"
+    : `Se generaron ${resumen.totalPedidosGenerados} pedidos`;
   const excluidos = resumen.totalExcluidos === 0
-      ? ""
-      : resumen.totalExcluidos === 1
-          ? " 1 suscripción quedó afuera del corte."
-          : ` ${resumen.totalExcluidos} suscripciones quedaron afuera del corte.`;
+    ? ""
+    : resumen.totalExcluidos === 1
+      ? " 1 suscripción quedó afuera del corte."
+      : ` ${resumen.totalExcluidos} suscripciones quedaron afuera del corte.`;
   return `Edición "${edicion.nombre}" cerrada. ${pedidos}.${excluidos}`;
 }
 
@@ -249,13 +250,17 @@ function renderCuradurias(curadurias: CuraduriaEdicion[], permiteSuscripcion: bo
     return mensajeVacio("Esta edición todavía no tiene curadurías.");
   }
 
+  const esAdmin = tieneRol("ADMIN");
+
   return `
     <ul class="curadurias-grid">
       ${curadurias.map((c) => `
         <li class="curaduria">
           <img class="curaduria-img" src="${imagenDeCategoria(c.categoria.nombre)}" alt="" width="400" height="280" loading="lazy" />
           <h3>${escapar(c.categoria.nombre)}</h3>
-          <p class="curaduria-libro">"${escapar(c.libro.titulo)}"</p>
+          <p class="curaduria-libro">${esCategoriaSorpresa(c.categoria.nombre) && !esAdmin
+        ? escapar(TEXTO_SORPRESA)
+        : `"${escapar(c.libro.titulo)}"`}</p>
           <p class="curaduria-datos">
             <span class="precio">${formatearMonto(c.precioVigente)}</span>
             <span>cupo: ${c.cupoMaximo ?? "sin límite"}</span>

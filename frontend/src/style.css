@@ -2,13 +2,13 @@
   color-scheme: light dark;
 
   /* Neutros (gris calido, tipo papel) */
-  --fondo: light-dark(#fafaf9, #1c1917);
-  --superficie: light-dark(#ffffff, #292524);
+  --fondo: light-dark(#fafaf9, #2a2429);
+  --superficie: light-dark(#ffffff, #362f35);
   --texto: light-dark(#292524, #f5f5f4);
   --texto-suave: light-dark(#57534e, #a8a29e);
-  --borde: light-dark(#e7e5e4, #44403c);
-  --borde-fuerte: light-dark(#d6d3d1, #57534e);
-  --fila-alterna: light-dark(#f5f5f4, #231f1e);
+  --borde: light-dark(#e7e5e4, #4d444c);
+  --borde-fuerte: light-dark(#d6d3d1, #655b64);
+  --fila-alterna: light-dark(#f5f5f4, #302a2f);
 
   /* Accion primaria: ciruela */
   --primario: light-dark(#6b2d5c, #d8a7e0);
@@ -18,7 +18,7 @@
   --enlace: light-dark(#6b2d5c, #e9c4ef);
 
   /* Variante: ciruela casi negra (menu y encabezados de tabla) */
-  --variante: light-dark(#3a1a35, #1f0d1c);
+  --variante: light-dark(#3a1a35, #30122b);
   --sobre-variante: #ffffff;
 
   /* Detalle tematico: papel kraft (borde de las tarjetas de ediciones) */
@@ -440,6 +440,13 @@ td button {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 1rem;
+}
+
+/* Formulario de nueva edicion: separado de la lista de ediciones de abajo */
+#nueva-edicion {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--borde);
 }
 
 /* Ediciones y Mi suscripcion: tarjetas */
