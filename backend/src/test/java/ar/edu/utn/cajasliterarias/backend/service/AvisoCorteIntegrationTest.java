@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Aviso antes del corte contra la base real: detecta a la suscriptora que recibiria
+ * Aviso antes del corte contra la base real: detecta a la suscriptor que recibiria
  * un libro que ya recibio en una edicion anterior. Todo se revierte al terminar (@Transactional).
  */
 @SpringBootTest
@@ -78,7 +78,7 @@ class AvisoCorteIntegrationTest {
         suscripcion.setFechaAlta(LocalDate.now(clock));
         suscripcionRepository.save(suscripcion);
 
-        // Edicion anterior, ya cerrada, en la que la suscriptora recibio "libroYaRecibido".
+        // Edicion anterior, ya cerrada, en la que la suscriptor recibio "libroYaRecibido".
         Edicion anterior = guardarEdicion(EstadoEdicion.CERRADA);
         CuraduriaEdicion curaduriaAnterior = guardarCuraduria(anterior, libroYaRecibido);
         guardarPedidoEntregado(anterior, curaduriaAnterior);
@@ -94,7 +94,7 @@ class AvisoCorteIntegrationTest {
         assertThat(aviso).hasSize(1);
         PosibleRepeticionResponse repeticion = aviso.get(0);
         assertThat(repeticion.suscripcionId()).isEqualTo(suscripcion.getId());
-        assertThat(repeticion.suscriptora()).isEqualTo("Suscriptora AVI");
+        assertThat(repeticion.suscriptor()).isEqualTo("Suscriptora AVI");
         assertThat(repeticion.categoria()).isEqualTo(categoria.getNombre());
         assertThat(repeticion.libro()).isEqualTo(libroYaRecibido.getTitulo());
     }

@@ -113,7 +113,7 @@ class CircuitoAdminIntegrationTest {
 
     @Test
     void circuitoCompleto_delPagoAlRemito() {
-        // 1. La suscriptora registra el pago: queda pendiente.
+        // 1. La suscriptor registra el pago: queda pendiente.
         Pago pago = pagoService.registrarPago(pedidoDePago());
         assertThat(pago.getEstado()).isEqualTo(EstadoPago.PENDIENTE);
 
@@ -160,7 +160,7 @@ class CircuitoAdminIntegrationTest {
         assertThat(entregado.tracking()).isEqualTo("TRK-CIR-001");
         assertThat(entregado.modificadoPor()).isEqualTo(admin.getEmail());
 
-        // 8. No repeticion: a partir de ahora el sistema sabe que la suscriptora ya recibio este libro.
+        // 8. No repeticion: a partir de ahora el sistema sabe que la suscriptor ya recibio este libro.
         assertThat(pedidoEdicionRepository
                 .existsBySuscripcionSuscriptorIdAndCuraduriaLibroId(suscriptor.getId(), libro.getId()))
                 .isTrue();
