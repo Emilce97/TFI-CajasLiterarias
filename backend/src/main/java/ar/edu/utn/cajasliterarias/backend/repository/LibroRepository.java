@@ -7,4 +7,5 @@ import java.util.List;
 public interface LibroRepository extends JpaRepository<Libro, Long> {
     // Catalogo para el formulario de nueva edicion, ordenado alfabeticamente.
     List<Libro> findAllByOrderByTituloAsc();
+    boolean existsByTituloIgnoreCase(String titulo);
 }

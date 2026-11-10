@@ -14,9 +14,18 @@ export interface Categoria {
     nombre: string;
 }
 
+export interface Proveedor {
+    id: number;
+    nombre: string;
+    contacto: string | null;
+}
+
 export interface Libro {
     id: number;
     titulo: string;
+    // Opcionales: el backend los manda, pero no todas las pantallas los usan.
+    autor?: string | null;
+    proveedor?: Proveedor | null;
 }
 
 export interface CuraduriaEdicion {
@@ -82,6 +91,7 @@ export interface PedidoDespacho {
     observaciones: string | null;
     fechaModificacion: string | null;
     modificadoPor: string | null;
+    libroRepetido: boolean;
 }
 
 // Lo que devuelve GET /api/pedidos/{id}/remito (RemitoResponse del backend)

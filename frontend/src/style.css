@@ -790,6 +790,15 @@ table {
   border-color: var(--error-borde);
 }
 
+/* Despacho: el corte marco que la persona ya habia recibido este libro. */
+.etiqueta-repetido {
+  color: var(--error);
+  background: var(--error-fondo);
+  border-color: var(--error-borde);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
 /* Tablet y celular: cada fila de una tabla pasa a ser una tarjeta.
    El titulo de cada columna sale del atributo data-label (lo pone utils/tablas.ts). */
 @media (max-width: 900px) {
