@@ -411,6 +411,12 @@ table {
   border-radius: 10px;
 }
 
+/* Catalogo: aire entre cada formulario y su tabla */
+#catalogo-proveedores table,
+#catalogo-libros table {
+  margin-top: 1.5rem;
+}
+
 th {
   padding: 0.7rem 0.9rem;
   text-align: left;
