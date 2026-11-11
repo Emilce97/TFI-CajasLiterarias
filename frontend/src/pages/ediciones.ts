@@ -25,7 +25,7 @@ interface ResumenCierre {
 /** Lo que devuelve GET /api/ediciones/{id}/posibles-repeticiones (aviso antes del corte). */
 interface PosibleRepeticion {
   suscripcionId: number;
-  suscriptora: string;
+  suscriptor: string;
   email: string;
   categoria: string;
   libro: string;
@@ -134,7 +134,7 @@ async function cerrarEdicion(container: HTMLElement, edicion: Edicion, boton: HT
   const zonaAviso = container.querySelector<HTMLDivElement>(`#aviso-${edicion.id}`);
   const repetidos = Number(zonaAviso?.dataset.cantidad ?? 0);
   const advertencia = repetidos > 0
-    ? `\n\nAtención: ${repetidos} suscriptora(s) recibirían un libro que ya tienen.`
+    ? `\n\nAtención: ${repetidos} suscriptor(es) recibirían un libro que ya tienen.`
     : "";
   const confirmado = confirm(
     `¿Cerrar la edición "${edicion.nombre}"?\n\n` +
@@ -171,19 +171,19 @@ async function cargarAvisoRepeticiones(container: HTMLElement, edicion: Edicion)
     zona.dataset.cantidad = String(repeticiones.length);
 
     if (repeticiones.length === 0) {
-      zona.innerHTML = mensajeExito("Ninguna suscriptora recibiría un libro que ya tiene.");
+      zona.innerHTML = mensajeExito("Ningún suscriptor recibiría un libro que ya tiene.");
       return;
     }
 
     const titulo = repeticiones.length === 1
-      ? "1 suscriptora recibiría un libro que ya tiene"
-      : `${repeticiones.length} suscriptoras recibirían un libro que ya tienen`;
+      ? "1 suscriptor recibiría un libro que ya tiene"
+      : `${repeticiones.length} suscriptores recibirían un libro que ya tienen`;
     zona.innerHTML = `
       <div class="mensaje mensaje-error" role="alert">
         <strong>Atención: ${titulo}.</strong>
         <ul>
           ${repeticiones.map((r) => `
-            <li>${escapar(r.suscriptora)} (${escapar(r.email)}): "${escapar(r.libro)}", ${escapar(r.categoria)}</li>
+            <li>${escapar(r.suscriptor)} (${escapar(r.email)}): "${escapar(r.libro)}", ${escapar(r.categoria)}</li>
           `).join("")}
         </ul>
         <p>Revisalo antes de cerrar la edición.</p>

@@ -42,7 +42,7 @@ class AvisoCorteControllerTest {
 
         mockMvc.perform(get("/api/ediciones/3/posibles-repeticiones"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].suscriptora").value("Lucía"))
+                .andExpect(jsonPath("$[0].suscriptor").value("Lucía"))
                 .andExpect(jsonPath("$[0].libro").value("Orgullo y prejuicio"));
     }
 

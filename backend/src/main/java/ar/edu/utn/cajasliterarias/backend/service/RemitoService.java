@@ -31,7 +31,7 @@ public class RemitoService {
 
         if (!pedido.getEstadoPedido().permiteRemito()) {
             throw new IllegalStateException("El pedido " + pedidoId
-                    + " todavia no esta empaquetado: el remito se emite desde EMPAQUETADO en adelante.");
+                    + " todavía no está empaquetado: el remito se emite desde EMPAQUETADO en adelante.");
         }
 
         RemitoResponse remito = new RemitoResponse();
