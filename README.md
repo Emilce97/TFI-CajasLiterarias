@@ -56,11 +56,11 @@ A futuro, las administradoras planean incorporar una modalidad premium con un Cl
 
 ## Estructura del repositorio
 
-| Carpeta | Contenido |
-| :--- | :--- |
-| `docs/` | Documentación del TFI en Markdown: propuesta y plan de trabajo (Etapa 1), modelo de datos / DER (Etapa 2 semana 1), [autenticación y configuración](./docs/autenticacion.md) y futuras entregas. |
-| `backend/` | API en Spring Boot (Java) + Spring Data JPA. |
-| `frontend/` | Cliente en HTML, CSS y TypeScript con Vite. |
+| Carpeta | Contenido                                                                                                                                                                                                   |
+| :--- |:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `docs/` | Documentación del TFI en Markdown: propuesta y plan de trabajo (Etapa 1), modelo de datos / DER (Etapa 2 semana 1), [autenticación y configuración](./docs/autenticacion.md), [pruebas](./docs/pruebas.md). |
+| `backend/` | API en Spring Boot (Java) + Spring Data JPA.                                                                                                                                                                |
+| `frontend/` | Cliente en HTML, CSS y TypeScript con Vite.                                                                                                                                                                 |
 
 ---
 
