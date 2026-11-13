@@ -29,9 +29,9 @@ Los suscriptores creados antes del registro no tienen contraseña y no pueden in
 | Acceso | Rutas |
 |---|---|
 | Público | `POST /api/auth/login`, `POST /api/auth/registro`, `GET /api/categorias`, `GET /api/ediciones` (a quien no es ADMIN solo le devuelve la edición abierta), `GET /api/ediciones/{id}/curadurias` |
-| SUSCRIPTOR | `POST /api/suscripciones`, `GET /api/suscripciones/mis-suscripciones`, `PATCH /api/suscripciones/{id}/baja\|pausa\|reanudar\|categoria` (solo sobre las propias), `POST /api/pagos` (solo sobre suscripciones propias), `GET` y `PATCH /api/suscriptores/mi-perfil` |
-| ADMIN | `POST /api/ediciones`, `POST /api/ediciones/{id}/cierre`, `GET /api/pagos/pendientes`, `PATCH /api/pagos/{id}/validar`, `GET /api/ediciones/{id}/demanda`, `PATCH /api/demanda/{id}/recepcion`, `GET /api/ediciones/{id}/pedidos`, `PATCH /api/pedidos/{id}/estado`, `GET /api/pedidos/{id}/remito` |
-- Cualquier ruta nueva queda reservada a ADMIN (403 para un suscriptor, 401 sin sesión) hasta que se la declare explícitamente.
+| SUSCRIPTOR | `POST /api/suscripciones`, `GET /api/suscripciones/mis-suscripciones`, `PATCH /api/suscripciones/{id}/baja\|pausa\|reanudar\|categoria` (solo sobre las propias), `POST /api/pagos` (solo sobre suscripciones propias), `GET` y `PATCH /api/suscriptores/mi-perfil`, `GET /api/suscriptores/mis-cajas` |
+| ADMIN | **Ediciones:** `POST /api/ediciones`, `POST /api/ediciones/{id}/cierre`, `GET /api/ediciones/{id}/posibles-repeticiones` (aviso de libros repetidos antes del corte) · **Catálogo:** `GET` y `POST /api/libros`, `GET` y `POST /api/proveedores` · **Pagos:** `GET /api/pagos/pendientes`, `GET /api/pagos/validados`, `PATCH /api/pagos/{id}/validar` · **Demanda:** `GET /api/ediciones/{id}/demanda`, `PATCH /api/demanda/{id}/recepcion` · **Despacho:** `GET /api/ediciones/{id}/pedidos`, `PATCH /api/pedidos/{id}/estado`, `GET /api/pedidos/{id}/remito` |
+- Cualquier ruta nueva queda reservada a ADMIN (403 para un suscriptor, 401 sin sesión) hasta que se la declare explícitamente. Así quedaron protegidas las del catálogo y el aviso, sin tocar `SecurityConfig` (lo confirman sus tests de controller).
 
 ## Alcance y limitaciones
 - Un suscriptor solo puede operar sobre sus propias suscripciones y pagos: si el id es de otra persona (o no existe) responde 403.

@@ -5,15 +5,29 @@
 > **Docente/Tutor:** Oscar Londero  
 > **Integrantes:** Natalia Córdoba, Emilce Spital  
 
+## Entrega final
+
+| Recurso | Enlace |
+| :--- | :--- |
+| Sitio desplegado | https://tfi-cajasliterarias-web.onrender.com |
+| Video explicativo | *(completar)* |
+| Informe final | *(completar)* |
+
+> El backend está en el plan gratuito de Render: la primera visita puede tardar cerca de un minuto en responder.
+
 ---
 
 ## Índice  
+- [Entrega final](#entrega-final)
 - [Propuesta del proyecto](#propuesta-del-proyecto)  
 - [Actores Involucrados](#actores-involucrados)  
 - [Estructura del repositorio](#estructura-del-repositorio)  
 - [Problema central](#problema-central)  
 - [Stack tecnológico](#stack-tecnologico)  
-- [Alcance del MVP](#alcance-del-mvp)  
+- [Alcance del MVP](#alcance-del-mvp) 
+- [Cómo ejecutarlo en local](#como-ejecutarlo-en-local)
+- [Despliegue](#despliegue)
+- [Limitaciones conocidas](#limitaciones-conocidas)
 - [Plan de trabajo](#plan-de-trabajo)  
 - [Integrantes](#integrantes)  
 
@@ -53,11 +67,11 @@ A futuro, las administradoras planean incorporar una modalidad premium con un Cl
 
 ## Estructura del repositorio
 
-| Carpeta | Contenido |
-| :--- | :--- |
-| `docs/` | Documentación del TFI en Markdown: propuesta y plan de trabajo (Etapa 1), modelo de datos / DER (Etapa 2 semana 1), [autenticación y configuración](./docs/autenticacion.md) y futuras entregas. |
-| `backend/` | API en Spring Boot (Java) + Spring Data JPA. |
-| `frontend/` | Cliente en HTML, CSS y TypeScript con Vite. |
+| Carpeta | Contenido                                                                                                                                                                                                   |
+| :--- |:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `docs/` | Documentación del TFI en Markdown: propuesta y plan de trabajo (Etapa 1), modelo de datos / DER (Etapa 2 semana 1), [autenticación y configuración](./docs/autenticacion.md), [pruebas](./docs/pruebas.md). |
+| `backend/` | API en Spring Boot (Java) + Spring Data JPA.                                                                                                                                                                |
+| `frontend/` | Cliente en HTML, CSS y TypeScript con Vite.                                                                                                                                                                 |
 
 ---
 
@@ -76,8 +90,8 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 | **Frontend** | *HTML*, *CSS* y *TypeScript* (sin framework), con *Vite* como build tool | El equipo ya domina esta combinación de proyectos anteriores; las pantallas requeridas (formularios y tablas) no justifican la curva de aprendizaje de un framework. |
 | **Backend** | *Java* con *Spring Boot* | El equipo ya trabajó con Java y Hibernate/JPA. Spring Boot potencia ese conocimiento agregando controladores REST, inyección de dependencias y validaciones de fábrica. |
 | **Persistencia** | *Spring Data JPA (Hibernate)* | Integración nativa con Spring Boot sobre la base de conocimiento previo del equipo. |
-| **Base de datos** | *MySQL* (relacional) | El dominio tiene relaciones fuertes entre entidades que se benefician de claves foráneas e integridad transaccional (ACID). Es el motor que el equipo ya utilizó en cuatrimestres anteriores. |
-| **Despliegue** | *PaaS (Plataforma como Servicio)* | Reduce la complejidad operativa de gestionar un servidor propio, adecuado para los plazos de un trabajo académico. |  
+| **Base de datos** | *MySQL* (relacional) | El dominio tiene relaciones fuertes entre entidades que se benefician de claves foráneas e integridad transaccional (ACID). Es el motor que el equipo ya utilizó en cuatrimestres anteriores. En desarrollo se usan MySQL y MariaDB indistintamente; en producción, *TiDB Cloud*, compatible con MySQL. |
+| **Despliegue** | *PaaS (Plataforma como Servicio)*: *Render* (backend y frontend) y *TiDB Cloud* (base) | Reduce la complejidad operativa de gestionar un servidor propio, adecuado para los plazos de un trabajo académico. |
 
 *La justificación detallada de cada decisión se encuentra en [`docs/etapa-1.md`](./docs/etapa-1.md#2-definición-del-stack-tecnológico).*
 
@@ -85,16 +99,18 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 
 ## Alcance del MVP
 
+Todo lo listado en **Incluido en el MVP** está implementado y desplegado. Lo de *Nice to have* y *No incluido* queda como mejora futura. Las decisiones de diseño y sus límites están en [Limitaciones conocidas](#limitaciones-conocidas).
+
 ### Incluido en el MVP
 
-* **Catálogo de cajas:** Configuración de las cuatro líneas temáticas (Misterio/Terror, Romance, Narrativa/Drama y Caja Sorpresa como temática de título curado único por mes).  
+* **Catálogo de cajas:** Configuración de las cuatro líneas temáticas (Misterio/Terror, Romance, Narrativa/Drama y Caja Sorpresa como temática de título curado único por mes), con alta de libros y proveedores desde el panel de la administradora.
 * **Ciclo de suscripciones y vigencia temporal:** Modelado de reglas de negocio en datos (mediante marcas temporales y estados de vigencia vinculados a la edición de destino), asegurando el desacoplamiento entre la entidad mutable Suscripcion y el snapshot inmutable PedidoEdicion. Modificaciones posteriores a la fecha de corte quedan registradas a nivel entidad con impacto programado para la edición siguiente.   
 * **Gestión de ciclo mensual:** Altas, bajas, pausas y cambios de temática en ventana habilitada (día 1 al 20).  
 * **Corte estricto e idempotente (día 21):** Operación de congelamiento del padrón que incluye únicamente suscripciones con pago validado por la administradora. Suscripciones sin pago confirmado quedan excluidas de la edición y no reservan stock.  
-* **Gestión de stock e inventario mensual:** Cálculo automático de la demanda de libros e insumos por edición cerrada, registro de cantidades recibidas de proveedores y detección/alerta de faltantes previo a la etapa de empaquetado.  
+* **Gestión de stock e inventario mensual:** Cálculo automático de la demanda de libros por edición cerrada, registro de cantidades recibidas de proveedores y detección/alerta de faltantes previo a la etapa de empaquetado.  
 * **Validación manual de pagos:** Panel de conciliación para que las administradoras verifiquen transferencias y habiliten los pedidos antes del día 21.  
 * **Panel de despacho:** Armado de pedidos, generación de remito interno, carga manual de código de seguimiento y actualización de estados del envío (Pendiente de empaque → Empaquetado → Despachado → Entregado).  
-* **Historial de suscriptor:** Registro relacional de pedidos previos para prevenir repetición involuntaria de títulos.  
+* **Historial de suscriptor:** Registro relacional de pedidos previos para prevenir repetición involuntaria de títulos, en tres capas: rechazo al cambiar a una temática cuyo libro ya se recibió, aviso a la administradora antes del corte y marca "Libro repetido" en el panel de despacho. El suscriptor ve sus cajas recibidas en "Mi suscripción".  
 * **Acceso por rol:** registro y login con JWT. La administradora (ADMIN) accede a las rutas de administración (validación de pagos, cierre de edición, demanda, despacho y remitos); el suscriptor (SUSCRIPTOR) se registra e inicia sesión para suscribirse y gestionar solo sus propias suscripciones. El inicio y las ediciones son públicos. Detalle en [`docs/autenticacion.md`](./docs/autenticacion.md).
 
 ### Nice to have (si sobra tiempo dentro del cronograma)  
@@ -108,7 +124,83 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 * **Integración por API con correos:** Sincronización automática de tracking en tiempo real con empresas logísticas (el correo se modela como actor externo tercerizado).
 
 ---
+<a id="como-ejecutarlo-en-local"></a>
+## Cómo ejecutarlo en local
 
+**Requisitos:** Java 25, Node.js y MySQL o MariaDB (por ejemplo, con XAMPP).
+
+1. **Base de datos:** crear la base `cajas_literarias` y correr, en este orden:
+    - `backend/src/main/resources/schema.sql` (las tablas).
+    - `backend/src/main/resources/datos-iniciales.sql` (las 4 categorías, un proveedor y libros de ejemplo). Se puede correr más de una vez: no duplica datos.
+2. **Variables de entorno del backend:** `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `DB_USERNAME` y `DB_PASSWORD` (detalle en [`docs/autenticacion.md`](./docs/autenticacion.md)). La administradora se crea sola al arrancar, con `ADMIN_EMAIL` y `ADMIN_PASSWORD`.
+3. **Backend:** desde `backend/`, `./gradlew bootRun` (queda en `http://localhost:8080`).
+4. **Frontend:** desde `frontend/`, `npm install` y después `npm run dev` (queda en `http://localhost:5173`, el origen que acepta CORS por defecto).
+
+**Tests:** desde `backend/`, `./gradlew test`. Los de integración usan la base local, así que MySQL tiene que estar encendido. Todo lo que crean se revierte al terminar cada test.
+
+---
+
+<a id="despliegue"></a>
+## Despliegue
+
+| Pieza | Plataforma | Dirección |
+| :--- | :--- | :--- |
+| Frontend | Render (sitio estático) | https://tfi-cajasliterarias-web.onrender.com |
+| Backend | Render (servicio web, Docker) | https://tfi-cajasliterarias.onrender.com |
+| Base de datos | TiDB Cloud Starter (compatible con MySQL) | — |
+
+**Backend (Web Service, Docker, directorio raíz `backend/`)**
+
+| Variable | Valor |
+| :--- | :--- |
+| `DB_URL` | URL JDBC de la base en TiDB Cloud |
+| `DB_USERNAME`, `DB_PASSWORD` | Credenciales de la base en TiDB |
+| `JWT_SECRET` | Clave de 32 caracteres o más |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Administradora inicial (se crea al primer arranque) |
+| `FRONTEND_URL` | Dirección del frontend en Render (origen permitido por CORS) |
+
+`PORT` lo define Render. Las contraseñas y el secreto no se guardan en el repositorio.
+
+**Frontend (Static Site, directorio raíz `frontend/`)**
+- Build: `npm install && npm run build`. Publish directory: `dist`.
+- Variable `VITE_API_BASE_URL`: dirección del backend terminada en `/api`. Se lee al compilar, así que si cambia hay que volver a hacer *Manual Deploy*.
+
+**Operación**
+- **Publicar un cambio:** merge a `main` y *Manual Deploy* de los dos servicios en Render. El backend tarda un par de minutos en volver a estar disponible.
+- **Base nueva:** correr `schema.sql` y después `datos-iniciales.sql` en TiDB.
+- **Cambios de esquema:** no viajan con el deploy. Cada `ALTER TABLE` se corre a mano en la base de producción.
+
+---
+
+<a id="limitaciones-conocidas"></a>
+## Limitaciones conocidas
+
+**Del alcance (decisiones de diseño)**
+- **Catálogo:** la administradora puede dar de alta libros y proveedores, pero no editarlos ni borrarlos. Borrar un libro ya usado en una edición rompería el historial (la base lo impide por las claves foráneas). La mejora futura sería *desactivar* libros en lugar de borrarlos.
+- **Categorías:** son 4 fijas por regla de negocio y se cargan por script. No tienen pantalla de alta.
+- **Precio único por edición:** las 4 temáticas de una edición tienen el mismo precio.
+- **Una sola edición abierta a la vez.**
+- **Corte manual:** el cierre de la edición lo dispara la administradora desde el panel ("Cerrar edición"); no corre solo el día 21. La fecha de corte de la edición se usa para decidir si un cambio de temática, una baja, una pausa o una reanudación rige para la edición actual o para la siguiente, pero no ejecuta el cierre por sí sola. Tampoco se abre sola la edición siguiente: la administradora la crea a mano una vez cerrada la anterior. Automatizar el cierre (por ejemplo, con una tarea programada) queda como mejora futura.
+- **Pagos:** la conciliación es manual (transferencia y validación de la administradora). No hay pasarela de pago.
+- **Envíos:** el sistema llega hasta el remito. El tracking se carga a mano, sin integración con el correo.
+- **Notificaciones:** no hay avisos por email. El suscriptor consulta todo en su panel.
+
+**De la no repetición de títulos**
+- El **aviso antes del corte** considera todas las suscripciones activas, incluso las que todavía no pagaron (pueden pagar antes del corte).
+- La **marca en el corte** no excluye el pedido ni cambia el libro: lo señala con la etiqueta "Libro repetido" para que la administradora decida.
+- El **rechazo al cambiar de temática** por libro ya recibido se aplica solo antes del corte. Los cambios pedidos desde el corte rigen para la edición siguiente.
+
+**Técnicas**
+- **Caja Sorpresa:** la pantalla oculta el título al suscriptor hasta la entrega, pero la API igual lo envía, así que se puede ver con las herramientas del navegador.
+- **Render (plan gratuito):** el backend se suspende después de un rato sin uso, y la primera visita puede tardar alrededor de un minuto en responder.
+- **TiDB:** los ids no son consecutivos (pueden saltar), lo que se nota en el número de remito. No afecta el funcionamiento.
+- Las limitaciones de autenticación (token en `localStorage`, sin recuperación de contraseña, etc.) están en [`docs/autenticacion.md`](./docs/autenticacion.md#alcance-y-limitaciones).
+- **TiDB y los `CHECK`:** TiDB no aplica la restricción `CHECK (monto > 0)` de la tabla `pago` (avisa con una advertencia al crearla). La base no rechaza sola un monto negativo; esa validación la hace `PagoService` y tiene su test.
+- **TiDB y las mayúsculas:** TiDB distingue mayúsculas y minúsculas por defecto, a diferencia de MySQL local. Por eso el email se guarda y compara en minúsculas, y el nombre de una edición se valida sin distinguir mayúsculas.
+- **Sin herramienta de migraciones:** los cambios de esquema se mantienen en `schema.sql` y se aplican con `ALTER TABLE` a mano.
+- **Administradora inicial:** se crea al arrancar el backend con `ADMIN_EMAIL` y `ADMIN_PASSWORD`; no hay pantalla para crear otras administradoras.
+
+---
 ## Plan de trabajo
 
 El plan se organiza en torno a las tres instancias de entrega definidas por la cátedra. El equipo (2 integrantes) trabaja de forma conjunta sobre todas las capas del proyecto, sin división fija de roles, con una disponibilidad estimada de 10 a 15 horas semanales combinadas.
@@ -127,28 +219,28 @@ Identificación del problema, definición del stack tecnológico, refinamiento d
 
 > > 📄 El detalle completo de esta entrega se encuentra en [`docs/etapa-1.md`](./docs/etapa-1.md).
 
-### Etapa 2 — Arquitectura y módulos (31/08 al 27/09)
+### Etapa 2 — Arquitectura y módulos (31/08 al 27/09) ✅
 
-| Semana | Tarea |
-| :---: | :--- |
+|        Semana         | Tarea |
+|:---------------------:| :--- |
 | **1 (31/08–06/09) ✅** | Diseño del modelo de datos (esquema ER con entidades desacopladas `Suscripcion` y `PedidoEdicion`), definición de módulos y setup inicial (Spring Boot + Vite/TS + MySQL). |
 | **2 (07/09–13/09) ✅** | Implementación backend del recorrido vertical: alta de suscripción, configuración de edición y operación manual idempotente de cierre/snapshot. |
 | **3 (14/09–20/09) ✅** | Conexión con frontend simple: visualización de ediciones, suscripción básica y prueba de inmutabilidad del padrón cerrado ante cambios posteriores. |
-| **4 (21/09–27/09)** | Ajustes según feedback del tutor, buffer para pruebas funcionales del recorrido y entrega formal (**condición de Regular**). |
+| **4 (21/09–27/09) ✅** | Ajustes según feedback del tutor, buffer para pruebas funcionales del recorrido y entrega formal (**condición de Regular**). |
 
 > 📄 El esquema ER (DER) y la definición de módulos correspondientes a la Semana 1 se encuentran disponibles en [`docs/der.md`](./docs/der.md).
 
 ### Etapa 3 — Informe final, video y despliegue (28/09 al 14/11)
 
-| Semana | Tarea |
-| :---: | :--- |
-| **1 (28/09–04/10)** | Módulo de conciliación manual de pagos y reglas de exclusión al corte. |
-| **2 (05/10–11/10)** | Módulo de Stock/Cupos y cálculo de demanda para proveedores. |
-| **3 (12/10–18/10)** | Panel de despacho, remitos y estados de entrega. |
-| **4 (19/10–25/10)** | Refinamiento de interfaces y componentes reutilizables en frontend. |
-| **5 (26/10–01/11)** | Pruebas integrales y verificación de no repetición de títulos |
-| **6 (02/11–08/11)** | Despliegue en PaaS (Frontend y Backend/MySQL en la nube) + corrección de bugs. |
-| **7 (09/11–14/11)** | Revisión general del proyecto y del informe final, grabación del video explicativo y entrega. |
+|        Semana         | Tarea |
+|:---------------------:| :--- |
+| **1 (28/09–04/10) ✅** | Módulo de conciliación manual de pagos y reglas de exclusión al corte. |
+| **2 (05/10–11/10) ✅** | Módulo de Stock/Cupos y cálculo de demanda para proveedores. |
+| **3 (12/10–18/10) ✅** | Panel de despacho, remitos y estados de entrega. |
+| **4 (19/10–25/10) ✅** | Refinamiento de interfaces y componentes reutilizables en frontend. |
+| **5 (26/10–01/11) ✅** | Pruebas integrales y verificación de no repetición de títulos |
+| **6 (02/11–08/11) ✅** | Despliegue en PaaS (Frontend y Backend/MySQL en la nube) + corrección de bugs. |
+|  **7 (09/11–14/11)**  | Revisión general del proyecto y del informe final, grabación del video explicativo y entrega. |
 
 > **Nota:** La documentación y el informe final se irán actualizando de manera incremental a medida que se completen los módulos, reservando la última semana exclusivamente para su consolidación, revisión general y grabación del video.  
 
