@@ -5,7 +5,7 @@
 -- Se puede correr mas de una vez: cada INSERT verifica antes que el dato no exista (no duplica).
 --
 -- La administradora NO se carga aca: su contrasena no debe quedar en el repositorio.
--- Se crea aparte, directamente en la base, con un hash BCrypt generado para ese entorno.
+-- Se crea sola al arrancar el backend con ADMIN_EMAIL y ADMIN_PASSWORD.
 -- ============================================
 
 SET NAMES utf8mb4;
