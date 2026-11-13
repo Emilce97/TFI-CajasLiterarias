@@ -5,9 +5,20 @@
 > **Docente/Tutor:** Oscar Londero  
 > **Integrantes:** Natalia Córdoba, Emilce Spital  
 
+## Entrega final
+
+| Recurso | Enlace |
+| :--- | :--- |
+| Sitio desplegado | https://tfi-cajasliterarias-web.onrender.com |
+| Video explicativo | *(completar)* |
+| Informe final | *(completar)* |
+
+> El backend está en el plan gratuito de Render: la primera visita puede tardar cerca de un minuto en responder.
+
 ---
 
 ## Índice  
+- [Entrega final](#entrega-final)
 - [Propuesta del proyecto](#propuesta-del-proyecto)  
 - [Actores Involucrados](#actores-involucrados)  
 - [Estructura del repositorio](#estructura-del-repositorio)  
@@ -88,19 +99,18 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 
 ## Alcance del MVP
 
-* **Catálogo de cajas:** Configuración de las cuatro líneas temáticas (Misterio/Terror, Romance, Narrativa/Drama y Caja Sorpresa como temática de título curado único por mes), con alta de libros y proveedores desde el panel de la administradora.
-* **Historial de suscriptor:** Registro relacional de pedidos previos para prevenir repetición involuntaria de títulos, en tres capas: rechazo al cambiar a una temática cuyo libro ya se recibió, aviso a la administradora antes del corte y marca "Libro repetido" en el panel de despacho. El suscriptor ve sus cajas recibidas en "Mi suscripción".
+Todo lo listado en **Incluido en el MVP** está implementado y desplegado. Lo de *Nice to have* y *No incluido* queda como mejora futura. Las decisiones de diseño y sus límites están en [Limitaciones conocidas](#limitaciones-conocidas).
 
 ### Incluido en el MVP
 
-* **Catálogo de cajas:** Configuración de las cuatro líneas temáticas (Misterio/Terror, Romance, Narrativa/Drama y Caja Sorpresa como temática de título curado único por mes).  
+* **Catálogo de cajas:** Configuración de las cuatro líneas temáticas (Misterio/Terror, Romance, Narrativa/Drama y Caja Sorpresa como temática de título curado único por mes), con alta de libros y proveedores desde el panel de la administradora.
 * **Ciclo de suscripciones y vigencia temporal:** Modelado de reglas de negocio en datos (mediante marcas temporales y estados de vigencia vinculados a la edición de destino), asegurando el desacoplamiento entre la entidad mutable Suscripcion y el snapshot inmutable PedidoEdicion. Modificaciones posteriores a la fecha de corte quedan registradas a nivel entidad con impacto programado para la edición siguiente.   
 * **Gestión de ciclo mensual:** Altas, bajas, pausas y cambios de temática en ventana habilitada (día 1 al 20).  
 * **Corte estricto e idempotente (día 21):** Operación de congelamiento del padrón que incluye únicamente suscripciones con pago validado por la administradora. Suscripciones sin pago confirmado quedan excluidas de la edición y no reservan stock.  
-* **Gestión de stock e inventario mensual:** Cálculo automático de la demanda de libros e insumos por edición cerrada, registro de cantidades recibidas de proveedores y detección/alerta de faltantes previo a la etapa de empaquetado.  
+* **Gestión de stock e inventario mensual:** Cálculo automático de la demanda de libros por edición cerrada, registro de cantidades recibidas de proveedores y detección/alerta de faltantes previo a la etapa de empaquetado.  
 * **Validación manual de pagos:** Panel de conciliación para que las administradoras verifiquen transferencias y habiliten los pedidos antes del día 21.  
 * **Panel de despacho:** Armado de pedidos, generación de remito interno, carga manual de código de seguimiento y actualización de estados del envío (Pendiente de empaque → Empaquetado → Despachado → Entregado).  
-* **Historial de suscriptor:** Registro relacional de pedidos previos para prevenir repetición involuntaria de títulos.  
+* **Historial de suscriptor:** Registro relacional de pedidos previos para prevenir repetición involuntaria de títulos, en tres capas: rechazo al cambiar a una temática cuyo libro ya se recibió, aviso a la administradora antes del corte y marca "Libro repetido" en el panel de despacho. El suscriptor ve sus cajas recibidas en "Mi suscripción".  
 * **Acceso por rol:** registro y login con JWT. La administradora (ADMIN) accede a las rutas de administración (validación de pagos, cierre de edición, demanda, despacho y remitos); el suscriptor (SUSCRIPTOR) se registra e inicia sesión para suscribirse y gestionar solo sus propias suscripciones. El inicio y las ediciones son públicos. Detalle en [`docs/autenticacion.md`](./docs/autenticacion.md).
 
 ### Nice to have (si sobra tiempo dentro del cronograma)  
@@ -135,14 +145,30 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 
 | Pieza | Plataforma | Dirección |
 | :--- | :--- | :--- |
-| Frontend | Render (sitio estático) | *(completar)* |
-| Backend | Render (servicio web) | *(completar)* |
-| Base de datos | TiDB Cloud (compatible con MySQL) | — |
+| Frontend | Render (sitio estático) | https://tfi-cajasliterarias-web.onrender.com |
+| Backend | Render (servicio web, Docker) | https://tfi-cajasliterarias.onrender.com |
+| Base de datos | TiDB Cloud Starter (compatible con MySQL) | — |
 
+**Backend (Web Service, Docker, directorio raíz `backend/`)**
+
+| Variable | Valor |
+| :--- | :--- |
+| `DB_URL` | URL JDBC de la base en TiDB Cloud |
+| `DB_USERNAME`, `DB_PASSWORD` | Credenciales de la base en TiDB |
+| `JWT_SECRET` | Clave de 32 caracteres o más |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Administradora inicial (se crea al primer arranque) |
+| `FRONTEND_URL` | Dirección del frontend en Render (origen permitido por CORS) |
+
+`PORT` lo define Render. Las contraseñas y el secreto no se guardan en el repositorio.
+
+**Frontend (Static Site, directorio raíz `frontend/`)**
+- Build: `npm install && npm run build`. Publish directory: `dist`.
+- Variable `VITE_API_BASE_URL`: dirección del backend terminada en `/api`. Se lee al compilar, así que si cambia hay que volver a hacer *Manual Deploy*.
+
+**Operación**
 - **Publicar un cambio:** merge a `main` y *Manual Deploy* de los dos servicios en Render. El backend tarda un par de minutos en volver a estar disponible.
 - **Base nueva:** correr `schema.sql` y después `datos-iniciales.sql` en TiDB.
 - **Cambios de esquema:** no viajan con el deploy. Cada `ALTER TABLE` se corre a mano en la base de producción.
-- *(Nati: completar las variables de entorno de cada servicio y cualquier paso particular de la configuración).*
 
 ---
 
@@ -154,6 +180,7 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 - **Categorías:** son 4 fijas por regla de negocio y se cargan por script. No tienen pantalla de alta.
 - **Precio único por edición:** las 4 temáticas de una edición tienen el mismo precio.
 - **Una sola edición abierta a la vez.**
+- **Corte manual:** el cierre de la edición lo dispara la administradora desde el panel ("Cerrar edición"); no corre solo el día 21. La fecha de corte de la edición se usa para decidir si un cambio de temática, una baja, una pausa o una reanudación rige para la edición actual o para la siguiente, pero no ejecuta el cierre por sí sola. Tampoco se abre sola la edición siguiente: la administradora la crea a mano una vez cerrada la anterior. Automatizar el cierre (por ejemplo, con una tarea programada) queda como mejora futura.
 - **Pagos:** la conciliación es manual (transferencia y validación de la administradora). No hay pasarela de pago.
 - **Envíos:** el sistema llega hasta el remito. El tracking se carga a mano, sin integración con el correo.
 - **Notificaciones:** no hay avisos por email. El suscriptor consulta todo en su panel.
@@ -168,6 +195,10 @@ Todo el ciclo de suscripciones se gestiona hoy de forma manual mediante WhatsApp
 - **Render (plan gratuito):** el backend se suspende después de un rato sin uso, y la primera visita puede tardar alrededor de un minuto en responder.
 - **TiDB:** los ids no son consecutivos (pueden saltar), lo que se nota en el número de remito. No afecta el funcionamiento.
 - Las limitaciones de autenticación (token en `localStorage`, sin recuperación de contraseña, etc.) están en [`docs/autenticacion.md`](./docs/autenticacion.md#alcance-y-limitaciones).
+- **TiDB y los `CHECK`:** TiDB no aplica la restricción `CHECK (monto > 0)` de la tabla `pago` (avisa con una advertencia al crearla). La base no rechaza sola un monto negativo; esa validación la hace `PagoService` y tiene su test.
+- **TiDB y las mayúsculas:** TiDB distingue mayúsculas y minúsculas por defecto, a diferencia de MySQL local. Por eso el email se guarda y compara en minúsculas, y el nombre de una edición se valida sin distinguir mayúsculas.
+- **Sin herramienta de migraciones:** los cambios de esquema se mantienen en `schema.sql` y se aplican con `ALTER TABLE` a mano.
+- **Administradora inicial:** se crea al arrancar el backend con `ADMIN_EMAIL` y `ADMIN_PASSWORD`; no hay pantalla para crear otras administradoras.
 
 ---
 ## Plan de trabajo
