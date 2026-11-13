@@ -24,6 +24,8 @@ Tests de integración destacados:
 | `AvisoCorteIntegrationTest` | El aviso antes del corte detecta a quien recibiría un libro que ya tiene, ignora libros nuevos y no se pide sobre una edición cerrada. |
 | `PagoUniqueIntegrationTest` | La base rechaza un segundo pago de la misma suscripción para la misma edición. |
 
+El frontend se verifica con `npx tsc --noEmit` y `npm run build` (desde `frontend/`), que compilan sin errores.
+
 ---
 
 ## 2. Pruebas manuales (local)
@@ -50,12 +52,13 @@ Tests de integración destacados:
 
 Circuito completo sobre la versión publicada (Render + TiDB):
 
-| # | Paso | Resultado |
-| :---: | :--- |:--------:|
-| 1 | Ingresar como administradora y crear una edición con libros del catálogo. |          |
-| 2 | Registrar una suscriptora nueva, suscribirse e informar el pago. |          |
-| 3 | Validar el pago como administradora. |          |
-| 4 | Cerrar la edición y verificar el resumen del corte. |          |
-| 5 | Avanzar el pedido en Despacho hasta Entregado y abrir el remito. |          |
-| 6 | Como suscriptora, ver la caja en "Mis cajas recibidas". |          |
-| 7 | Ingresar con el email en mayúsculas y crear una edición con un nombre repetido en otra combinación de mayúsculas (TiDB distingue mayúsculas por defecto). |          |
+| # | Paso | Resultado esperado | Resultado |
+| :---: | :--- | :--- | :---: |
+| 1 | Ingresar como administradora y crear una edición con libros del catálogo. | La edición se crea abierta. | ✅ |
+| 2 | Registrar una suscriptora nueva, suscribirse a una temática e informar el pago. | Aparece la suscripción y el pago queda pendiente. | ✅ |
+| 3 | Validar el pago como administradora. | El pago sale de pendientes y aparece en el historial de validados. | ✅ |
+| 4 | Cerrar la edición y verificar el resumen del corte. | El resumen muestra 1 pedido generado y la edición queda cerrada. | ✅ |
+| 5 | Avanzar el pedido en Despacho hasta Entregado y abrir el remito. | Cada cambio de estado se refleja y el remito muestra los datos congelados del pedido. | ✅ |
+| 6 | Como suscriptora, ver la caja en "Mis cajas recibidas". | La caja entregada aparece en la lista. | ✅ |
+| 7 | Ingresar con el email de la administradora en mayúsculas. | El ingreso funciona (el email se compara en minúsculas). | ✅ |
+| 8 | Crear una edición con el nombre de una existente, cambiando las mayúsculas. | El backend la rechaza con "Ya existe una edición con el nombre…" (TiDB distingue mayúsculas por defecto). | ✅ |
