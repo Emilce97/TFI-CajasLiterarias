@@ -10,7 +10,7 @@
 | Recurso | Enlace |
 | :--- | :--- |
 | Sitio desplegado | https://tfi-cajasliterarias-web.onrender.com |
-| Video explicativo | https://www.youtube.com/watch?v=uf_rG9bi2Qk&t=47s |
+| Video explicativo | https://www.youtube.com/watch?v=uf_rG9bi2Qk |
 | Informe final | *(completar)* |
 
 > El backend está en el plan gratuito de Render: la primera visita puede tardar cerca de un minuto en responder.
