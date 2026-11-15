@@ -4,14 +4,16 @@
 > **Carrera:** Tecnicatura Universitaria en Programación a Distancia (UTN)  
 > **Docente/Tutor:** Oscar Londero  
 > **Integrantes:** Natalia Córdoba, Emilce Spital  
+> 
+> 
 
 ## Entrega final
 
-| Recurso | Enlace |
-| :--- | :--- |
-| Sitio desplegado | https://tfi-cajasliterarias-web.onrender.com |
-| Video explicativo | https://www.youtube.com/watch?v=uf_rG9bi2Qk |
-| Informe final | *(completar)* |
+| Recurso | Enlace                                                                                                                 |
+| :--- |:-----------------------------------------------------------------------------------------------------------------------|
+| Sitio desplegado | https://tfi-cajasliterarias-web.onrender.com                                                                           |
+| Video explicativo | https://www.youtube.com/watch?v=uf_rG9bi2Qk                                                                            |
+| Informe final | [docs/Informe_final.pdf](./docs/Informe_final.pdf) |                                           |
 
 > El backend está en el plan gratuito de Render: la primera visita puede tardar cerca de un minuto en responder.
 
